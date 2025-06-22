@@ -60,59 +60,111 @@ Best regards,
 [Your Name]`
   };
 
+  const getTranslation = (text: string, fromLang: string, toLang: string): string => {
+    console.log(`Translating from ${fromLang} to ${toLang}:`);
+    console.log(text);
+
+    // Enhanced mock translations with more comprehensive coverage
+    const translations: Record<string, Record<string, string>> = {
+      es: {
+        'PROFESSIONAL SUMMARY': 'RESUMEN PROFESIONAL',
+        'Experienced Software Engineer': 'Ingeniero de Software Experimentado',
+        'WORK EXPERIENCE': 'EXPERIENCIA LABORAL',
+        'Senior Software Engineer': 'Ingeniero de Software Senior',
+        'Dear Hiring Manager': 'Estimado Gerente de Contratación',
+        'Best regards': 'Saludos cordiales'
+      },
+      fr: {
+        'PROFESSIONAL SUMMARY': 'RÉSUMÉ PROFESSIONNEL',
+        'Experienced Software Engineer': 'Ingénieur Logiciel Expérimenté',
+        'WORK EXPERIENCE': 'EXPÉRIENCE PROFESSIONNELLE',
+        'Senior Software Engineer': 'Ingénieur Logiciel Senior',
+        'Dear Hiring Manager': 'Cher Responsable de Recrutement',
+        'Best regards': 'Cordialement'
+      },
+      de: {
+        'PROFESSIONAL SUMMARY': 'BERUFLICHE ZUSAMMENFASSUNG',
+        'Experienced Software Engineer': 'Erfahrener Software-Ingenieur',
+        'WORK EXPERIENCE': 'BERUFSERFAHRUNG',
+        'Senior Software Engineer': 'Senior Software-Ingenieur',
+        'Dear Hiring Manager': 'Sehr geehrte Damen und Herren',
+        'Best regards': 'Mit freundlichen Grüßen'
+      },
+      it: {
+        'PROFESSIONAL SUMMARY': 'RIEPILOGO PROFESSIONALE',
+        'Experienced Software Engineer': 'Ingegnere del Software Esperto',
+        'WORK EXPERIENCE': 'ESPERIENZA LAVORATIVA',
+        'Senior Software Engineer': 'Ingegnere del Software Senior',
+        'Dear Hiring Manager': 'Gentile Responsabile delle Assunzioni',
+        'Best regards': 'Cordiali saluti'
+      },
+      pt: {
+        'PROFESSIONAL SUMMARY': 'RESUMO PROFISSIONAL',
+        'Experienced Software Engineer': 'Engenheiro de Software Experiente',
+        'WORK EXPERIENCE': 'EXPERIÊNCIA PROFISSIONAL',
+        'Senior Software Engineer': 'Engenheiro de Software Sênior',
+        'Dear Hiring Manager': 'Caro Gerente de Contratação',
+        'Best regards': 'Atenciosamente'
+      },
+      zh: {
+        'PROFESSIONAL SUMMARY': '专业总结',
+        'Experienced Software Engineer': '经验丰富的软件工程师',
+        'WORK EXPERIENCE': '工作经验',
+        'Senior Software Engineer': '高级软件工程师',
+        'Dear Hiring Manager': '尊敬的招聘经理',
+        'Best regards': '此致敬礼'
+      },
+      ja: {
+        'PROFESSIONAL SUMMARY': 'プロフェッショナル要約',
+        'Experienced Software Engineer': '経験豊富なソフトウェアエンジニア',
+        'WORK EXPERIENCE': '職歴',
+        'Senior Software Engineer': 'シニアソフトウェアエンジニア',
+        'Dear Hiring Manager': '採用担当者様',
+        'Best regards': '敬具'
+      }
+    };
+
+    // Simple word-by-word translation for demonstration
+    let translatedText = text;
+    if (translations[toLang]) {
+      Object.entries(translations[toLang]).forEach(([key, value]) => {
+        translatedText = translatedText.replace(new RegExp(key, 'gi'), value);
+      });
+    }
+
+    // If no specific translation found, provide a generic response
+    if (translatedText === text && toLang !== fromLang) {
+      return `[Translated to ${languages.find(l => l.code === toLang)?.name}]\n\n${text}\n\n[Professional translation service would provide accurate translation here]`;
+    }
+
+    return translatedText;
+  };
+
   const translateText = async () => {
+    if (!sourceText.trim()) {
+      toast({
+        title: "No text to translate",
+        description: "Please enter some text to translate.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (sourceLanguage === targetLanguage) {
+      toast({
+        title: "Same language selected",
+        description: "Please select different source and target languages.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsTranslating(true);
+    console.log('Starting translation...');
     
-    // Simulate translation
+    // Simulate API call with realistic delay
     setTimeout(() => {
-      const mockTranslations: Record<string, Record<string, string>> = {
-        es: {
-          resume: `RESUMEN PROFESIONAL
-Ingeniero de Software experimentado con más de 5 años de experiencia en desarrollo full-stack, especializado en React, Node.js y tecnologías en la nube. Historial comprobado de entrega de aplicaciones web escalables y liderazgo de equipos multifuncionales para lograr objetivos de proyecto.
-
-EXPERIENCIA LABORAL
-Ingeniero de Software Senior | Tech Corp | 2020 - Presente
-• Desarrollé y mantuve más de 15 aplicaciones web que sirven a más de 100K usuarios
-• Lideré un equipo de 4 desarrolladores en la implementación de nuevas características
-• Reduje el tiempo de carga de la aplicación en un 40% mediante técnicas de optimización`,
-          
-          coverLetter: `Estimado Gerente de Contratación,
-
-Le escribo para expresar mi gran interés en el puesto de Ingeniero de Software en su empresa. Con mi amplia experiencia en desarrollo de software y pasión por crear soluciones innovadoras, estoy seguro de que sería una valiosa adición a su equipo.
-
-En mi rol actual, he desarrollado exitosamente múltiples aplicaciones web que han mejorado significativamente la experiencia del usuario y la eficiencia empresarial. Mi experiencia en frameworks modernos y compromiso con las mejores prácticas me permitirían contribuir efectivamente a sus proyectos.
-
-Me encantaría la oportunidad de discutir cómo mis habilidades y experiencia se alinean con las necesidades de su equipo. Gracias por considerar mi solicitud.
-
-Saludos cordiales,
-[Su Nombre]`
-        },
-        fr: {
-          resume: `RÉSUMÉ PROFESSIONNEL
-Ingénieur logiciel expérimenté avec plus de 5 ans d'expertise en développement full-stack, spécialisé en React, Node.js et technologies cloud. Historique prouvé de livraison d'applications web évolutives et de direction d'équipes transfonctionnelles pour atteindre les objectifs de projet.
-
-EXPÉRIENCE PROFESSIONNELLE
-Ingénieur Logiciel Senior | Tech Corp | 2020 - Présent
-• Développé et maintenu plus de 15 applications web servant plus de 100K utilisateurs
-• Dirigé une équipe de 4 développeurs dans l'implémentation de nouvelles fonctionnalités
-• Réduit le temps de chargement de l'application de 40% grâce aux techniques d'optimisation`,
-          
-          coverLetter: `Cher Responsable de Recrutement,
-
-Je vous écris pour exprimer mon vif intérêt pour le poste d'Ingénieur Logiciel dans votre entreprise. Avec ma vaste expérience en développement logiciel et ma passion pour créer des solutions innovantes, je suis confiant que je serais un ajout précieux à votre équipe.
-
-Dans mon rôle actuel, j'ai développé avec succès plusieurs applications web qui ont considérablement amélioré l'expérience utilisateur et l'efficacité commerciale. Mon expertise des frameworks modernes et mon engagement envers les meilleures pratiques me permettraient de contribuer efficacement à vos projets.
-
-Je serais ravi de l'opportunité de discuter de la façon dont mes compétences et mon expérience s'alignent avec les besoins de votre équipe. Merci de considérer ma candidature.
-
-Cordialement,
-[Votre Nom]`
-        }
-      };
-
-      const translation = mockTranslations[targetLanguage]?.[documentType] || 
-        'Translation completed! Professional translation services ensure accuracy for career documents.';
-      
+      const translation = getTranslation(sourceText, sourceLanguage, targetLanguage);
       setTranslatedText(translation);
       setIsTranslating(false);
       
@@ -120,15 +172,27 @@ Cordialement,
         title: "Translation Complete!",
         description: `Document translated from ${languages.find(l => l.code === sourceLanguage)?.name} to ${languages.find(l => l.code === targetLanguage)?.name}`,
       });
+
+      console.log('Translation completed successfully');
     }, 2000);
   };
 
   const loadSample = (type: 'resume' | 'coverLetter') => {
     setSourceText(sampleTexts[type]);
     setDocumentType(type);
+    console.log(`Loaded ${type} sample`);
   };
 
   const copyToClipboard = () => {
+    if (!translatedText) {
+      toast({
+        title: "Nothing to copy",
+        description: "No translation available to copy.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     navigator.clipboard.writeText(translatedText);
     toast({
       title: "Copied!",
@@ -136,15 +200,39 @@ Cordialement,
     });
   };
 
+  const downloadTranslation = () => {
+    if (!translatedText) {
+      toast({
+        title: "Nothing to download",
+        description: "No translation available to download.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const element = document.createElement('a');
+    const file = new Blob([translatedText], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `translated_${documentType}_${targetLanguage}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    toast({
+      title: "Download started",
+      description: "Your translated document is being downloaded.",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-gray-900/60 border-indigo-500/30 backdrop-blur-lg">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center space-x-2 text-indigo-300">
             <Globe className="w-5 h-5" />
             <span>Multilingual Translator</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-400">
             Translate your resume, cover letter, and other career documents to any language. Perfect for global job applications.
           </CardDescription>
         </CardHeader>
@@ -152,15 +240,16 @@ Cordialement,
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Source Text */}
-        <Card>
+        <Card className="bg-gray-900/60 border-cyan-500/30 backdrop-blur-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Source Document</CardTitle>
+              <CardTitle className="text-lg text-cyan-300">Source Document</CardTitle>
               <div className="flex space-x-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => loadSample('resume')}
+                  className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10"
                 >
                   Load Resume Sample
                 </Button>
@@ -168,24 +257,25 @@ Cordialement,
                   size="sm"
                   variant="outline"
                   onClick={() => loadSample('coverLetter')}
+                  className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10"
                 >
                   Load Cover Letter Sample
                 </Button>
               </div>
             </div>
-            <CardDescription>
+            <CardDescription className="text-gray-400">
               Paste your document or load a sample to get started
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">From Language</label>
+                <label className="text-sm font-medium mb-2 block text-cyan-300">From Language</label>
                 <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-gray-800/50 border-cyan-500/30">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-800 border-cyan-500/30">
                     {languages.map((lang) => (
                       <SelectItem key={lang.code} value={lang.code}>
                         <span className="flex items-center space-x-2">
@@ -198,12 +288,12 @@ Cordialement,
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Document Type</label>
+                <label className="text-sm font-medium mb-2 block text-cyan-300">Document Type</label>
                 <Select value={documentType} onValueChange={setDocumentType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-gray-800/50 border-cyan-500/30">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-800 border-cyan-500/30">
                     <SelectItem value="resume">Resume</SelectItem>
                     <SelectItem value="coverLetter">Cover Letter</SelectItem>
                     <SelectItem value="other">Other Document</SelectItem>
@@ -216,15 +306,15 @@ Cordialement,
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               placeholder="Paste your resume, cover letter, or other career document here..."
-              className="min-h-96"
+              className="min-h-96 bg-gray-800/50 border-cyan-500/30 text-gray-200 placeholder:text-gray-500"
             />
 
             <div className="flex items-center space-x-2">
-              <Badge variant="outline">
+              <Badge variant="outline" className="border-cyan-500/50 text-cyan-300">
                 {languages.find(l => l.code === sourceLanguage)?.flag} {languages.find(l => l.code === sourceLanguage)?.name}
               </Badge>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <Badge variant="outline">
+              <Badge variant="outline" className="border-indigo-500/50 text-indigo-300">
                 {languages.find(l => l.code === targetLanguage)?.flag} {languages.find(l => l.code === targetLanguage)?.name}
               </Badge>
             </div>
@@ -232,21 +322,21 @@ Cordialement,
         </Card>
 
         {/* Translation Output */}
-        <Card>
+        <Card className="bg-gray-900/60 border-indigo-500/30 backdrop-blur-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Translation</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg text-indigo-300">Translation</CardTitle>
+            <CardDescription className="text-gray-400">
               Your professionally translated document will appear here
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">To Language</label>
+              <label className="text-sm font-medium mb-2 block text-indigo-300">To Language</label>
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800/50 border-indigo-500/30">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-indigo-500/30">
                   {languages.map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
                       <span className="flex items-center space-x-2">
@@ -256,33 +346,33 @@ Cordialement,
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+                </Select>
             </div>
 
             {translatedText ? (
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg border max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm">
+                <div className="bg-gray-800/50 p-4 rounded-lg border border-indigo-500/30 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-200">
                     {translatedText}
                   </pre>
                 </div>
                 <div className="flex space-x-2">
-                  <Button onClick={copyToClipboard} variant="outline" className="flex-1">
+                  <Button onClick={copyToClipboard} variant="outline" className="flex-1 border-indigo-500/50 text-indigo-300 hover:bg-indigo-500/10">
                     <Copy className="w-4 h-4 mr-2" />
                     Copy
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button onClick={downloadTranslation} variant="outline" className="flex-1 border-indigo-500/50 text-indigo-300 hover:bg-indigo-500/10">
                     <Download className="w-4 h-4 mr-2" />
                     Download
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center min-h-96 flex items-center justify-center">
+              <div className="bg-gray-800/30 border-2 border-dashed border-indigo-500/30 rounded-lg p-8 text-center min-h-96 flex items-center justify-center">
                 <div>
-                  <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Translation will appear here</p>
-                  <p className="text-sm text-gray-500">Add source text and click translate</p>
+                  <Globe className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+                  <p className="text-indigo-200 mb-2">Translation will appear here</p>
+                  <p className="text-sm text-indigo-400/70">Add source text and click translate</p>
                 </div>
               </div>
             )}
@@ -290,7 +380,7 @@ Cordialement,
             <Button
               onClick={translateText}
               disabled={isTranslating || !sourceText.trim() || sourceLanguage === targetLanguage}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700"
             >
               {isTranslating ? (
                 <>
@@ -310,43 +400,43 @@ Cordialement,
 
       {/* Feature Highlights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="bg-gray-900/60 border-blue-500/30 backdrop-blur-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Globe className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <h3 className="font-medium">12+ Languages</h3>
-                <p className="text-sm text-gray-600">Support for major world languages</p>
+                <h3 className="font-medium text-blue-300">12+ Languages</h3>
+                <p className="text-sm text-gray-400">Support for major world languages</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-900/60 border-green-500/30 backdrop-blur-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <h3 className="font-medium">Professional Quality</h3>
-                <p className="text-sm text-gray-600">Optimized for career documents</p>
+                <h3 className="font-medium text-green-300">Professional Quality</h3>
+                <p className="text-sm text-gray-400">Optimized for career documents</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-900/60 border-purple-500/30 backdrop-blur-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Download className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                <Download className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <h3 className="font-medium">Multiple Formats</h3>
-                <p className="text-sm text-gray-600">Download in various formats</p>
+                <h3 className="font-medium text-purple-300">Multiple Formats</h3>
+                <p className="text-sm text-gray-400">Download in various formats</p>
               </div>
             </div>
           </CardContent>
