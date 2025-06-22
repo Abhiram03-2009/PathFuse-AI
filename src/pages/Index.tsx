@@ -15,27 +15,63 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute -bottom-40 left-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-cyan-400/30 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${10 + Math.random() * 20}s`
+            }}
+          />
+        ))}
+      </div>
+
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
+      <div className="bg-gray-900/80 backdrop-blur-xl border-b border-cyan-500/30 sticky top-0 z-20 shadow-lg shadow-cyan-500/10">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative group">
+                <img 
+                  src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
+                  alt="Resumate AI Logo" 
+                  className="w-12 h-12 object-contain filter drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-cyan-400/20 rounded-lg blur-lg group-hover:bg-cyan-400/40 transition-all duration-300"></div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
                   Resumate AI
                 </h1>
-                <p className="text-sm text-gray-600">Your AI Career Assistant</p>
+                <p className="text-sm text-cyan-300/80 font-medium">Your AI Career Assistant</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200 hover:border-cyan-300 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/25"
+              >
                 Sign In
               </Button>
-              <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
                 Get Pro
               </Button>
             </div>
@@ -43,158 +79,212 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8">
-            <TabsTrigger value="dashboard" className="flex items-center space-x-2">
+          <TabsList className="grid w-full grid-cols-7 mb-8 bg-gray-900/60 border border-cyan-500/30 backdrop-blur-lg">
+            <TabsTrigger 
+              value="dashboard" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="resume" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="resume" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Resume</span>
             </TabsTrigger>
-            <TabsTrigger value="cover-letter" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="cover-letter" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Cover Letter</span>
             </TabsTrigger>
-            <TabsTrigger value="chatbot" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="chatbot" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">AI Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="keyword" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="keyword" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">Keywords</span>
             </TabsTrigger>
-            <TabsTrigger value="analyzer" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="analyzer" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <Briefcase className="w-4 h-4" />
               <span className="hidden sm:inline">Job Match</span>
             </TabsTrigger>
-            <TabsTrigger value="translator" className="flex items-center space-x-2">
+            <TabsTrigger 
+              value="translator" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
               <Globe className="w-4 h-4" />
               <span className="hidden sm:inline">Translate</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            <div className="text-center py-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to Resumate AI
-              </h2>
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                Your all-in-one AI-powered career toolkit. Generate resumes, cover letters, analyze job matches, and more.
-              </p>
+          <TabsContent value="dashboard" className="space-y-8">
+            <div className="text-center py-12 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-6 animate-fade-in">
+                  Welcome to Resumate AI
+                </h2>
+                <p className="text-xl text-cyan-200/80 mb-8 max-w-3xl mx-auto leading-relaxed">
+                  Your all-in-one AI-powered career toolkit. Generate resumes, cover letters, analyze job matches, and more with cutting-edge AI technology.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('resume')}>
+              <Card 
+                className="bg-gray-900/60 border-cyan-500/30 hover:border-cyan-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25" 
+                onClick={() => setActiveTab('resume')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5 text-blue-600" />
+                  <CardTitle className="flex items-center space-x-3 text-cyan-300 group-hover:text-cyan-200 transition-colors">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg group-hover:bg-cyan-500/30 transition-colors">
+                      <FileText className="w-5 h-5" />
+                    </div>
                     <span>Resume Generator</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Create professional resumes with AI assistance
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm text-blue-700">
+                  <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-4 rounded-lg border border-cyan-500/20">
+                    <p className="text-sm text-cyan-200/80">
                       Generate ATS-friendly resumes tailored to specific job requirements
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('cover-letter')}>
+              <Card 
+                className="bg-gray-900/60 border-purple-500/30 hover:border-purple-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25" 
+                onClick={() => setActiveTab('cover-letter')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="flex items-center space-x-3 text-purple-300 group-hover:text-purple-200 transition-colors">
+                    <div className="p-2 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-colors">
+                      <FileText className="w-5 h-5" />
+                    </div>
                     <span>Cover Letter Generator</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Craft compelling cover letters that get noticed
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <p className="text-sm text-purple-700">
+                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20">
+                    <p className="text-sm text-purple-200/80">
                       Personalized cover letters that highlight your strengths
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('chatbot')}>
+              <Card 
+                className="bg-gray-900/60 border-green-500/30 hover:border-green-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-green-500/25" 
+                onClick={() => setActiveTab('chatbot')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <MessageCircle className="w-5 h-5 text-green-600" />
+                  <CardTitle className="flex items-center space-x-3 text-green-300 group-hover:text-green-200 transition-colors">
+                    <div className="p-2 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-colors">
+                      <MessageCircle className="w-5 h-5" />
+                    </div>
                     <span>AI Career Coach</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Get personalized career advice and tips
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-sm text-green-700">
+                  <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20">
+                    <p className="text-sm text-green-200/80">
                       24/7 AI assistant for all your career questions
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('keyword')}>
+              <Card 
+                className="bg-gray-900/60 border-orange-500/30 hover:border-orange-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-orange-500/25" 
+                onClick={() => setActiveTab('keyword')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Search className="w-5 h-5 text-orange-600" />
+                  <CardTitle className="flex items-center space-x-3 text-orange-300 group-hover:text-orange-200 transition-colors">
+                    <div className="p-2 bg-orange-500/20 rounded-lg group-hover:bg-orange-500/30 transition-colors">
+                      <Search className="w-5 h-5" />
+                    </div>
                     <span>Keyword Matcher</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Optimize your profile for job descriptions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <p className="text-sm text-orange-700">
+                  <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 p-4 rounded-lg border border-orange-500/20">
+                    <p className="text-sm text-orange-200/80">
                       Match your skills with job requirements perfectly
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('analyzer')}>
+              <Card 
+                className="bg-gray-900/60 border-red-500/30 hover:border-red-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-red-500/25" 
+                onClick={() => setActiveTab('analyzer')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Briefcase className="w-5 h-5 text-red-600" />
+                  <CardTitle className="flex items-center space-x-3 text-red-300 group-hover:text-red-200 transition-colors">
+                    <div className="p-2 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 transition-colors">
+                      <Briefcase className="w-5 h-5" />
+                    </div>
                     <span>Job Match Analyzer</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Analyze your fit for top companies
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-red-50 p-4 rounded-lg">
-                    <p className="text-sm text-red-700">
+                  <div className="bg-gradient-to-r from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20">
+                    <p className="text-sm text-red-200/80">
                       Get percentage scores for job compatibility
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('translator')}>
+              <Card 
+                className="bg-gray-900/60 border-indigo-500/30 hover:border-indigo-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/25" 
+                onClick={() => setActiveTab('translator')}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Globe className="w-5 h-5 text-indigo-600" />
+                  <CardTitle className="flex items-center space-x-3 text-indigo-300 group-hover:text-indigo-200 transition-colors">
+                    <div className="p-2 bg-indigo-500/20 rounded-lg group-hover:bg-indigo-500/30 transition-colors">
+                      <Globe className="w-5 h-5" />
+                    </div>
                     <span>Multilingual Translator</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
                     Translate your documents to any language
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-indigo-50 p-4 rounded-lg">
-                    <p className="text-sm text-indigo-700">
+                  <div className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 p-4 rounded-lg border border-indigo-500/20">
+                    <p className="text-sm text-indigo-200/80">
                       Apply globally with translated resumes and cover letters
                     </p>
                   </div>
