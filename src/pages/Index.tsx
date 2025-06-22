@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,13 +43,16 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="relative group">
-                <img 
-                  src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
-                  alt="Resumate AI Logo" 
-                  className="w-12 h-12 object-contain filter drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-cyan-400/20 rounded-lg blur-lg group-hover:bg-cyan-400/40 transition-all duration-300"></div>
+              <div className="relative group cursor-pointer">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500 transform group-hover:scale-110"></div>
+                <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-2 border border-cyan-400/30 group-hover:border-cyan-300/60 transition-all duration-300 transform group-hover:scale-105 group-hover:rotate-2">
+                  <img 
+                    src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
+                    alt="Resumate AI Logo" 
+                    className="w-12 h-12 object-contain transition-all duration-300 group-hover:brightness-110 group-hover:contrast-110"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-purple-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
