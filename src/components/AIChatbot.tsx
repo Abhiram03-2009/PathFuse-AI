@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,23 @@ const AIChatbot = () => {
   const generateAIResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
     
+    // Handle inappropriate language or negative messages
+    if (message.includes('dumb') || message.includes('stupid') || message.includes('hate') || 
+        message.includes('suck') || message.includes('terrible') || message.includes('awful') ||
+        message.includes('idiot') || message.includes('moron')) {
+      return "Hey, that's not very nice language to use! I'm here to help you with your career goals in a positive and constructive way. Let's focus on how I can assist you with resume writing, interview preparation, or career advice. What can I help you with today?";
+    }
+
+    // Handle rude or dismissive messages
+    if (message.includes('shut up') || message.includes('go away') || message.includes('leave me alone')) {
+      return "I understand you might be frustrated, but I'm here to support your career journey. If you're having a tough day, that's okay! Sometimes career planning can feel overwhelming. Would you like to talk about what's bothering you, or shall we focus on something positive like your career goals?";
+    }
+
+    // Handle complaints about the AI
+    if (message.includes('you\'re not helpful') || message.includes('useless') || message.includes('don\'t understand')) {
+      return "I'm sorry if I haven't been as helpful as you'd like! I'm constantly learning and want to provide you with the best career advice possible. Could you help me understand what specific information you're looking for? I'm here to assist with resumes, interviews, job search strategies, and career planning.";
+    }
+    
     // Greeting responses
     if (message.includes('hi') || message.includes('hello') || message.includes('hey') || message.includes('good morning') || message.includes('good afternoon') || message.includes('good evening')) {
       return "Hello! How can I help you with your career today? I'm here to assist with resume writing, interview preparation, job search strategies, and any other career-related questions you might have!";
@@ -48,6 +66,16 @@ const AIChatbot = () => {
     
     if (message.includes('thank you') || message.includes('thanks')) {
       return "You're very welcome! I'm always here to help with your career questions. Feel free to ask me anything else!";
+    }
+
+    // Handle general questions and conversations
+    if (message.includes('what can you do') || message.includes('help me')) {
+      return "I can help you with many career-related topics! Here's what I specialize in: 1) Resume writing and optimization 2) Interview preparation and common questions 3) Salary negotiation strategies 4) Job search techniques 5) Career change guidance 6) LinkedIn profile optimization 7) Cover letter writing 8) Professional networking tips. What specific area would you like to explore?";
+    }
+
+    // Handle personal questions
+    if (message.includes('who are you') || message.includes('what are you')) {
+      return "I'm your AI Career Coach! I'm designed to help professionals like you navigate their career journey. I have knowledge about current job market trends, interview techniques, resume best practices, and career development strategies. I'm here to provide personalized advice based on your specific situation and goals.";
     }
     
     // Career advice responses
@@ -82,13 +110,14 @@ const AIChatbot = () => {
     if (message.includes('cover letter')) {
       return "Cover letter best practices: 1) Address to specific person when possible 2) Opening paragraph should grab attention 3) Show you've researched the company 4) Highlight 2-3 key achievements relevant to the role 5) Explain why you want THIS job at THIS company 6) Keep it concise (3-4 paragraphs) 7) Professional closing with call to action 8) Proofread carefully!";
     }
-    
-    // Default intelligent response with better greeting handling
-    if (message.length < 10 && !message.includes('resume') && !message.includes('job') && !message.includes('career')) {
-      return "Hello! I'm here to help you with your career development. You can ask me about resume writing, interview tips, job search strategies, salary negotiation, career changes, or any other professional development topics. What would you like to know?";
+
+    // Handle random or unclear messages
+    if (message.length < 5) {
+      return "I'd love to help you! Could you be a bit more specific about what you're looking for? I can assist with resume writing, interview preparation, job search strategies, career advice, or any other professional development topics.";
     }
     
-    return `That's a great question about ${message.includes('job') ? 'job searching' : 'career development'}! Based on current industry trends, I'd recommend focusing on continuous learning and networking. Consider: 1) Updating your skills regularly 2) Building meaningful professional relationships 3) Staying current with industry news 4) Seeking feedback and mentorship 5) Setting clear career goals. What specific aspect would you like me to elaborate on?`;
+    // Default intelligent response
+    return `That's an interesting question! Based on what you're asking about, I think you might benefit from focusing on professional development and strategic career planning. Here are some key areas to consider: 1) Skill development - What new abilities could enhance your career? 2) Networking - Building meaningful professional relationships 3) Personal branding - How do you present yourself professionally? 4) Goal setting - What are your short and long-term career objectives? Which of these areas would you like to explore further?`;
   };
 
   const sendMessage = async (message?: string) => {
@@ -234,7 +263,7 @@ const AIChatbot = () => {
                   placeholder="Ask me anything about your career..."
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   disabled={isTyping}
-                  className="text-gray-900 border-gray-300"
+                  className="text-white bg-gray-800 border-gray-600 placeholder-gray-400"
                 />
                 <Button 
                   onClick={() => sendMessage()}

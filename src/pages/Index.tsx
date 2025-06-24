@@ -15,6 +15,11 @@ import UniversityPredictor from '@/components/UniversityPredictor';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const handleLogoClick = () => {
+    setActiveTab('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -44,8 +49,8 @@ const Index = () => {
       <div className="bg-gray-900/80 backdrop-blur-xl border-b border-cyan-500/30 sticky top-0 z-20 shadow-lg shadow-cyan-500/10">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative group cursor-pointer">
+            <div className="flex items-center space-x-4 cursor-pointer" onClick={handleLogoClick}>
+              <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500 transform group-hover:scale-110"></div>
                 <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-2 border border-cyan-400/30 group-hover:border-cyan-300/60 transition-all duration-300 transform group-hover:scale-105 group-hover:rotate-2">
                   <img 
@@ -70,13 +75,6 @@ const Index = () => {
                 className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200 hover:border-cyan-300 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/25"
               >
                 Sign In
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Get Pro
               </Button>
             </div>
           </div>
