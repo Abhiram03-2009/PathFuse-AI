@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Download, FileText, Sparkles, Plus, X } from 'lucide-react';
+import { Download, FileText, Sparkles, Plus, X, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import PDFPreviewModal from './PDFPreviewModal';
 
 interface Experience {
   title: string;
@@ -39,6 +39,7 @@ const ResumeGenerator = () => {
   const [newSkill, setNewSkill] = useState('');
   const [template, setTemplate] = useState('professional');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const addExperience = () => {
     setExperiences([...experiences, { title: '', company: '', duration: '', description: '' }]);
@@ -79,6 +80,35 @@ const ResumeGenerator = () => {
 
   const removeSkill = (skill: string) => {
     setSkills(skills.filter(s => s !== skill));
+  };
+
+  const generateResumeContent = () => {
+    let content = `${personalInfo.name}\n`;
+    content += `${personalInfo.email} | ${personalInfo.phone} | ${personalInfo.location}\n\n`;
+    
+    if (personalInfo.summary) {
+      content += `PROFESSIONAL SUMMARY\n${personalInfo.summary}\n\n`;
+    }
+    
+    if (experiences.length > 0) {
+      content += `WORK EXPERIENCE\n`;
+      experiences.forEach(exp => {
+        content += `${exp.title} at ${exp.company}\n${exp.duration}\n${exp.description}\n\n`;
+      });
+    }
+    
+    if (education.length > 0) {
+      content += `EDUCATION\n`;
+      education.forEach(edu => {
+        content += `${edu.degree}\n${edu.school}, ${edu.year}\n\n`;
+      });
+    }
+    
+    if (skills.length > 0) {
+      content += `SKILLS\n${skills.join(', ')}\n`;
+    }
+    
+    return content;
   };
 
   const generateResume = async () => {
@@ -322,10 +352,16 @@ const ResumeGenerator = () => {
               <CardTitle className="text-lg">Resume Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center min-h-96">
+              <div 
+                className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center min-h-96 cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setShowPreview(true)}
+              >
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Resume preview will appear here</p>
-                <p className="text-sm text-gray-500">Fill in your information to see a live preview</p>
+                <p className="text-gray-600 mb-4">Click to preview your resume</p>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview PDF
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -348,13 +384,25 @@ const ResumeGenerator = () => {
                 </>
               )}
             </Button>
-            <Button variant="outline" className="w-full">
-              <Download className="w-4 h-4 mr-2" />
-              Download PDF
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowPreview(true)}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Preview & Download
             </Button>
           </div>
         </div>
       </div>
+
+      <PDFPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        title="Resume"
+        content={generateResumeContent()}
+        type="resume"
+      />
     </div>
   );
 };

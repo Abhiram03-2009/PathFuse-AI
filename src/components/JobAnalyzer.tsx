@@ -3,321 +3,423 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Briefcase, Building, MapPin, TrendingUp, Star, DollarSign } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Briefcase, Building2, MapPin, DollarSign, Clock, Users, Star, BookmarkPlus, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface CompanyMatch {
-  name: string;
-  logo: string;
-  matchScore: number;
-  salaryRange: string;
+interface JobMatch {
+  id: string;
+  title: string;
+  company: string;
   location: string;
-  jobTitle: string;
-  requirements: string[];
-  benefits: string[];
-  matchReasons: string[];
-  growthPotential: number;
+  salary: string;
+  type: string;
+  experience: string;
+  skills: string[];
+  description: string;
+  matchPercentage: number;
+  postedDays: number;
+  applicants: number;
+  saved: boolean;
 }
 
 const JobAnalyzer = () => {
   const { toast } = useToast();
-  const [userProfile, setUserProfile] = useState('');
-  const [preferences, setPreferences] = useState({
-    location: '',
-    salaryMin: '',
-    jobType: '',
-    industry: ''
-  });
-  const [companyMatches, setCompanyMatches] = useState<CompanyMatch[]>([]);
+  const [userSkills, setUserSkills] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [location, setLocation] = useState('');
+  const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<JobMatch | null>(null);
+  const [showJobDetails, setShowJobDetails] = useState(false);
+
+  const industries = [
+    'Technology',
+    'Healthcare',
+    'Finance',
+    'Education',
+    'Marketing',
+    'Sales',
+    'Human Resources',
+    'Engineering',
+    'Design',
+    'Consulting',
+    'Manufacturing',
+    'Retail',
+    'Real Estate',
+    'Legal',
+    'Media & Communications',
+    'Non-profit',
+    'Government',
+    'Energy',
+    'Transportation',
+    'Hospitality'
+  ];
+
+  const generateJobMatches = (skills: string, industry: string, location: string): JobMatch[] => {
+    const companies = [
+      'Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Tesla', 'Spotify',
+      'Airbnb', 'Uber', 'LinkedIn', 'Twitter', 'Adobe', 'Salesforce', 'Oracle',
+      'IBM', 'Intel', 'NVIDIA', 'PayPal', 'Square', 'Dropbox', 'Slack'
+    ];
+
+    const jobTitles = {
+      'Technology': ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer'],
+      'Healthcare': ['Nurse Practitioner', 'Medical Assistant', 'Healthcare Administrator', 'Physical Therapist', 'Medical Technician'],
+      'Finance': ['Financial Analyst', 'Investment Banker', 'Accountant', 'Risk Manager', 'Portfolio Manager', 'Credit Analyst'],
+      'Marketing': ['Digital Marketing Manager', 'Content Marketing Specialist', 'SEO Specialist', 'Brand Manager', 'Social Media Manager'],
+      'Sales': ['Sales Representative', 'Account Executive', 'Business Development Manager', 'Sales Manager', 'Inside Sales Rep'],
+      'default': ['Project Manager', 'Operations Manager', 'Business Analyst', 'Consultant', 'Specialist']
+    };
+
+    const skillSets = {
+      'Technology': ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes', 'SQL'],
+      'Healthcare': ['Patient Care', 'Medical Records', 'HIPAA Compliance', 'Clinical Skills', 'Medical Terminology'],
+      'Finance': ['Financial Analysis', 'Excel', 'Bloomberg', 'Risk Assessment', 'Portfolio Management', 'Accounting'],
+      'Marketing': ['Google Analytics', 'SEO', 'Content Creation', 'Social Media', 'Email Marketing', 'PPC'],
+      'Sales': ['CRM', 'Lead Generation', 'Negotiation', 'Cold Calling', 'Pipeline Management', 'Customer Relations'],
+      'default': ['Communication', 'Leadership', 'Problem Solving', 'Project Management', 'Analysis', 'Strategy']
+    };
+
+    const locations = location ? [location] : ['New York, NY', 'San Francisco, CA', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Chicago, IL'];
+    const selectedTitles = jobTitles[industry as keyof typeof jobTitles] || jobTitles.default;
+    const selectedSkills = skillSets[industry as keyof typeof skillSets] || skillSets.default;
+
+    return Array.from({ length: 12 }, (_, index) => {
+      const company = companies[Math.floor(Math.random() * companies.length)];
+      const title = selectedTitles[Math.floor(Math.random() * selectedTitles.length)];
+      const jobLocation = locations[Math.floor(Math.random() * locations.length)];
+      const jobSkills = selectedSkills.slice(0, 4 + Math.floor(Math.random() * 3));
+      
+      // Calculate match percentage based on skill overlap
+      const userSkillsArray = skills.toLowerCase().split(',').map(s => s.trim());
+      const matchingSkills = jobSkills.filter(skill => 
+        userSkillsArray.some(userSkill => 
+          skill.toLowerCase().includes(userSkill) || userSkill.includes(skill.toLowerCase())
+        )
+      );
+      const matchPercentage = Math.min(85, Math.max(30, (matchingSkills.length / jobSkills.length) * 100 + Math.random() * 20));
+
+      return {
+        id: `job-${index}`,
+        title,
+        company,
+        location: jobLocation,
+        salary: `$${60 + Math.floor(Math.random() * 100)}k - $${100 + Math.floor(Math.random() * 150)}k`,
+        type: Math.random() > 0.3 ? 'Full-time' : Math.random() > 0.5 ? 'Contract' : 'Part-time',
+        experience: `${1 + Math.floor(Math.random() * 8)}+ years`,
+        skills: jobSkills,
+        description: `We are seeking a talented ${title} to join our ${industry.toLowerCase()} team. The ideal candidate will have experience with ${jobSkills.slice(0, 3).join(', ')} and a passion for innovation. This role offers excellent growth opportunities and the chance to work on cutting-edge projects.`,
+        matchPercentage: Math.round(matchPercentage),
+        postedDays: Math.floor(Math.random() * 30) + 1,
+        applicants: Math.floor(Math.random() * 200) + 50,
+        saved: false
+      };
+    }).sort((a, b) => b.matchPercentage - a.matchPercentage);
+  };
 
   const analyzeJobs = async () => {
+    if (!userSkills.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your skills to analyze job matches.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     
-    // Simulate job analysis
     setTimeout(() => {
-      const mockMatches: CompanyMatch[] = [
-        {
-          name: 'Google',
-          logo: '🟦',
-          matchScore: 92,
-          salaryRange: '$120k - $180k',
-          location: 'Mountain View, CA',
-          jobTitle: 'Senior Software Engineer',
-          requirements: ['JavaScript', 'React', 'Node.js', 'Python'],
-          benefits: ['Health Insurance', 'Stock Options', '401k', 'Remote Work'],
-          matchReasons: ['Strong React experience', 'Previous startup experience', 'Open source contributions'],
-          growthPotential: 95
-        },
-        {
-          name: 'Microsoft',
-          logo: '🟨',
-          matchScore: 88,
-          salaryRange: '$110k - $170k',
-          location: 'Seattle, WA',
-          jobTitle: 'Full Stack Developer',
-          requirements: ['TypeScript', 'Azure', 'C#', 'React'],
-          benefits: ['Health Insurance', 'Stock Purchase Plan', 'Learning Budget'],
-          matchReasons: ['TypeScript expertise', 'Cloud experience', 'Team leadership skills'],
-          growthPotential: 90
-        },
-        {
-          name: 'Meta',
-          logo: '🔵',
-          matchScore: 85,
-          salaryRange: '$125k - $190k',
-          location: 'Menlo Park, CA',
-          jobTitle: 'Frontend Engineer',
-          requirements: ['React', 'GraphQL', 'JavaScript', 'Mobile Development'],
-          benefits: ['Health Insurance', 'RSUs', 'Wellness Programs', 'Free Meals'],
-          matchReasons: ['React expertise', 'Mobile app development', 'UI/UX skills'],
-          growthPotential: 88
-        },
-        {
-          name: 'Apple',
-          logo: '🍎',
-          matchScore: 82,
-          salaryRange: '$115k - $175k',
-          location: 'Cupertino, CA',
-          jobTitle: 'iOS Developer',
-          requirements: ['Swift', 'iOS', 'Objective-C', 'UI/UX'],
-          benefits: ['Health Insurance', 'Stock Purchase Plan', 'Employee Discounts'],
-          matchReasons: ['Mobile development experience', 'Design skills', 'Attention to detail'],
-          growthPotential: 85
-        },
-        {
-          name: 'Amazon',
-          logo: '📦',
-          matchScore: 78,
-          salaryRange: '$105k - $160k',
-          location: 'Seattle, WA',
-          jobTitle: 'Software Development Engineer',
-          requirements: ['Java', 'AWS', 'Python', 'Distributed Systems'],
-          benefits: ['Health Insurance', 'Stock Options', '401k'],
-          matchReasons: ['Backend development', 'Scalable systems', 'Problem solving'],
-          growthPotential: 82
-        }
-      ];
-
-      setCompanyMatches(mockMatches);
+      const matches = generateJobMatches(userSkills, selectedIndustry, location);
+      setJobMatches(matches);
       setIsAnalyzing(false);
       
       toast({
         title: "Analysis Complete!",
-        description: `Found ${mockMatches.length} potential job matches at top companies.`,
+        description: `Found ${matches.length} job matches based on your profile.`,
       });
-    }, 2500);
+    }, 2000);
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50';
-    if (score >= 80) return 'text-blue-600 bg-blue-50';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  const saveJob = (jobId: string) => {
+    setJobMatches(prev => prev.map(job => 
+      job.id === jobId ? { ...job, saved: !job.saved } : job
+    ));
+    
+    const job = jobMatches.find(j => j.id === jobId);
+    toast({
+      title: job?.saved ? "Job Unsaved" : "Job Saved!",
+      description: job?.saved ? "Job removed from saved list" : "Job added to your saved list",
+    });
+  };
+
+  const viewJobDetails = (job: JobMatch) => {
+    setSelectedJob(job);
+    setShowJobDetails(true);
+  };
+
+  const getMatchColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600 bg-green-100';
+    if (percentage >= 60) return 'text-yellow-600 bg-yellow-100';
+    return 'text-red-600 bg-red-100';
   };
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center space-x-2 text-gray-900">
             <Briefcase className="w-5 h-5" />
             <span>Job Match Analyzer</span>
           </CardTitle>
-          <CardDescription>
-            Analyze your profile against top companies and get percentage match scores with detailed insights.
+          <CardDescription className="text-gray-600">
+            Find jobs that match your skills and get compatibility scores with top companies.
           </CardDescription>
         </CardHeader>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Input Section */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Your Profile</CardTitle>
-              <CardDescription>
-                Tell us about your skills and experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={userProfile}
-                onChange={(e) => setUserProfile(e.target.value)}
-                placeholder="Describe your skills, experience, and background..."
-                className="min-h-32"
+        <Card className="bg-white border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-gray-900">Your Profile</CardTitle>
+            <CardDescription className="text-gray-600">
+              Tell us about your skills and preferences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="skills" className="text-gray-900">Your Skills</Label>
+              <Input
+                id="skills"
+                value={userSkills}
+                onChange={(e) => setUserSkills(e.target.value)}
+                placeholder="e.g., JavaScript, React, Python, Project Management"
+                className="text-gray-900"
               />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Preferences</CardTitle>
-              <CardDescription>
-                Help us find the right matches
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Input
-                  placeholder="Preferred location"
-                  value={preferences.location}
-                  onChange={(e) => setPreferences({...preferences, location: e.target.value})}
-                />
-              </div>
-              <div>
-                <Input
-                  placeholder="Minimum salary"
-                  value={preferences.salaryMin}
-                  onChange={(e) => setPreferences({...preferences, salaryMin: e.target.value})}
-                />
-              </div>
-              <div>
-                <Input
-                  placeholder="Job type (e.g., Full-time)"
-                  value={preferences.jobType}
-                  onChange={(e) => setPreferences({...preferences, jobType: e.target.value})}
-                />
-              </div>
-              <div>
-                <Input
-                  placeholder="Industry preference"
-                  value={preferences.industry}
-                  onChange={(e) => setPreferences({...preferences, industry: e.target.value})}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button
-            onClick={analyzeJobs}
-            disabled={isAnalyzing || !userProfile.trim()}
-            className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
-          >
-            {isAnalyzing ? (
-              <>
-                <TrendingUp className="w-4 h-4 mr-2 animate-spin" />
-                Analyzing Jobs...
-              </>
-            ) : (
-              <>
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Analyze Job Matches
-              </>
-            )}
-          </Button>
-        </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="industry" className="text-gray-900">Preferred Industry</Label>
+              <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                <SelectTrigger className="text-gray-900">
+                  <SelectValue placeholder="Select an industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="location" className="text-gray-900">Preferred Location (Optional)</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., New York, NY"
+                className="text-gray-900"
+              />
+            </div>
+            
+            <Button
+              onClick={analyzeJobs}
+              disabled={isAnalyzing}
+              className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Briefcase className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing Jobs...
+                </>
+              ) : (
+                <>
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  Find Job Matches
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Results Section */}
-        <div className="lg:col-span-2">
-          {companyMatches.length > 0 ? (
-            <div className="space-y-4">
-              {companyMatches.map((match, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-2xl">{match.logo}</div>
-                        <div>
-                          <CardTitle className="text-lg">{match.name}</CardTitle>
-                          <CardDescription>{match.jobTitle}</CardDescription>
-                        </div>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full font-bold text-lg ${getScoreColor(match.matchScore)}`}>
-                        {match.matchScore}%
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="w-4 h-4 text-green-600" />
-                        <span className="text-sm">{match.salaryRange}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm">{match.location}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-4 h-4 text-yellow-600" />
-                        <span className="text-sm">Growth: {match.growthPotential}%</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Match Score Breakdown</h4>
-                      <Progress value={match.matchScore} className="mb-2" />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="text-sm">
-                          <span className="text-gray-600">Skills Match:</span> {match.matchScore - 5}%
-                        </div>
-                        <div className="text-sm">
-                          <span className="text-gray-600">Experience:</span> {match.matchScore + 3}%
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Why you're a good match:</h4>
-                      <div className="space-y-1">
-                        {match.matchReasons.map((reason, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full" />
-                            <span className="text-sm text-gray-700">{reason}</span>
+        <div className="lg:col-span-2 space-y-4">
+          {jobMatches.length > 0 ? (
+            <>
+              <Card className="bg-white border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-900">Job Matches ({jobMatches.length})</CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Jobs ranked by compatibility with your profile
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              
+              {jobMatches.map((job) => (
+                <Card key={job.id} className="bg-white border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                          <div className="flex items-center space-x-1">
+                            <Building2 className="w-4 h-4" />
+                            <span>{job.company}</span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Key Requirements:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {match.requirements.map((req, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {req}
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{job.location}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <DollarSign className="w-4 h-4" />
+                            <span>{job.salary}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                          <div className="flex items-center space-x-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{job.postedDays} days ago</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Users className="w-4 h-4" />
+                            <span>{job.applicants} applicants</span>
+                          </div>
+                          <Badge variant="outline">{job.type}</Badge>
+                          <Badge variant="outline">{job.experience}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-3">{job.description}</p>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {job.skills.map((skill) => (
+                            <Badge key={skill} variant="secondary" className="text-xs">
+                              {skill}
                             </Badge>
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium mb-2">Benefits:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {match.benefits.map((benefit, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {benefit}
-                            </Badge>
-                          ))}
+                      <div className="ml-4 text-center">
+                        <div className={`text-2xl font-bold px-3 py-1 rounded-lg ${getMatchColor(job.matchPercentage)}`}>
+                          {job.matchPercentage}%
                         </div>
+                        <div className="text-xs text-gray-500 mt-1">Match</div>
                       </div>
                     </div>
-
+                    
+                    <Progress value={job.matchPercentage} className="mb-4" />
+                    
                     <div className="flex space-x-2">
-                      <Button size="sm" className="flex-1">
-                        View Job Details
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => viewJobDetails(job)}
+                        className="flex items-center space-x-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View Details</span>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Save Job
+                      <Button
+                        variant={job.saved ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => saveJob(job.id)}
+                        className="flex items-center space-x-1"
+                      >
+                        <BookmarkPlus className="w-4 h-4" />
+                        <span>{job.saved ? 'Saved' : 'Save Job'}</span>
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-            </div>
+            </>
           ) : (
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="text-center py-12">
-                <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No job analysis yet</p>
-                <p className="text-sm text-gray-500">Add your profile information to see company matches</p>
+                <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No job matches yet</p>
+                <p className="text-sm text-gray-500">Fill in your skills and preferences to find matching jobs</p>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+
+      {/* Job Details Modal */}
+      {showJobDetails && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl text-gray-900">{selectedJob.title}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowJobDetails(false)}
+                >
+                  ×
+                </Button>
+              </div>
+              <CardDescription>
+                {selectedJob.company} • {selectedJob.location}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-900">Salary</h4>
+                  <p className="text-gray-700">{selectedJob.salary}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Experience</h4>
+                  <p className="text-gray-700">{selectedJob.experience}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Job Type</h4>
+                  <p className="text-gray-700">{selectedJob.type}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Match Score</h4>
+                  <p className={`font-bold ${getMatchColor(selectedJob.matchPercentage).split(' ')[0]}`}>
+                    {selectedJob.matchPercentage}%
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Required Skills</h4>
+                <div className="flex flex-wrap gap-1">
+                  {selectedJob.skills.map((skill) => (
+                    <Badge key={skill} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Job Description</h4>
+                <p className="text-gray-700">{selectedJob.description}</p>
+              </div>
+              
+              <div className="flex space-x-2 pt-4">
+                <Button className="flex-1">Apply Now</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => saveJob(selectedJob.id)}
+                >
+                  {selectedJob.saved ? 'Saved' : 'Save Job'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

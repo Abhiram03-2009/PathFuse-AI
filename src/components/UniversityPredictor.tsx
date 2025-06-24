@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +32,7 @@ interface UniversityMatch {
 
 const UniversityPredictor = () => {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [studentStats, setStudentStats] = useState<StudentStats>({
     gpaUnweighted: 0,
     gpaWeighted: 0,
@@ -48,20 +48,58 @@ const UniversityPredictor = () => {
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [results, setResults] = useState<UniversityMatch[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const topUniversities = [
+    // Ivy League
     { name: 'Harvard University', icon: '🏛️', admissionRate: 3, avgGpa: 4.0, avgSat: 1520 },
-    { name: 'Stanford University', icon: '🌲', admissionRate: 4, avgGpa: 3.96, avgSat: 1510 },
-    { name: 'MIT', icon: '🔬', admissionRate: 7, avgGpa: 4.0, avgSat: 1540 },
     { name: 'Yale University', icon: '🎓', admissionRate: 6, avgGpa: 4.0, avgSat: 1515 },
     { name: 'Princeton University', icon: '🐅', admissionRate: 6, avgGpa: 3.95, avgSat: 1510 },
     { name: 'Columbia University', icon: '🗽', admissionRate: 6, avgGpa: 4.0, avgSat: 1505 },
+    { name: 'University of Pennsylvania', icon: '🔔', admissionRate: 8, avgGpa: 3.94, avgSat: 1500 },
+    { name: 'Dartmouth College', icon: '🌲', admissionRate: 9, avgGpa: 3.93, avgSat: 1490 },
+    { name: 'Brown University', icon: '🐻', admissionRate: 9, avgGpa: 3.92, avgSat: 1485 },
+    { name: 'Cornell University', icon: '🌽', admissionRate: 11, avgGpa: 3.91, avgSat: 1480 },
+    
+    // Top Private Universities
+    { name: 'Stanford University', icon: '🌲', admissionRate: 4, avgGpa: 3.96, avgSat: 1510 },
+    { name: 'MIT', icon: '🔬', admissionRate: 7, avgGpa: 4.0, avgSat: 1540 },
     { name: 'University of Chicago', icon: '🏛️', admissionRate: 7, avgGpa: 4.0, avgSat: 1520 },
     { name: 'Northwestern University', icon: '💜', admissionRate: 9, avgGpa: 4.0, avgSat: 1490 },
+    { name: 'Duke University', icon: '👑', admissionRate: 10, avgGpa: 3.94, avgSat: 1485 },
+    { name: 'Johns Hopkins University', icon: '🏥', admissionRate: 12, avgGpa: 3.93, avgSat: 1480 },
+    { name: 'Vanderbilt University', icon: '⭐', admissionRate: 12, avgGpa: 3.89, avgSat: 1470 },
+    { name: 'Rice University', icon: '🌾', admissionRate: 11, avgGpa: 3.96, avgSat: 1500 },
+    { name: 'Washington University in St. Louis', icon: '🦅', admissionRate: 16, avgGpa: 3.92, avgSat: 1480 },
+    { name: 'Emory University', icon: '🏛️', admissionRate: 19, avgGpa: 3.78, avgSat: 1450 },
+    { name: 'Carnegie Mellon University', icon: '🤖', admissionRate: 17, avgGpa: 3.88, avgSat: 1470 },
+    { name: 'Notre Dame', icon: '⛪', admissionRate: 19, avgGpa: 3.90, avgSat: 1465 },
+    
+    // Top Public Universities
     { name: 'UC Berkeley', icon: '🐻', admissionRate: 17, avgGpa: 3.89, avgSat: 1430 },
     { name: 'UCLA', icon: '🌴', admissionRate: 14, avgGpa: 3.90, avgSat: 1435 },
     { name: 'University of Michigan', icon: '〽️', admissionRate: 23, avgGpa: 3.85, avgSat: 1420 },
-    { name: 'NYU', icon: '🏙️', admissionRate: 21, avgGpa: 3.69, avgSat: 1350 }
+    { name: 'University of Virginia', icon: '🏛️', admissionRate: 30, avgGpa: 3.87, avgSat: 1410 },
+    { name: 'University of North Carolina', icon: '🌟', admissionRate: 25, avgGpa: 3.85, avgSat: 1400 },
+    { name: 'UC San Diego', icon: '🌊', admissionRate: 38, avgGpa: 3.85, avgSat: 1370 },
+    { name: 'University of Florida', icon: '🐊', admissionRate: 37, avgGpa: 3.85, avgSat: 1360 },
+    { name: 'Georgia Tech', icon: '🐝', admissionRate: 23, avgGpa: 3.89, avgSat: 1465 },
+    { name: 'University of Texas at Austin', icon: '🤘', admissionRate: 32, avgGpa: 3.83, avgSat: 1350 },
+    { name: 'University of Wisconsin', icon: '🧀', admissionRate: 60, avgGpa: 3.75, avgSat: 1320 },
+    
+    // Liberal Arts Colleges
+    { name: 'Williams College', icon: '🏔️', admissionRate: 15, avgGpa: 3.95, avgSat: 1470 },
+    { name: 'Amherst College', icon: '📚', admissionRate: 13, avgGpa: 3.94, avgSat: 1465 },
+    { name: 'Swarthmore College', icon: '🌹', admissionRate: 9, avgGpa: 3.92, avgSat: 1460 },
+    { name: 'Pomona College', icon: '🍊', admissionRate: 10, avgGpa: 3.95, avgSat: 1470 },
+    { name: 'Bowdoin College', icon: '🦌', admissionRate: 10, avgGpa: 3.90, avgSat: 1450 },
+    
+    // Other Notable Universities
+    { name: 'NYU', icon: '🏙️', admissionRate: 21, avgGpa: 3.69, avgSat: 1350 },
+    { name: 'Boston University', icon: '🦎', admissionRate: 22, avgGpa: 3.71, avgSat: 1340 },
+    { name: 'Northeastern University', icon: '🐺', admissionRate: 20, avgGpa: 3.91, avgSat: 1440 },
+    { name: 'Tulane University', icon: '🌊', admissionRate: 17, avgGpa: 3.56, avgSat: 1380 },
+    { name: 'University of Southern California', icon: '✌️', admissionRate: 16, avgGpa: 3.79, avgSat: 1430 }
   ];
 
   const calculateMatchPercentage = (university: any, stats: StudentStats): number => {
@@ -128,6 +166,17 @@ const UniversityPredictor = () => {
     );
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been uploaded successfully.`,
+      });
+    }
+  };
+
   const calculateChances = () => {
     if (selectedUniversities.length === 0) {
       toast({
@@ -173,10 +222,37 @@ const UniversityPredictor = () => {
           <CardHeader>
             <CardTitle className="text-lg text-gray-900">Your Academic Profile</CardTitle>
             <CardDescription className="text-gray-600">
-              Enter your current academic statistics
+              Enter your current academic statistics or upload your resume
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* File Upload Section */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <div className="text-center">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Upload your resume or transcript (optional)</p>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  size="sm"
+                >
+                  Choose File
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                {uploadedFile && (
+                  <p className="text-sm text-green-600 mt-2">
+                    ✓ {uploadedFile.name} uploaded
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="gpaUnweighted" className="text-gray-900">Unweighted GPA</Label>
@@ -279,7 +355,7 @@ const UniversityPredictor = () => {
         {/* University Selection */}
         <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900">Select Universities</CardTitle>
+            <CardTitle className="text-lg text-gray-900">Select Universities ({topUniversities.length} available)</CardTitle>
             <CardDescription className="text-gray-600">
               Choose universities you want to analyze your chances for
             </CardDescription>
