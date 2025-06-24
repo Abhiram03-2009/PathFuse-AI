@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +37,19 @@ const AIChatbot = () => {
   const generateAIResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
     
+    // Greeting responses
+    if (message.includes('hi') || message.includes('hello') || message.includes('hey') || message.includes('good morning') || message.includes('good afternoon') || message.includes('good evening')) {
+      return "Hello! How can I help you with your career today? I'm here to assist with resume writing, interview preparation, job search strategies, and any other career-related questions you might have!";
+    }
+    
+    if (message.includes('how are you') || message.includes('how\'s it going')) {
+      return "I'm doing great, thank you for asking! I'm excited to help you with your career goals. What would you like to work on today?";
+    }
+    
+    if (message.includes('thank you') || message.includes('thanks')) {
+      return "You're very welcome! I'm always here to help with your career questions. Feel free to ask me anything else!";
+    }
+    
     // Career advice responses
     if (message.includes('resume') || message.includes('cv')) {
       return "For an effective resume: 1) Use a clean, ATS-friendly format 2) Include relevant keywords from job descriptions 3) Quantify achievements with specific numbers 4) Keep it concise (1-2 pages) 5) Use action verbs like 'managed', 'developed', 'increased' 6) Tailor each resume to the specific job you're applying for.";
@@ -71,7 +83,11 @@ const AIChatbot = () => {
       return "Cover letter best practices: 1) Address to specific person when possible 2) Opening paragraph should grab attention 3) Show you've researched the company 4) Highlight 2-3 key achievements relevant to the role 5) Explain why you want THIS job at THIS company 6) Keep it concise (3-4 paragraphs) 7) Professional closing with call to action 8) Proofread carefully!";
     }
     
-    // Default intelligent response
+    // Default intelligent response with better greeting handling
+    if (message.length < 10 && !message.includes('resume') && !message.includes('job') && !message.includes('career')) {
+      return "Hello! I'm here to help you with your career development. You can ask me about resume writing, interview tips, job search strategies, salary negotiation, career changes, or any other professional development topics. What would you like to know?";
+    }
+    
     return `That's a great question about ${message.includes('job') ? 'job searching' : 'career development'}! Based on current industry trends, I'd recommend focusing on continuous learning and networking. Consider: 1) Updating your skills regularly 2) Building meaningful professional relationships 3) Staying current with industry news 4) Seeking feedback and mentorship 5) Setting clear career goals. What specific aspect would you like me to elaborate on?`;
   };
 
@@ -139,7 +155,7 @@ const AIChatbot = () => {
                 key={index}
                 variant="outline"
                 size="sm"
-                className="w-full text-left justify-start text-wrap h-auto p-3 text-gray-800 border-gray-300 hover:bg-gray-50"
+                className="w-full text-left justify-start text-wrap h-auto p-3 text-white bg-gray-800 border-gray-600 hover:bg-gray-700 hover:text-white"
                 onClick={() => handleQuestionClick(question)}
               >
                 {question}
