@@ -35,9 +35,49 @@ const AIChatbot = () => {
     "What skills are in demand right now?"
   ];
 
+  const generateAIResponse = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    
+    // Career advice responses
+    if (message.includes('resume') || message.includes('cv')) {
+      return "For an effective resume: 1) Use a clean, ATS-friendly format 2) Include relevant keywords from job descriptions 3) Quantify achievements with specific numbers 4) Keep it concise (1-2 pages) 5) Use action verbs like 'managed', 'developed', 'increased' 6) Tailor each resume to the specific job you're applying for.";
+    }
+    
+    if (message.includes('interview')) {
+      return "Common interview questions and how to answer them: 1) 'Tell me about yourself' - Give a 2-minute professional summary 2) 'Why do you want this job?' - Show enthusiasm and research 3) 'What are your strengths?' - Pick 2-3 relevant strengths with examples 4) 'Where do you see yourself in 5 years?' - Show ambition aligned with the role 5) Always prepare questions to ask them back!";
+    }
+    
+    if (message.includes('salary') || message.includes('negotiate')) {
+      return "Salary negotiation tips: 1) Research market rates on sites like Glassdoor, PayScale 2) Know your worth - list your achievements and skills 3) Consider the entire package (benefits, PTO, remote work) 4) Practice your pitch beforehand 5) Be confident but respectful 6) Give a range rather than exact number 7) Don't accept immediately - ask for time to consider.";
+    }
+    
+    if (message.includes('skills') || message.includes('demand')) {
+      return "High-demand skills in 2024: Technical - Python, JavaScript, Cloud Computing (AWS/Azure), Data Analysis, Cybersecurity, AI/Machine Learning. Soft Skills - Leadership, Communication, Problem-solving, Adaptability, Emotional Intelligence. Industry-specific - Digital Marketing, UX/UI Design, Project Management, Sales, Healthcare. Focus on combining technical and soft skills!";
+    }
+    
+    if (message.includes('remote') || message.includes('work from home')) {
+      return "Remote work tips: 1) Create a dedicated workspace 2) Establish clear boundaries between work and personal time 3) Over-communicate with your team 4) Use video calls for important discussions 5) Take regular breaks and stay active 6) Invest in good lighting and audio for video calls 7) Build relationships with colleagues through virtual coffee chats.";
+    }
+    
+    if (message.includes('career change') || message.includes('switch')) {
+      return "Career change strategy: 1) Identify transferable skills from your current role 2) Network in your target industry 3) Consider informational interviews 4) Get relevant certifications or training 5) Start with side projects or volunteer work 6) Update your LinkedIn to reflect your new direction 7) Be patient - career transitions take time but are very achievable!";
+    }
+    
+    if (message.includes('linkedin')) {
+      return "LinkedIn optimization: 1) Professional headshot photo 2) Compelling headline beyond just job title 3) Summary that tells your story 4) Complete all sections (experience, education, skills) 5) Get recommendations from colleagues 6) Post regularly about industry topics 7) Engage with others' content 8) Join relevant groups 9) Use keywords for discoverability.";
+    }
+    
+    if (message.includes('cover letter')) {
+      return "Cover letter best practices: 1) Address to specific person when possible 2) Opening paragraph should grab attention 3) Show you've researched the company 4) Highlight 2-3 key achievements relevant to the role 5) Explain why you want THIS job at THIS company 6) Keep it concise (3-4 paragraphs) 7) Professional closing with call to action 8) Proofread carefully!";
+    }
+    
+    // Default intelligent response
+    return `That's a great question about ${message.includes('job') ? 'job searching' : 'career development'}! Based on current industry trends, I'd recommend focusing on continuous learning and networking. Consider: 1) Updating your skills regularly 2) Building meaningful professional relationships 3) Staying current with industry news 4) Seeking feedback and mentorship 5) Setting clear career goals. What specific aspect would you like me to elaborate on?`;
+  };
+
   const sendMessage = async (message?: string) => {
-    const messageText = message || inputMessage;
-    if (!messageText.trim()) return;
+    const messageText = message || inputMessage.trim();
+    if (!messageText) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -50,28 +90,20 @@ const AIChatbot = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate AI response
+    // Generate intelligent AI response
     setTimeout(() => {
-      const responses = [
-        "Great question! Based on current industry trends, I'd recommend focusing on developing both technical and soft skills. Technical skills like data analysis, digital marketing, and programming are highly sought after, while soft skills like communication, adaptability, and emotional intelligence are equally important.",
-        "For resume writing, I suggest using the STAR method (Situation, Task, Action, Result) to describe your achievements. Quantify your accomplishments whenever possible - for example, 'Increased sales by 25%' is much stronger than 'Improved sales performance.'",
-        "Interview preparation is crucial! Research the company thoroughly, practice common questions, and prepare specific examples that demonstrate your skills. Remember, interviews are conversations - prepare thoughtful questions about the role and company culture.",
-        "Salary negotiation can be intimidating, but it's an important skill. Research market rates for your role, consider the entire compensation package (not just salary), and practice your negotiation conversation beforehand. Remember, the worst they can say is no!",
-        "Career transitions require careful planning. Start by identifying transferable skills from your current role, network within your target industry, and consider gaining relevant certifications or experience through volunteer work or side projects."
-      ];
-
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      const aiResponse = generateAIResponse(messageText);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: randomResponse,
+        content: aiResponse,
         sender: 'bot',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1500);
+    }, 1000);
   };
 
   const handleQuestionClick = (question: string) => {
@@ -80,13 +112,13 @@ const AIChatbot = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center space-x-2 text-gray-900">
             <MessageCircle className="w-5 h-5" />
             <span>AI Career Coach</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600">
             Get personalized career advice, interview tips, and job search strategies from your AI assistant.
           </CardDescription>
         </CardHeader>
@@ -94,10 +126,10 @@ const AIChatbot = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Quick Questions */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-lg">Quick Questions</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg text-gray-900">Quick Questions</CardTitle>
+            <CardDescription className="text-gray-600">
               Click on a question to get started
             </CardDescription>
           </CardHeader>
@@ -107,7 +139,7 @@ const AIChatbot = () => {
                 key={index}
                 variant="outline"
                 size="sm"
-                className="w-full text-left justify-start text-wrap h-auto p-3"
+                className="w-full text-left justify-start text-wrap h-auto p-3 text-gray-800 border-gray-300 hover:bg-gray-50"
                 onClick={() => handleQuestionClick(question)}
               >
                 {question}
@@ -117,9 +149,9 @@ const AIChatbot = () => {
         </Card>
 
         {/* Chat Interface */}
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center space-x-2">
+            <CardTitle className="text-lg flex items-center space-x-2 text-gray-900">
               <Bot className="w-5 h-5 text-blue-600" />
               <span>Chat with AI Coach</span>
             </CardTitle>
@@ -144,11 +176,13 @@ const AIChatbot = () => {
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         message.sender === 'user'
                           ? 'bg-blue-600 text-white'
-                          : 'bg-white border'
+                          : 'bg-white border border-gray-200 text-gray-900'
                       }`}
                     >
                       <p className="text-sm">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
+                      <p className={`text-xs mt-1 ${
+                        message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                      }`}>
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -165,7 +199,7 @@ const AIChatbot = () => {
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                       <Bot className="w-4 h-4 text-white" />
                     </div>
-                    <div className="bg-white border px-4 py-2 rounded-lg">
+                    <div className="bg-white border border-gray-200 px-4 py-2 rounded-lg">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -184,6 +218,7 @@ const AIChatbot = () => {
                   placeholder="Ask me anything about your career..."
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   disabled={isTyping}
+                  className="text-gray-900 border-gray-300"
                 />
                 <Button 
                   onClick={() => sendMessage()}

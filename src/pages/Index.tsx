@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, MessageCircle, Search, BarChart3, Globe, Briefcase, Sparkles } from 'lucide-react';
+import { FileText, MessageCircle, Search, BarChart3, Globe, Briefcase, Sparkles, Linkedin } from 'lucide-react';
 import ResumeGenerator from '@/components/ResumeGenerator';
 import CoverLetterGenerator from '@/components/CoverLetterGenerator';
 import AIChatbot from '@/components/AIChatbot';
 import KeywordMatcher from '@/components/KeywordMatcher';
 import JobAnalyzer from '@/components/JobAnalyzer';
 import MultilingualTranslator from '@/components/MultilingualTranslator';
+import LinkedInIntegration from '@/components/LinkedInIntegration';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -83,7 +84,7 @@ const Index = () => {
 
       <div className="container mx-auto px-6 py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8 bg-gray-900/60 border border-cyan-500/30 backdrop-blur-lg">
+          <TabsList className="grid w-full grid-cols-8 mb-8 bg-gray-900/60 border border-cyan-500/30 backdrop-blur-lg">
             <TabsTrigger 
               value="dashboard" 
               className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
@@ -132,6 +133,13 @@ const Index = () => {
             >
               <Globe className="w-4 h-4" />
               <span className="hidden sm:inline">Translate</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="linkedin" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
+            >
+              <Linkedin className="w-4 h-4" />
+              <span className="hidden sm:inline">LinkedIn</span>
             </TabsTrigger>
           </TabsList>
 
@@ -292,6 +300,30 @@ const Index = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card 
+                className="bg-gray-900/60 border-blue-500/30 hover:border-blue-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25" 
+                onClick={() => setActiveTab('linkedin')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-3 text-blue-300 group-hover:text-blue-200 transition-colors">
+                    <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
+                      <Linkedin className="w-5 h-5" />
+                    </div>
+                    <span>LinkedIn Integration</span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
+                    Analyze and optimize your LinkedIn profile
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/20">
+                    <p className="text-sm text-blue-200/80">
+                      AI-powered LinkedIn profile analysis and resume generation
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -317,6 +349,10 @@ const Index = () => {
 
           <TabsContent value="translator">
             <MultilingualTranslator />
+          </TabsContent>
+
+          <TabsContent value="linkedin">
+            <LinkedInIntegration />
           </TabsContent>
         </Tabs>
       </div>
