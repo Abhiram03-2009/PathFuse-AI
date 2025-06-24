@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ const MultilingualTranslator = () => {
   ];
 
   // Enhanced translation dictionary for better word-by-word translation
-  const translationDictionary: { [key: string]: { [key: string]: string } } = {
+  const translationDictionary: { [key: string]: { [key: string]: { [key: string]: string } } } = {
     en: {
       hello: { es: 'hola', fr: 'bonjour', de: 'hallo', it: 'ciao', pt: 'olá', ru: 'привет', zh: '你好', ja: 'こんにちは', ko: '안녕하세요', ar: 'مرحبا', hi: 'नमस्ते', tr: 'merhaba' },
       world: { es: 'mundo', fr: 'monde', de: 'welt', it: 'mondo', pt: 'mundo', ru: 'мир', zh: '世界', ja: '世界', ko: '세계', ar: 'عالم', hi: 'दुनिया', tr: 'dünya' },
