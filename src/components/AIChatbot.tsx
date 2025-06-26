@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Send, Bot, User, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, Bot, User, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -54,11 +54,22 @@ const AIChatbot = () => {
     setIsTyping(true);
 
     try {
+      console.log('Sending message to AI:', messageText);
+      
       const { data, error } = await supabase.functions.invoke('chat-gpt', {
         body: { message: messageText }
       });
 
-      if (error) throw error;
+      console.log('AI Response received:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to get AI response');
+      }
+
+      if (!data || !data.response) {
+        throw new Error('No response received from AI');
+      }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -68,11 +79,17 @@ const AIChatbot = () => {
       };
 
       setMessages(prev => [...prev, botMessage]);
+      
+      toast({
+        title: "Response received",
+        description: "AI Career Coach has responded to your question.",
+      });
+      
     } catch (error) {
       console.error('Error getting AI response:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm having trouble connecting right now. Please check that the OpenAI API key is configured and try again.",
+        content: "I apologize, but I'm having trouble connecting to the AI service right now. This could be due to API configuration issues. Please make sure the OpenAI API key is properly set and try again in a moment.",
         sender: 'bot',
         timestamp: new Date()
       };
@@ -80,7 +97,7 @@ const AIChatbot = () => {
       
       toast({
         title: "Connection Error",
-        description: "Unable to get AI response. Please try again.",
+        description: "Unable to get AI response. Please check your connection and try again.",
         variant: "destructive"
       });
     } finally {
@@ -123,6 +140,7 @@ const AIChatbot = () => {
                 size="sm"
                 className="w-full text-left justify-start text-wrap h-auto p-3 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                 onClick={() => handleQuestionClick(question)}
+                disabled={isTyping}
               >
                 {question}
               </Button>
@@ -179,14 +197,10 @@ const AIChatbot = () => {
                 {isTyping && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-white" />
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
                     </div>
                     <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2 rounded-lg">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">AI is thinking...</p>
                     </div>
                   </div>
                 )}
@@ -205,9 +219,13 @@ const AIChatbot = () => {
                 <Button 
                   onClick={() => sendMessage()}
                   disabled={isTyping || !inputMessage.trim()}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" />
+                  {isTyping ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>
