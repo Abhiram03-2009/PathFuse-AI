@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, MessageCircle, Search, BarChart3, Globe, Briefcase, Sparkles, Linkedin, GraduationCap } from 'lucide-react';
+import { FileText, MessageCircle, Search, BarChart3, Globe, Briefcase, Sparkles, Linkedin, GraduationCap, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import ResumeGenerator from '@/components/ResumeGenerator';
 import CoverLetterGenerator from '@/components/CoverLetterGenerator';
 import AIChatbot from '@/components/AIChatbot';
@@ -14,11 +16,83 @@ import UniversityPredictor from '@/components/UniversityPredictor';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const { user, profile, signOut, loading } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogoClick = () => {
     setActiveTab('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-cyan-300 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden flex items-center justify-center">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+          <div className="absolute -bottom-40 left-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+          <div className="flex items-center justify-center space-x-4 mb-8">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500"></div>
+              <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-3 border border-cyan-400/30">
+                <img 
+                  src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
+                  alt="Resumate AI Logo" 
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Resumate AI
+              </h1>
+              <p className="text-xl text-cyan-300/80">Your AI Career Assistant</p>
+            </div>
+          </div>
+          
+          <p className="text-xl text-cyan-200/80 mb-8 leading-relaxed">
+            Transform your career with AI-powered tools for resumes, cover letters, job matching, and more.
+          </p>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 mr-4"
+            >
+              Get Started Free
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/auth')}
+              className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200 hover:border-cyan-300 transition-all duration-300 px-8 py-3"
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
@@ -69,12 +143,18 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 text-cyan-300">
+                <User className="w-5 h-5" />
+                <span className="text-sm">{profile?.full_name?.split(' ')[0] || 'User'}</span>
+              </div>
               <Button 
                 variant="outline" 
                 size="sm"
-                className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200 hover:border-cyan-300 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/25"
+                onClick={handleSignOut}
+                className="border-red-400/50 text-red-300 hover:bg-red-400/10 hover:text-red-200 hover:border-red-300 transition-all duration-300 hover:shadow-lg hover:shadow-red-400/25"
               >
-                Sign In
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
               </Button>
             </div>
           </div>
@@ -154,7 +234,7 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
               <div className="relative z-10">
                 <h2 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-6 animate-fade-in">
-                  Welcome to Resumate AI
+                  Welcome back, {profile?.full_name?.split(' ')[0] || 'User'}!
                 </h2>
                 <p className="text-xl text-cyan-200/80 mb-8 max-w-3xl mx-auto leading-relaxed">
                   Your all-in-one AI-powered career toolkit. Generate resumes, cover letters, analyze job matches, and more with cutting-edge AI technology.
