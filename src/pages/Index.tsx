@@ -1,473 +1,272 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, MessageCircle, Search, BarChart3, Globe, Briefcase, Sparkles, Linkedin, GraduationCap, User, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { 
+  FileText, 
+  MessageSquare, 
+  Search, 
+  GraduationCap, 
+  Globe, 
+  Briefcase,
+  BookOpen,
+  User,
+  PlusCircle,
+  Target,
+  Zap,
+  Shield,
+  Clock
+} from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+
+// Component imports
 import ResumeGenerator from '@/components/ResumeGenerator';
 import CoverLetterGenerator from '@/components/CoverLetterGenerator';
 import AIChatbot from '@/components/AIChatbot';
-import KeywordMatcher from '@/components/KeywordMatcher';
 import JobAnalyzer from '@/components/JobAnalyzer';
+import KeywordMatcher from '@/components/KeywordMatcher';
+import UniversityPredictor from '@/components/UniversityPredictor';
 import MultilingualTranslator from '@/components/MultilingualTranslator';
 import LinkedInIntegration from '@/components/LinkedInIntegration';
-import UniversityPredictor from '@/components/UniversityPredictor';
+import SavedItems from '@/components/SavedItems';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const { user, profile, signOut, loading } = useAuth();
-  const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const handleLogoClick = () => {
-    setActiveTab('dashboard');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const features = [
+    {
+      id: 'resume',
+      name: 'Resume Builder',
+      description: 'Create professional resumes with AI-powered suggestions',
+      icon: FileText,
+      color: 'bg-blue-600',
+      component: ResumeGenerator
+    },
+    {
+      id: 'cover-letter',
+      name: 'Cover Letter Generator',
+      description: 'Generate personalized cover letters for any job',
+      icon: PlusCircle,
+      color: 'bg-green-600',
+      component: CoverLetterGenerator
+    },
+    {
+      id: 'ai-chat',
+      name: 'AI Career Coach',
+      description: 'Get personalized career advice from GPT-4',
+      icon: MessageSquare,
+      color: 'bg-purple-600',
+      component: AIChatbot
+    },
+    {
+      id: 'job-analyzer',
+      name: 'Job Match Analyzer',
+      description: 'Find jobs that match your skills and preferences',
+      icon: Search,
+      color: 'bg-orange-600',
+      component: JobAnalyzer
+    },
+    {
+      id: 'keyword-matcher',
+      name: 'Keyword Matcher',
+      description: 'Optimize your resume for ATS systems',
+      icon: Target,
+      color: 'bg-red-600',
+      component: KeywordMatcher
+    },
+    {
+      id: 'university-predictor',
+      name: 'University Predictor',
+      description: 'Predict your chances at top universities',
+      icon: GraduationCap,
+      color: 'bg-indigo-600',
+      component: UniversityPredictor
+    },
+    {
+      id: 'translator',
+      name: 'Multilingual Translator',
+      description: 'Translate documents and content across 50+ languages',
+      icon: Globe,
+      color: 'bg-teal-600',
+      component: MultilingualTranslator
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn Optimizer',
+      description: 'Analyze and optimize your LinkedIn profile',
+      icon: User,
+      color: 'bg-blue-700',
+      component: LinkedInIntegration
+    },
+    {
+      id: 'saved-items',
+      name: 'Saved Items',
+      description: 'View and manage your saved colleges and jobs',
+      icon: BookOpen,
+      color: 'bg-gray-600',
+      component: SavedItems
+    }
+  ];
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
+  const stats = [
+    { label: 'AI Tools', value: '9+', icon: Zap },
+    { label: 'Universities', value: '50+', icon: GraduationCap },
+    { label: 'Languages', value: '50+', icon: Globe },
+    { label: 'Job Industries', value: '25+', icon: Briefcase }
+  ];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-cyan-300 text-lg">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const benefits = [
+    {
+      icon: Target,
+      title: 'AI-Powered Accuracy',
+      description: 'Advanced algorithms analyze your profile and provide personalized recommendations'
+    },
+    {
+      icon: Shield,
+      title: 'Privacy First',
+      description: 'Your data is encrypted and secure. We never share your personal information'
+    },
+    {
+      icon: Clock,
+      title: 'Real-Time Updates',
+      description: 'Get the latest job market trends and university admission requirements'
+    },
+    {
+      icon: Zap,
+      title: 'Instant Results',
+      description: 'Generate professional documents and get insights in seconds, not hours'
+    }
+  ];
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden flex items-center justify-center">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-          <div className="absolute -bottom-40 left-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500"></div>
-              <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-3 border border-cyan-400/30">
-                <img 
-                  src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
-                  alt="Resumate AI Logo" 
-                  className="w-16 h-16 object-contain"
-                />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Resumate AI
-              </h1>
-              <p className="text-xl text-cyan-300/80">Your AI Career Assistant</p>
-            </div>
-          </div>
-          
-          <p className="text-xl text-cyan-200/80 mb-8 leading-relaxed">
-            Transform your career with AI-powered tools for resumes, cover letters, job matching, and more.
-          </p>
-          
-          <div className="space-y-4">
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 mr-4"
-            >
-              Get Started Free
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/auth')}
-              className="border-cyan-400/50 text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200 hover:border-cyan-300 transition-all duration-300 px-8 py-3"
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const ActiveComponent = features.find(f => f.id === activeTab)?.component;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-        <div className="absolute -bottom-40 left-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-cyan-400/30 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${10 + Math.random() * 20}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Header */}
-      <div className="bg-gray-900/80 backdrop-blur-xl border-b border-cyan-500/30 sticky top-0 z-20 shadow-lg shadow-cyan-500/10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 cursor-pointer" onClick={handleLogoClick}>
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500 transform group-hover:scale-110"></div>
-                <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-2 border border-cyan-400/30 group-hover:border-cyan-300/60 transition-all duration-300 transform group-hover:scale-105 group-hover:rotate-2">
-                  <img 
-                    src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
-                    alt="Resumate AI Logo" 
-                    className="w-12 h-12 object-contain transition-all duration-300 group-hover:brightness-110 group-hover:contrast-110"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-purple-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
-                  Resumate AI
-                </h1>
-                <p className="text-sm text-cyan-300/80 font-medium">Your AI Career Assistant</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 text-cyan-300">
-                <User className="w-5 h-5" />
-                <span className="text-sm">{profile?.full_name?.split(' ')[0] || 'User'}</span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSignOut}
-                className="border-red-400/50 text-red-300 hover:bg-red-400/10 hover:text-red-200 hover:border-red-300 transition-all duration-300 hover:shadow-lg hover:shadow-red-400/25"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
+            AI Career Platform
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            Empower your career journey with AI-powered tools for resumes, job matching, university predictions, and more.
+          </p>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {stats.map((stat, index) => (
+              <Card key={index} className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <CardContent className="p-4 text-center">
+                  <stat.icon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-6 py-8 relative z-10">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8 bg-gray-900/60 border border-cyan-500/30 backdrop-blur-lg">
-            <TabsTrigger 
-              value="dashboard" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="resume" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Resume</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="cover-letter" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Cover Letter</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chatbot" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">AI Chat</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="university" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <GraduationCap className="w-4 h-4" />
-              <span className="hidden sm:inline">College</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="keyword" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Keywords</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analyzer" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <Briefcase className="w-4 h-4" />
-              <span className="hidden sm:inline">Job Match</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="translator" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <Globe className="w-4 h-4" />
-              <span className="hidden sm:inline">Translate</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="linkedin" 
-              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-purple-500/20 data-[state=active]:text-cyan-300 text-gray-400 hover:text-cyan-400 transition-all duration-300"
-            >
-              <Linkedin className="w-4 h-4" />
-              <span className="hidden sm:inline">LinkedIn</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          {/* Navigation */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <TabsList className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2 h-auto bg-transparent">
+              <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white p-3 rounded-lg"
+              >
+                <div className="flex flex-col items-center space-y-1">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-xs">Overview</span>
+                </div>
+              </TabsTrigger>
+              {features.map((feature) => (
+                <TabsTrigger 
+                  key={feature.id} 
+                  value={feature.id}
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white p-3 rounded-lg"
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <feature.icon className="w-4 h-4" />
+                    <span className="text-xs">{feature.name.split(' ')[0]}</span>
+                  </div>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <TabsContent value="dashboard" className="space-y-8">
-            <div className="text-center py-12 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
-              <div className="relative z-10">
-                <h2 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-6 animate-fade-in">
-                  Welcome back, {profile?.full_name?.split(' ')[0] || 'User'}!
-                </h2>
-                <p className="text-xl text-cyan-200/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-                  Your all-in-one AI-powered career toolkit. Generate resumes, cover letters, analyze job matches, and more with cutting-edge AI technology.
-                </p>
-              </div>
-            </div>
-
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-8">
+            {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card 
-                className="bg-gray-900/60 border-cyan-500/30 hover:border-cyan-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25" 
-                onClick={() => setActiveTab('resume')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-cyan-300 group-hover:text-cyan-200 transition-colors">
-                    <div className="p-2 bg-cyan-500/20 rounded-lg group-hover:bg-cyan-500/30 transition-colors">
-                      <FileText className="w-5 h-5" />
+              {features.map((feature) => (
+                <Card 
+                  key={feature.id} 
+                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => setActiveTab(feature.id)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center space-x-3">
+                      <div className={`${feature.color} p-3 rounded-lg`}>
+                        <feature.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-gray-900 dark:text-white">
+                          {feature.name}
+                        </CardTitle>
+                        <Badge variant="secondary" className="mt-1">
+                          AI-Powered
+                        </Badge>
+                      </div>
                     </div>
-                    <span>Resume Generator</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Create professional resumes with AI assistance
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-4 rounded-lg border border-cyan-500/20">
-                    <p className="text-sm text-cyan-200/80">
-                      Generate ATS-friendly resumes tailored to specific job requirements
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-purple-500/30 hover:border-purple-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25" 
-                onClick={() => setActiveTab('cover-letter')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-purple-300 group-hover:text-purple-200 transition-colors">
-                    <div className="p-2 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-colors">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <span>Cover Letter Generator</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Craft compelling cover letters that get noticed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/20">
-                    <p className="text-sm text-purple-200/80">
-                      Personalized cover letters that highlight your strengths
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-green-500/30 hover:border-green-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-green-500/25" 
-                onClick={() => setActiveTab('chatbot')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-green-300 group-hover:text-green-200 transition-colors">
-                    <div className="p-2 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-colors">
-                      <MessageCircle className="w-5 h-5" />
-                    </div>
-                    <span>AI Career Coach</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Get personalized career advice and tips
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-4 rounded-lg border border-green-500/20">
-                    <p className="text-sm text-green-200/80">
-                      24/7 AI assistant for all your career questions
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-orange-500/30 hover:border-orange-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-orange-500/25" 
-                onClick={() => setActiveTab('keyword')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-orange-300 group-hover:text-orange-200 transition-colors">
-                    <div className="p-2 bg-orange-500/20 rounded-lg group-hover:bg-orange-500/30 transition-colors">
-                      <Search className="w-5 h-5" />
-                    </div>
-                    <span>Keyword Matcher</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Optimize your profile for job descriptions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 p-4 rounded-lg border border-orange-500/20">
-                    <p className="text-sm text-orange-200/80">
-                      Match your skills with job requirements perfectly
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-red-500/30 hover:border-red-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-red-500/25" 
-                onClick={() => setActiveTab('analyzer')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-red-300 group-hover:text-red-200 transition-colors">
-                    <div className="p-2 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 transition-colors">
-                      <Briefcase className="w-5 h-5" />
-                    </div>
-                    <span>Job Match Analyzer</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Analyze your fit for top companies
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-red-500/10 to-rose-500/10 p-4 rounded-lg border border-red-500/20">
-                    <p className="text-sm text-red-200/80">
-                      Get percentage scores for job compatibility
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-indigo-500/30 hover:border-indigo-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/25" 
-                onClick={() => setActiveTab('translator')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-indigo-300 group-hover:text-indigo-200 transition-colors">
-                    <div className="p-2 bg-indigo-500/20 rounded-lg group-hover:bg-indigo-500/30 transition-colors">
-                      <Globe className="w-5 h-5" />
-                    </div>
-                    <span>Multilingual Translator</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Translate your documents to any language
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 p-4 rounded-lg border border-indigo-500/20">
-                    <p className="text-sm text-indigo-200/80">
-                      Apply globally with translated resumes and cover letters
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-blue-500/30 hover:border-blue-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25" 
-                onClick={() => setActiveTab('linkedin')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-blue-300 group-hover:text-blue-200 transition-colors">
-                    <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
-                      <Linkedin className="w-5 h-5" />
-                    </div>
-                    <span>LinkedIn Integration</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    Analyze and optimize your LinkedIn profile
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/20">
-                    <p className="text-sm text-blue-200/80">
-                      AI-powered LinkedIn profile analysis and resume generation
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card 
-                className="bg-gray-900/60 border-yellow-500/30 hover:border-yellow-400/60 backdrop-blur-lg transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-yellow-500/25" 
-                onClick={() => setActiveTab('university')}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-3 text-yellow-300 group-hover:text-yellow-200 transition-colors">
-                    <div className="p-2 bg-yellow-500/20 rounded-lg group-hover:bg-yellow-500/30 transition-colors">
-                      <GraduationCap className="w-5 h-5" />
-                    </div>
-                    <span>College Predictor</span>
-                  </CardTitle>
-                  <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    For high school students - predict university admission chances
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 p-4 rounded-lg border border-yellow-500/20">
-                    <p className="text-sm text-yellow-200/80">
-                      Get personalized university match percentages and improvement tips
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-gray-600 dark:text-gray-300">
+                      {feature.description}
+                    </CardDescription>
+                    <Button 
+                      className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      onClick={() => setActiveTab(feature.id)}
+                    >
+                      Try Now
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+
+            {/* Benefits Section */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center text-gray-900 dark:text-white">
+                  Why Choose Our AI Platform?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {benefits.map((benefit, index) => (
+                    <div key={index} className="text-center">
+                      <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <benefit.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{benefit.title}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{benefit.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="resume">
-            <ResumeGenerator />
-          </TabsContent>
-
-          <TabsContent value="cover-letter">
-            <CoverLetterGenerator />
-          </TabsContent>
-
-          <TabsContent value="chatbot">
-            <AIChatbot />
-          </TabsContent>
-
-          <TabsContent value="university">
-            <UniversityPredictor />
-          </TabsContent>
-
-          <TabsContent value="keyword">
-            <KeywordMatcher />
-          </TabsContent>
-
-          <TabsContent value="analyzer">
-            <JobAnalyzer />
-          </TabsContent>
-
-          <TabsContent value="translator">
-            <MultilingualTranslator />
-          </TabsContent>
-
-          <TabsContent value="linkedin">
-            <LinkedInIntegration />
-          </TabsContent>
+          {/* Feature Tabs */}
+          {features.map((feature) => (
+            <TabsContent key={feature.id} value={feature.id}>
+              {ActiveComponent && <ActiveComponent />}
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
     </div>
