@@ -10,16 +10,36 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Chat GPT function called');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!openAIApiKey) {
+    console.error('OpenAI API key not found');
+    return new Response(
+      JSON.stringify({ error: 'OpenAI API key not configured' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+
   try {
     const { message } = await req.json();
+    console.log('Received message:', message);
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: 'Message is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -29,47 +49,55 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a professional AI Career Coach. Provide helpful, specific career advice. Keep responses concise but comprehensive. Topics you can help with:
-            - Resume writing and optimization
-            - Interview preparation
-            - Career transitions
-            - Job search strategies
-            - Salary negotiation
-            - Professional networking
-            - Skills development
-            - Industry insights
-            
-            Always maintain a professional, encouraging tone and provide actionable advice.`
+            content: 'You are a helpful AI career assistant. Provide professional advice about resumes, cover letters, job searching, and career development. Keep responses concise and actionable.'
           },
           {
             role: 'user',
             content: message
           }
         ],
-        temperature: 0.7,
         max_tokens: 1000,
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      console.error('OpenAI API error:', response.status, response.statusText);
+      const errorData = await response.text();
+      console.error('Error details:', errorData);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    console.log('OpenAI response received');
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response from OpenAI');
+    }
 
-    return new Response(JSON.stringify({ response: aiResponse }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const reply = data.choices[0].message.content;
+
+    return new Response(
+      JSON.stringify({ reply }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Error in chat-gpt function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to get AI response',
+        details: error.message 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
