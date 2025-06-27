@@ -93,6 +93,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_resumes: {
+        Row: {
+          content: string
+          created_at: string
+          filename: string
+          id: string
+          parsed_data: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          filename: string
+          id?: string
+          parsed_data?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          filename?: string
+          id?: string
+          parsed_data?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
