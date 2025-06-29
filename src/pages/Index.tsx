@@ -10,11 +10,12 @@ import {
   Search, 
   GraduationCap, 
   Globe, 
-  Briefcase,
-  BookOpen,
   User,
   PlusCircle,
-  Target
+  Target,
+  BookOpen,
+  BarChart3,
+  Linkedin
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -31,7 +32,7 @@ import SavedItems from '@/components/SavedItems';
 
 const Index = () => {
   const { isDarkMode } = useTheme();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const features = [
     {
@@ -39,7 +40,8 @@ const Index = () => {
       name: 'Resume Builder',
       description: 'Create professional resumes with AI-powered suggestions',
       icon: FileText,
-      gradient: 'from-cyan-400 via-blue-500 to-purple-600',
+      gradient: 'from-cyan-500 to-blue-600',
+      hoverColor: 'hover:bg-cyan-500/20',
       component: ResumeGenerator
     },
     {
@@ -47,7 +49,8 @@ const Index = () => {
       name: 'Cover Letter Generator',
       description: 'Generate personalized cover letters for any job',
       icon: PlusCircle,
-      gradient: 'from-green-400 via-emerald-500 to-teal-600',
+      gradient: 'from-emerald-500 to-teal-600',
+      hoverColor: 'hover:bg-emerald-500/20',
       component: CoverLetterGenerator
     },
     {
@@ -55,7 +58,8 @@ const Index = () => {
       name: 'AI Career Coach',
       description: 'Get personalized career advice from GPT-4',
       icon: MessageSquare,
-      gradient: 'from-purple-400 via-pink-500 to-red-500',
+      gradient: 'from-purple-500 to-pink-600',
+      hoverColor: 'hover:bg-purple-500/20',
       component: AIChatbot
     },
     {
@@ -63,7 +67,8 @@ const Index = () => {
       name: 'Job Match Analyzer',
       description: 'Find jobs that match your skills and preferences',
       icon: Search,
-      gradient: 'from-orange-400 via-red-500 to-pink-600',
+      gradient: 'from-orange-500 to-red-600',
+      hoverColor: 'hover:bg-orange-500/20',
       component: JobAnalyzer
     },
     {
@@ -71,7 +76,8 @@ const Index = () => {
       name: 'Keyword Matcher',
       description: 'Optimize your resume for ATS systems',
       icon: Target,
-      gradient: 'from-red-400 via-rose-500 to-pink-600',
+      gradient: 'from-rose-500 to-pink-600',
+      hoverColor: 'hover:bg-rose-500/20',
       component: KeywordMatcher
     },
     {
@@ -79,7 +85,8 @@ const Index = () => {
       name: 'University Predictor',
       description: 'Predict your chances at top universities',
       icon: GraduationCap,
-      gradient: 'from-indigo-400 via-purple-500 to-blue-600',
+      gradient: 'from-indigo-500 to-purple-600',
+      hoverColor: 'hover:bg-indigo-500/20',
       component: UniversityPredictor
     },
     {
@@ -87,15 +94,17 @@ const Index = () => {
       name: 'Multilingual Translator',
       description: 'Translate documents and content across 50+ languages',
       icon: Globe,
-      gradient: 'from-teal-400 via-cyan-500 to-blue-600',
+      gradient: 'from-blue-500 to-cyan-600',
+      hoverColor: 'hover:bg-blue-500/20',
       component: MultilingualTranslator
     },
     {
       id: 'linkedin',
       name: 'LinkedIn Optimizer',
       description: 'Analyze and optimize your LinkedIn profile',
-      icon: User,
-      gradient: 'from-blue-400 via-indigo-500 to-purple-600',
+      icon: Linkedin,
+      gradient: 'from-blue-600 to-indigo-600',
+      hoverColor: 'hover:bg-blue-600/20',
       component: LinkedInIntegration
     },
     {
@@ -103,7 +112,8 @@ const Index = () => {
       name: 'Saved Items',
       description: 'View and manage your saved colleges and jobs',
       icon: BookOpen,
-      gradient: 'from-gray-600 via-slate-700 to-gray-800',
+      gradient: 'from-slate-600 to-gray-700',
+      hoverColor: 'hover:bg-slate-600/20',
       component: SavedItems
     }
   ];
@@ -111,12 +121,22 @@ const Index = () => {
   const ActiveComponent = features.find(f => f.id === activeTab)?.component;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
+    <div className={`min-h-screen transition-all duration-500 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800' 
+        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
+    } relative overflow-hidden`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-4 -left-4 w-72 h-72 bg-cyan-400/20 rounded-full animate-float"></div>
-        <div className="absolute -bottom-8 -right-8 w-96 h-96 bg-purple-400/20 rounded-full animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-400/20 rounded-full animate-float" style={{animationDelay: '4s'}}></div>
+        <div className={`absolute top-20 right-20 w-64 h-64 ${
+          isDarkMode ? 'bg-cyan-400/8' : 'bg-cyan-400/12'
+        } rounded-full blur-3xl animate-float`}></div>
+        <div className={`absolute bottom-20 left-20 w-96 h-96 ${
+          isDarkMode ? 'bg-purple-400/8' : 'bg-purple-400/12'
+        } rounded-full blur-3xl animate-float`} style={{animationDelay: '2s'}}></div>
+        <div className={`absolute top-1/2 left-1/2 w-80 h-80 ${
+          isDarkMode ? 'bg-blue-400/6' : 'bg-blue-400/10'
+        } rounded-full blur-3xl animate-float`} style={{animationDelay: '4s'}}></div>
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -125,7 +145,9 @@ const Index = () => {
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker mb-4">
             Resumate AI
           </h1>
-          <p className="text-xl text-cyan-300 mb-8 animate-fade-in">
+          <p className={`text-xl mb-8 animate-fade-in ${
+            isDarkMode ? 'text-cyan-300' : 'text-blue-600'
+          }`}>
             Your AI Career Assistant - Powered by Advanced Intelligence
           </p>
         </div>
@@ -133,22 +155,34 @@ const Index = () => {
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           {/* Tab Navigation */}
-          <div className="bg-gray-800/30 backdrop-blur-lg rounded-2xl p-6 border border-cyan-400/30 neon-border">
+          <div className={`${
+            isDarkMode 
+              ? 'bg-gray-800/30 border-cyan-400/30' 
+              : 'bg-white/50 border-blue-300/50'
+          } backdrop-blur-lg rounded-2xl p-6 border neon-border transition-all duration-300`}>
             <TabsList className="grid grid-cols-5 lg:grid-cols-10 gap-2 h-auto bg-transparent">
               <TabsTrigger 
-                value="overview" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300 p-3 rounded-lg border border-cyan-400/20 hover:border-cyan-400/50 transition-all duration-300"
+                value="dashboard" 
+                className={`${
+                  isDarkMode
+                    ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300 border-cyan-400/20 hover:border-cyan-400/50'
+                    : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600 border-blue-300/30 hover:border-blue-400/60'
+                } p-3 rounded-lg border transition-all duration-300`}
               >
                 <div className="flex flex-col items-center space-y-1">
-                  <span className="text-lg">⚡</span>
-                  <span className="text-xs">Overview</span>
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="text-xs">Dashboard</span>
                 </div>
               </TabsTrigger>
               {features.map((feature) => (
                 <TabsTrigger 
                   key={feature.id} 
                   value={feature.id}
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300 p-3 rounded-lg border border-cyan-400/20 hover:border-cyan-400/50 transition-all duration-300"
+                  className={`${
+                    isDarkMode
+                      ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300 border-cyan-400/20 hover:border-cyan-400/50'
+                      : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600 border-blue-300/30 hover:border-blue-400/60'
+                  } p-3 rounded-lg border transition-all duration-300`}
                 >
                   <div className="flex flex-col items-center space-y-1">
                     <feature.icon className="w-4 h-4" />
@@ -159,14 +193,18 @@ const Index = () => {
             </TabsList>
           </div>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-8">
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-8">
             {/* 3x3 Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature) => (
                 <Card 
                   key={feature.id} 
-                  className="bg-gray-800/50 backdrop-blur-lg border border-cyan-400/30 hover:border-cyan-400/60 transition-all duration-300 cursor-pointer group neon-border"
+                  className={`${
+                    isDarkMode 
+                      ? 'bg-gray-800/40 border-cyan-400/20 hover:border-cyan-400/50' 
+                      : 'bg-white/60 border-blue-300/40 hover:border-blue-400/70'
+                  } backdrop-blur-lg border transition-all duration-300 cursor-pointer group neon-border ${feature.hoverColor}`}
                   onClick={() => setActiveTab(feature.id)}
                 >
                   <CardHeader>
@@ -175,17 +213,25 @@ const Index = () => {
                         <feature.icon className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg text-cyan-100 group-hover:text-white transition-colors">
+                        <CardTitle className={`text-lg group-hover:text-white transition-colors ${
+                          isDarkMode ? 'text-cyan-100' : 'text-gray-800'
+                        }`}>
                           {feature.name}
                         </CardTitle>
-                        <Badge variant="secondary" className="mt-1 bg-cyan-500/20 text-cyan-300 border-cyan-400/30">
+                        <Badge variant="secondary" className={`mt-1 border ${
+                          isDarkMode 
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30' 
+                            : 'bg-blue-500/20 text-blue-600 border-blue-400/40'
+                        }`}>
                           AI-Powered
                         </Badge>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-gray-300 group-hover:text-gray-200 transition-colors mb-4">
+                    <CardDescription className={`group-hover:text-gray-200 transition-colors mb-4 ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
                       {feature.description}
                     </CardDescription>
                     <Button 

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, UserPlus, LogIn, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -83,45 +83,49 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 relative overflow-hidden flex items-center justify-center p-6">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-        <div className="absolute -bottom-40 left-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 right-20 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-blue-400/8 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
       </div>
 
       {/* Floating Particles */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(15)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-cyan-400/30 rounded-full animate-float"
+            className="absolute w-1 h-1 bg-cyan-400/20 rounded-full animate-float"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${10 + Math.random() * 20}s`
+              animationDuration: `${15 + Math.random() * 20}s`
             }}
           />
         ))}
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <Card className="bg-gray-900/80 border-cyan-500/30 backdrop-blur-xl shadow-2xl shadow-cyan-500/10 transform transition-all duration-500 hover:scale-105">
+        <Card className="bg-gray-800/40 border-cyan-400/20 backdrop-blur-xl shadow-2xl shadow-cyan-500/5 transform transition-all duration-500 hover:scale-105 neon-border">
           <CardHeader className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-3">
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 to-purple-400/30 rounded-xl blur-lg group-hover:from-cyan-400/50 group-hover:to-purple-400/50 transition-all duration-500"></div>
-                <div className="relative bg-gray-800/50 backdrop-blur-lg rounded-xl p-3 border border-cyan-400/30">
-                  <Sparkles className="w-8 h-8 text-cyan-400" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow"></div>
+                <div className="relative bg-gray-800/60 backdrop-blur-lg rounded-xl p-3 border border-cyan-400/30 neon-border">
+                  <img 
+                    src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" 
+                    alt="Resumate AI Logo" 
+                    className="w-8 h-8 object-contain"
+                  />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker">
                   Resumate AI
                 </h1>
-                <p className="text-xs text-cyan-300/80">Your AI Career Assistant</p>
+                <p className="text-xs text-cyan-300/80 animate-fade-in">Your AI Career Assistant</p>
               </div>
             </div>
             <CardTitle className="text-xl text-cyan-300 flex items-center justify-center space-x-2">

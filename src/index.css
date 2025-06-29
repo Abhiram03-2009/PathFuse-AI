@@ -100,14 +100,14 @@
 @keyframes float {
   0%, 100% {
     transform: translateY(0px) translateX(0px);
-    opacity: 0.3;
+    opacity: 0.4;
   }
   33% {
-    transform: translateY(-30px) translateX(20px);
-    opacity: 1;
+    transform: translateY(-20px) translateX(15px);
+    opacity: 0.8;
   }
   66% {
-    transform: translateY(-10px) translateX(-20px);
+    transform: translateY(-8px) translateX(-15px);
     opacity: 0.6;
   }
 }
@@ -127,15 +127,15 @@
     text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor, 0 0 20px currentColor;
   }
   2%, 8%, 10%, 92%, 98% {
-    opacity: 0.8;
-    text-shadow: none;
+    opacity: 0.85;
+    text-shadow: 0 0 2px currentColor;
   }
 }
 
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -145,15 +145,26 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
   }
   50% {
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 0 16px rgba(34, 211, 238, 0.4), 0 0 24px rgba(34, 211, 238, 0.2);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
 .animate-float {
-  animation: float 15s ease-in-out infinite;
+  animation: float 18s ease-in-out infinite;
 }
 
 .animate-glow {
@@ -161,15 +172,19 @@
 }
 
 .animate-neon-flicker {
-  animation: neon-flicker 1.5s ease-in-out infinite alternate;
+  animation: neon-flicker 2s ease-in-out infinite alternate;
 }
 
 .animate-fade-in {
-  animation: fade-in 1s ease-out;
+  animation: fade-in 0.8s ease-out;
 }
 
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out;
 }
 
 /* Scrollbar Styling */
@@ -192,11 +207,43 @@
 
 /* Neon border effects */
 .neon-border {
-  border: 1px solid rgba(34, 211, 238, 0.5);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.15);
+  transition: all 0.3s ease;
 }
 
 .neon-border:hover {
-  border-color: rgba(34, 211, 238, 0.8);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  border-color: rgba(34, 211, 238, 0.6);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.3);
+}
+
+/* Light mode neon effects */
+.light .neon-border {
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+}
+
+.light .neon-border:hover {
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+}
+
+/* Improved hover effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
