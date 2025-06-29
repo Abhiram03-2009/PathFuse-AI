@@ -96,7 +96,7 @@
   }
 }
 
-/* Custom Cyberpunk Animations */
+/* Enhanced Cyberpunk Animations with Floating Bubbles */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px) translateX(0px);
@@ -109,6 +109,63 @@
   66% {
     transform: translateY(-8px) translateX(-15px);
     opacity: 0.6;
+  }
+}
+
+@keyframes bubble-float {
+  0% {
+    transform: translateY(100vh) translateX(0px) scale(0);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(90vh) translateX(10px) scale(1);
+    opacity: 0.6;
+  }
+  90% {
+    transform: translateY(-10vh) translateX(-10px) scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-20vh) translateX(5px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-float-2 {
+  0% {
+    transform: translateY(100vh) translateX(0px) scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(85vh) translateX(-15px) scale(1);
+    opacity: 0.4;
+  }
+  85% {
+    transform: translateY(-15vh) translateX(20px) scale(1);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateY(-25vh) translateX(-5px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-float-3 {
+  0% {
+    transform: translateY(100vh) translateX(0px) scale(0);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(80vh) translateX(25px) scale(1);
+    opacity: 0.5;
+  }
+  80% {
+    transform: translateY(-20vh) translateX(-25px) scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-30vh) translateX(10px) scale(0);
+    opacity: 0;
   }
 }
 
@@ -167,6 +224,18 @@
   animation: float 18s ease-in-out infinite;
 }
 
+.animate-bubble-1 {
+  animation: bubble-float 25s linear infinite;
+}
+
+.animate-bubble-2 {
+  animation: bubble-float-2 30s linear infinite;
+}
+
+.animate-bubble-3 {
+  animation: bubble-float-3 35s linear infinite;
+}
+
 .animate-glow {
   animation: glow 2s ease-in-out infinite alternate;
 }
@@ -187,6 +256,19 @@
   animation: slide-in 0.5s ease-out;
 }
 
+/* Floating Bubble Classes */
+.floating-bubble {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bubble-neon {
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.3) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(147, 51, 234, 0.1) 100%);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -205,7 +287,7 @@
   background: rgba(34, 211, 238, 0.8);
 }
 
-/* Neon border effects */
+/* Enhanced neon border effects */
 .neon-border {
   border: 1px solid rgba(34, 211, 238, 0.3);
   box-shadow: 0 0 8px rgba(34, 211, 238, 0.15);

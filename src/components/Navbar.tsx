@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,45 +7,54 @@ import { LogOut, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 const Navbar = () => {
-  const {
-    user,
-    profile,
-    signOut
-  } = useAuth();
-  const {
-    isDarkMode
-  } = useTheme();
+  const { user, profile, signOut } = useAuth();
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
+
   const handleLogoClick = () => {
     navigate('/');
   };
+
   const getInitials = (name: string | null) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
-  return <nav className={`${isDarkMode ? 'bg-gradient-to-r from-slate-900 via-gray-900 to-slate-800 border-cyan-400/20' : 'bg-gradient-to-r from-white via-blue-50 to-indigo-50 border-blue-300/40'} border-b px-4 py-3 relative overflow-hidden transition-all duration-300`}>
-      {/* Animated background elements */}
+
+  return (
+    <nav className={`${isDarkMode ? 'bg-gradient-to-r from-slate-900 via-gray-900 to-slate-800 border-cyan-400/20' : 'bg-gradient-to-r from-white via-blue-50 to-indigo-50 border-blue-300/40'} border-b px-4 py-3 relative overflow-hidden transition-all duration-300`}>
+      {/* Animated background elements with enhanced neon bubbles */}
       <div className="absolute inset-0 overflow-hidden">
         <div className={`absolute -top-4 -left-4 w-72 h-72 ${isDarkMode ? 'bg-cyan-400/8' : 'bg-cyan-400/12'} rounded-full animate-float`}></div>
-        <div className={`absolute -bottom-8 -right-8 w-96 h-96 ${isDarkMode ? 'bg-purple-400/8' : 'bg-purple-400/12'} rounded-full animate-float`} style={{
-        animationDelay: '2s'
-      }}></div>
-        <div className={`absolute top-1/2 left-1/2 w-64 h-64 ${isDarkMode ? 'bg-blue-400/6' : 'bg-blue-400/10'} rounded-full animate-float`} style={{
-        animationDelay: '4s'
-      }}></div>
+        <div className={`absolute -bottom-8 -right-8 w-96 h-96 ${isDarkMode ? 'bg-purple-400/8' : 'bg-purple-400/12'} rounded-full animate-float`} style={{animationDelay: '2s'}}></div>
+        <div className={`absolute top-1/2 left-1/2 w-64 h-64 ${isDarkMode ? 'bg-blue-400/6' : 'bg-blue-400/10'} rounded-full animate-float`} style={{animationDelay: '4s'}}></div>
+        
+        {/* Enhanced floating bubbles */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className={`floating-bubble bubble-neon w-${Math.floor(Math.random() * 3) + 2} h-${Math.floor(Math.random() * 3) + 2} animate-bubble-${(i % 3) + 1}`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 20}s`,
+              animationDuration: `${25 + Math.random() * 15}s`
+            }}
+          />
+        ))}
       </div>
       
       <div className="container mx-auto flex justify-between items-center relative z-10">
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
-            <div className={`relative ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl p-3 border neon-border`}>
-              <img src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" alt="Resumate AI Logo" className="w-8 h-8 object-fill" />
+            <div className={`relative ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl p-4 border neon-border`}>
+              <img src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" alt="Resumate AI Logo" className="w-10 h-10 object-contain" />
             </div>
           </div>
           <div>
@@ -55,7 +65,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {user && <DropdownMenu>
+        {user && (
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-transparent">
                 <Avatar className={`h-10 w-10 border-2 ${isDarkMode ? 'border-cyan-400/30' : 'border-blue-400/40'}`}>
@@ -88,8 +99,11 @@ const Navbar = () => {
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>}
+          </DropdownMenu>
+        )}
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;

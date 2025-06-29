@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap } from 'lucide-react';
+import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface LinkedInProfile {
   name: string;
@@ -30,11 +31,17 @@ interface LinkedInProfile {
 
 const LinkedInIntegration = () => {
   const { toast } = useToast();
+  const { isDarkMode } = useTheme();
   const [linkedInUrl, setLinkedInUrl] = useState('');
   const [profileData, setProfileData] = useState<LinkedInProfile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeText, setResumeText] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
+
+  const extractUsernameFromUrl = (url: string): string => {
+    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
+    return match ? match[1] : '';
+  };
 
   const analyzeLinkedInProfile = async () => {
     if (!linkedInUrl.includes('linkedin.com')) {
@@ -47,25 +54,32 @@ const LinkedInIntegration = () => {
     }
 
     setIsAnalyzing(true);
+    const username = extractUsernameFromUrl(linkedInUrl);
 
-    // Simulate LinkedIn profile analysis
+    // Simulate LinkedIn profile analysis with realistic data based on URL
     setTimeout(() => {
       const mockProfile: LinkedInProfile = {
-        name: "John Smith",
+        name: username.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Professional User",
         headline: "Senior Software Engineer | Full Stack Developer | React & Node.js Expert",
-        summary: "Passionate software engineer with 5+ years of experience building scalable web applications. Expertise in React, Node.js, and cloud technologies. Led multiple cross-functional teams to deliver high-impact products.",
+        summary: `Passionate software engineer with 5+ years of experience building scalable web applications. Expertise in React, Node.js, and cloud technologies. Led multiple cross-functional teams to deliver high-impact products. Currently working at a leading tech company focusing on innovative solutions.`,
         experience: [
           {
             title: "Senior Software Engineer",
             company: "Tech Corp",
             duration: "2022 - Present",
-            description: "Led development of microservices architecture, improved system performance by 40%, mentored junior developers"
+            description: "Led development of microservices architecture, improved system performance by 40%, mentored junior developers, implemented CI/CD pipelines"
           },
           {
             title: "Software Engineer",
             company: "StartupXYZ",
             duration: "2020 - 2022",
-            description: "Developed full-stack web applications using React and Node.js, implemented CI/CD pipelines"
+            description: "Developed full-stack web applications using React and Node.js, collaborated with design team, implemented responsive UI components"
+          },
+          {
+            title: "Junior Developer",
+            company: "Innovation Labs",
+            duration: "2019 - 2020",
+            description: "Built web applications, participated in code reviews, learned modern development practices and agile methodologies"
           }
         ],
         education: [
@@ -73,10 +87,10 @@ const LinkedInIntegration = () => {
             school: "University of Technology",
             degree: "Bachelor of Science",
             field: "Computer Science",
-            year: "2020"
+            year: "2019"
           }
         ],
-        skills: ["JavaScript", "React", "Node.js", "Python", "AWS", "Docker", "MongoDB", "PostgreSQL", "Git", "Agile"]
+        skills: ["JavaScript", "React", "Node.js", "Python", "AWS", "Docker", "MongoDB", "PostgreSQL", "Git", "Agile", "TypeScript", "GraphQL"]
       };
 
       setProfileData(mockProfile);
@@ -84,9 +98,15 @@ const LinkedInIntegration = () => {
       
       toast({
         title: "Profile Analyzed!",
-        description: "LinkedIn profile data has been extracted and analyzed"
+        description: "LinkedIn profile data has been extracted and analyzed successfully"
       });
     }, 3000);
+  };
+
+  const openLinkedInProfile = () => {
+    if (linkedInUrl) {
+      window.open(linkedInUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const generateOptimizedResume = () => {
@@ -116,124 +136,175 @@ KEY ACHIEVEMENTS
 • Demonstrated leadership in cross-functional team environments
 • Proven track record of delivering scalable software solutions
 • Strong problem-solving abilities with focus on performance optimization
-• Experience with modern development practices and cloud technologies`;
+• Experience with modern development practices and cloud technologies
+• Excellent communication and collaboration skills`;
 
     setResumeText(optimizedResume);
     
     toast({
       title: "Resume Generated!",
-      description: "Optimized resume created from your LinkedIn profile"
+      description: "Optimized resume created from LinkedIn profile analysis"
     });
   };
 
   const analyzeProfileStrengths = () => {
     if (!profileData) return;
 
-    const analysis = `LINKEDIN PROFILE ANALYSIS
+    const analysis = `COMPREHENSIVE LINKEDIN PROFILE ANALYSIS
 
-STRENGTHS:
-✅ Strong professional headline that includes key technologies
-✅ Comprehensive summary highlighting years of experience
-✅ Quantified achievements (40% performance improvement)
-✅ Diverse skill set covering both frontend and backend technologies
-✅ Leadership experience mentioned
-✅ Educational background aligns with career path
+PROFILE OVERVIEW:
+Name: ${profileData.name}
+Current Position: ${profileData.headline}
+Career Level: Senior Professional (5+ years experience)
 
-RECOMMENDATIONS FOR IMPROVEMENT:
-🔧 Add more specific metrics and numbers to experience descriptions
-🔧 Include certifications or recent courses to show continuous learning
-🔧 Add volunteer work or side projects to demonstrate passion
-🔧 Request more recommendations from colleagues
-🔧 Update skills section with latest technologies
-🔧 Add industry keywords for better searchability
+STRENGTHS ANALYSIS:
+✅ Professional headline clearly states expertise and technologies
+✅ Comprehensive summary highlighting years of experience and key skills
+✅ Quantified achievements (40% performance improvement mentioned)
+✅ Progressive career advancement showing growth
+✅ Diverse technical skill set covering full-stack development
+✅ Leadership experience and mentoring capabilities demonstrated
+✅ Educational background aligns with career trajectory
+
+CONTENT QUALITY SCORE: 88/100
 
 KEYWORD OPTIMIZATION:
-Your profile includes good technical keywords like React, Node.js, AWS. Consider adding:
-- "Microservices Architecture"
-- "DevOps"
-- "API Development"
-- "Database Design"
-- "Team Leadership"
+Strong presence of industry keywords:
+• Technical Skills: React, Node.js, JavaScript, Python, AWS
+• Role Keywords: Senior Software Engineer, Full Stack Developer
+• Industry Terms: Microservices, CI/CD, Agile, Cloud Technologies
 
-ATS COMPATIBILITY SCORE: 85/100
-Your profile is well-optimized for Applicant Tracking Systems with good keyword density and clear structure.`;
+RECOMMENDATIONS FOR IMPROVEMENT:
+🔧 Add industry certifications (AWS, Google Cloud, etc.)
+🔧 Include volunteer work or open-source contributions
+🔧 Add specific project outcomes with metrics
+🔧 Request recommendations from former colleagues
+🔧 Include links to portfolio or GitHub projects
+🔧 Add recent courses or continuous learning activities
+🔧 Consider adding industry publications or speaking engagements
+
+MARKET POSITIONING:
+Your profile positions you well for:
+• Senior Software Engineering roles
+• Technical Lead positions
+• Full-Stack Developer roles
+• Solutions Architect positions
+• Engineering Management tracks
+
+SALARY EXPECTATIONS:
+Based on experience and skills: $120,000 - $160,000 annually
+(varies by location and company size)
+
+NETWORKING OPPORTUNITIES:
+Consider connecting with:
+• Technical leads in similar roles
+• Professionals at target companies
+• Industry thought leaders
+• Alumni from your university
+• Colleagues from previous companies
+
+ATS COMPATIBILITY SCORE: 92/100
+Your profile is excellently optimized for Applicant Tracking Systems with:
+• High keyword density for relevant terms
+• Clear structure and formatting
+• Proper use of industry terminology
+• Quantified achievements and metrics`;
 
     setAnalysisResult(analysis);
     
     toast({
       title: "Analysis Complete!",
-      description: "Detailed profile analysis generated with improvement suggestions"
+      description: "Comprehensive profile analysis generated with actionable insights"
     });
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-white border-gray-200">
+    <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
+      <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900">
+          <CardTitle className={`flex items-center space-x-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             <Linkedin className="w-5 h-5 text-blue-600" />
             <span>LinkedIn Profile Analyzer</span>
           </CardTitle>
-          <CardDescription className="text-gray-600">
-            Analyze your LinkedIn profile and generate optimized resumes with AI-powered insights.
+          <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Analyze LinkedIn profiles and generate optimized resumes with comprehensive AI-powered insights and recommendations.
           </CardDescription>
         </CardHeader>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LinkedIn Input */}
-        <Card className="bg-white border-gray-200">
+        <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900">Profile Analysis</CardTitle>
-            <CardDescription className="text-gray-600">
-              Enter your LinkedIn profile URL to get started
+            <CardTitle className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Profile Analysis</CardTitle>
+            <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Enter a LinkedIn profile URL to analyze and extract insights
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="linkedinUrl" className="text-gray-700">LinkedIn Profile URL</Label>
+              <Label htmlFor="linkedinUrl" className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>LinkedIn Profile URL</Label>
               <Input
                 id="linkedinUrl"
                 value={linkedInUrl}
                 onChange={(e) => setLinkedInUrl(e.target.value)}
-                placeholder="https://www.linkedin.com/in/yourprofile"
-                className="text-gray-900 border-gray-300"
+                placeholder="https://www.linkedin.com/in/username"
+                className={`${
+                  isDarkMode 
+                    ? 'bg-gray-900/50 border-cyan-400/30 text-white placeholder-gray-400' 
+                    : 'bg-white border-blue-300/50 text-gray-900 placeholder-gray-500'
+                }`}
               />
             </div>
 
-            <Button 
-              onClick={analyzeLinkedInProfile}
-              disabled={isAnalyzing || !linkedInUrl}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing Profile...
-                </>
-              ) : (
-                <>
-                  <Linkedin className="w-4 h-4 mr-2" />
-                  Analyze LinkedIn Profile
-                </>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={analyzeLinkedInProfile}
+                disabled={isAnalyzing || !linkedInUrl}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing Profile...
+                  </>
+                ) : (
+                  <>
+                    <Linkedin className="w-4 h-4 mr-2" />
+                    Analyze Profile
+                  </>
+                )}
+              </Button>
+              {linkedInUrl && (
+                <Button 
+                  onClick={openLinkedInProfile}
+                  variant="outline"
+                  className={`${
+                    isDarkMode 
+                      ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' 
+                      : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'
+                  }`}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
               )}
-            </Button>
+            </div>
 
             {profileData && (
-              <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-4 pt-4 border-t border-cyan-400/20">
                 <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">{profileData.name}</span>
+                  <User className={`w-4 h-4 ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
+                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{profileData.name}</span>
                 </div>
-                <p className="text-sm text-gray-600">{profileData.headline}</p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{profileData.headline}</p>
                 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900 flex items-center">
+                  <h4 className={`font-medium flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     <Briefcase className="w-4 h-4 mr-2" />
                     Experience
                   </h4>
                   {profileData.experience.slice(0, 2).map((exp, index) => (
-                    <div key={index} className="text-sm text-gray-600 pl-6">
+                    <div key={index} className={`text-sm pl-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       <div className="font-medium">{exp.title}</div>
                       <div>{exp.company} • {exp.duration}</div>
                     </div>
@@ -241,22 +312,26 @@ Your profile is well-optimized for Applicant Tracking Systems with good keyword 
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900 flex items-center">
+                  <h4 className={`font-medium flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Education
                   </h4>
                   {profileData.education.map((edu, index) => (
-                    <div key={index} className="text-sm text-gray-600 pl-6">
+                    <div key={index} className={`text-sm pl-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {edu.degree} in {edu.field} - {edu.school}
                     </div>
                   ))}
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900">Top Skills</h4>
+                  <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Top Skills</h4>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.skills.slice(0, 6).map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                    {profileData.skills.slice(0, 8).map((skill, index) => (
+                      <Badge key={index} variant="secondary" className={`text-xs ${
+                        isDarkMode 
+                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30' 
+                          : 'bg-blue-500/20 text-blue-600 border-blue-400/40'
+                      }`}>
                         {skill}
                       </Badge>
                     ))}
@@ -264,11 +339,15 @@ Your profile is well-optimized for Applicant Tracking Systems with good keyword 
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button onClick={generateOptimizedResume} size="sm" className="flex-1">
+                  <Button onClick={generateOptimizedResume} size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
                     <Download className="w-4 h-4 mr-2" />
                     Generate Resume
                   </Button>
-                  <Button onClick={analyzeProfileStrengths} size="sm" variant="outline" className="flex-1">
+                  <Button onClick={analyzeProfileStrengths} size="sm" variant="outline" className={`flex-1 ${
+                    isDarkMode 
+                      ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' 
+                      : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'
+                  }`}>
                     <Sparkles className="w-4 h-4 mr-2" />
                     Analyze Profile
                   </Button>
@@ -279,18 +358,22 @@ Your profile is well-optimized for Applicant Tracking Systems with good keyword 
         </Card>
 
         {/* Results */}
-        <Card className="bg-white border-gray-200">
+        <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900">AI Analysis Results</CardTitle>
-            <CardDescription className="text-gray-600">
-              Generated content and insights from your LinkedIn profile
+            <CardTitle className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>AI Analysis Results</CardTitle>
+            <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Generated content and insights from LinkedIn profile analysis
             </CardDescription>
           </CardHeader>
           <CardContent>
             {resumeText || analysisResult ? (
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg border max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-900 font-sans">
+                <div className={`${
+                  isDarkMode ? 'bg-gray-900/50' : 'bg-gray-50'
+                } p-4 rounded-lg border max-h-96 overflow-y-auto`}>
+                  <pre className={`whitespace-pre-wrap text-sm font-sans ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-900'
+                  }`}>
                     {resumeText || analysisResult}
                   </pre>
                 </div>
@@ -298,23 +381,35 @@ Your profile is well-optimized for Applicant Tracking Systems with good keyword 
                   <Button 
                     onClick={() => navigator.clipboard.writeText(resumeText || analysisResult)}
                     variant="outline" 
-                    className="flex-1 text-gray-700 border-gray-300"
+                    className={`flex-1 ${
+                      isDarkMode 
+                        ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' 
+                        : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'
+                    }`}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Copy to Clipboard
                   </Button>
-                  <Button variant="outline" className="flex-1 text-gray-700 border-gray-300">
+                  <Button variant="outline" className={`flex-1 ${
+                    isDarkMode 
+                      ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' 
+                      : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'
+                  }`}>
                     <Download className="w-4 h-4 mr-2" />
                     Export PDF
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center min-h-96 flex items-center justify-center">
+              <div className={`${
+                isDarkMode 
+                  ? 'bg-gray-900/20 border-2 border-dashed border-cyan-400/30' 
+                  : 'bg-blue-50/30 border-2 border-dashed border-blue-300/50'
+              } rounded-lg p-8 text-center min-h-96 flex items-center justify-center`}>
                 <div>
-                  <Linkedin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Analysis results will appear here</p>
-                  <p className="text-sm text-gray-500">Enter your LinkedIn URL and click analyze to get started</p>
+                  <Linkedin className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-cyan-400' : 'text-blue-500'}`} />
+                  <p className={`mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Analysis results will appear here</p>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enter a LinkedIn URL and click analyze to get started</p>
                 </div>
               </div>
             )}

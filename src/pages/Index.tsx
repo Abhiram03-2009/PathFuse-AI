@@ -126,7 +126,7 @@ const Index = () => {
         ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800' 
         : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
     } relative overflow-hidden`}>
-      {/* Animated background elements */}
+      {/* Enhanced animated background elements with neon floating bubbles */}
       <div className="absolute inset-0 overflow-hidden">
         <div className={`absolute top-20 right-20 w-64 h-64 ${
           isDarkMode ? 'bg-cyan-400/8' : 'bg-cyan-400/12'
@@ -137,6 +137,21 @@ const Index = () => {
         <div className={`absolute top-1/2 left-1/2 w-80 h-80 ${
           isDarkMode ? 'bg-blue-400/6' : 'bg-blue-400/10'
         } rounded-full blur-3xl animate-float`} style={{animationDelay: '4s'}}></div>
+        
+        {/* Enhanced floating neon bubbles */}
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className={`floating-bubble bubble-neon animate-bubble-${(i % 3) + 1}`}
+            style={{
+              width: `${Math.floor(Math.random() * 8) + 4}px`,
+              height: `${Math.floor(Math.random() * 8) + 4}px`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 25}s`,
+              animationDuration: `${20 + Math.random() * 20}s`
+            }}
+          />
+        ))}
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -195,7 +210,7 @@ const Index = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-8">
-            {/* 3x3 Features Grid */}
+            {/* 3x3 Features Grid with proper theming */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature) => (
                 <Card 
@@ -203,7 +218,7 @@ const Index = () => {
                   className={`${
                     isDarkMode 
                       ? 'bg-gray-800/40 border-cyan-400/20 hover:border-cyan-400/50' 
-                      : 'bg-white/60 border-blue-300/40 hover:border-blue-400/70'
+                      : 'bg-white border-blue-300/40 hover:border-blue-400/70'
                   } backdrop-blur-lg border transition-all duration-300 cursor-pointer group neon-border ${feature.hoverColor}`}
                   onClick={() => setActiveTab(feature.id)}
                 >
