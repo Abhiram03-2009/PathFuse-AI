@@ -67,13 +67,13 @@ const AIChatbot = () => {
         throw new Error(error.message || 'Failed to get AI response');
       }
 
-      if (!data || !data.response) {
+      if (!data || !data.reply) {
         throw new Error('No response received from AI');
       }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response,
+        content: data.reply,
         sender: 'bot',
         timestamp: new Date()
       };

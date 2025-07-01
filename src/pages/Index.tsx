@@ -15,7 +15,8 @@ import {
   Target,
   BookOpen,
   BarChart3,
-  Linkedin
+  Linkedin,
+  Bot
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -57,7 +58,7 @@ const Index = () => {
       id: 'ai-chat',
       name: 'AI Career Coach',
       description: 'Get personalized career advice from GPT-4',
-      icon: MessageSquare,
+      icon: Bot,
       gradient: 'from-purple-500 to-pink-600',
       hoverColor: 'hover:bg-purple-500/20',
       component: AIChatbot
