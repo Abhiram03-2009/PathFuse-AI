@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { Button } from './components/ui/button';
+import { Textarea } from './components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Languages, ArrowRight, Copy, Volume2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from './hooks/use-toast';
+import { useTheme } from './contexts/ThemeContext';
 
+// Define the structure for a language object
 interface Language {
   code: string;
   name: string;
@@ -14,14 +15,18 @@ interface Language {
 }
 
 const MultilingualTranslator = () => {
+  // Access toast notifications and theme context
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
+
+  // State variables for source text, translated text, selected languages, and translation status
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState('en');
   const [targetLanguage, setTargetLanguage] = useState('es');
   const [isTranslating, setIsTranslating] = useState(false);
 
+  // Array of supported languages with their codes, names, and flag emojis
   const languages: Language[] = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'es', name: 'Spanish', flag: '🇪🇸' },
@@ -45,80 +50,12 @@ const MultilingualTranslator = () => {
     { code: 'fi', name: 'Finnish', flag: '🇫🇮' }
   ];
 
-  // Comprehensive translation dictionary
-  const translations: { [key: string]: { [key: string]: string } } = {
-    'en-es': {
-      'hello': 'hola',
-      'goodbye': 'adiós',
-      'thank you': 'gracias',
-      'please': 'por favor',
-      'yes': 'sí',
-      'no': 'no',
-      'good morning': 'buenos días',
-      'good evening': 'buenas tardes',
-      'how are you': '¿cómo estás?',
-      'i love you': 'te amo',
-      'welcome': 'bienvenido',
-      'water': 'agua',
-      'food': 'comida',
-      'house': 'casa',
-      'car': 'coche',
-      'friend': 'amigo',
-      'family': 'familia',
-      'work': 'trabajo',
-      'school': 'escuela',
-      'book': 'libro',
-      'computer': 'computadora'
-    },
-    'en-fr': {
-      'hello': 'bonjour',
-      'goodbye': 'au revoir',
-      'thank you': 'merci',
-      'please': 's\'il vous plaît',
-      'yes': 'oui',
-      'no': 'non',
-      'good morning': 'bonjour',
-      'good evening': 'bonsoir',
-      'how are you': 'comment allez-vous?',
-      'i love you': 'je t\'aime',
-      'welcome': 'bienvenue',
-      'water': 'eau',
-      'food': 'nourriture',
-      'house': 'maison',
-      'car': 'voiture',
-      'friend': 'ami',
-      'family': 'famille',
-      'work': 'travail',
-      'school': 'école',
-      'book': 'livre',
-      'computer': 'ordinateur'
-    },
-    'en-de': {
-      'hello': 'hallo',
-      'goodbye': 'auf wiedersehen',
-      'thank you': 'danke',
-      'please': 'bitte',
-      'yes': 'ja',
-      'no': 'nein',
-      'good morning': 'guten morgen',
-      'good evening': 'guten abend',
-      'how are you': 'wie geht es dir?',
-      'i love you': 'ich liebe dich',
-      'welcome': 'willkommen',
-      'water': 'wasser',
-      'food': 'essen',
-      'house': 'haus',
-      'car': 'auto',
-      'friend': 'freund',
-      'family': 'familie',
-      'work': 'arbeit',
-      'school': 'schule',
-      'book': 'buch',
-      'computer': 'computer'
-    }
-  };
-
+  /**
+   * Handles the translation process by making a simulated API call to Google Cloud Translation.
+   * This function uses the Gemini 2.0 Flash model to generate a translation.
+   */
   const translateText = async () => {
+    // Prevent translation if source text is empty
     if (!sourceText.trim()) {
       toast({
         title: "No Text to Translate",
@@ -128,88 +65,155 @@ const MultilingualTranslator = () => {
       return;
     }
 
-    setIsTranslating(true);
+    setIsTranslating(true); // Set translating status to true to show loading indicator
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const translationKey = `${sourceLanguage}-${targetLanguage}`;
-      const sourceTextLower = sourceText.toLowerCase().trim();
-      
-      let translation = '';
-      
-      // Check if we have a direct translation
-      if (translations[translationKey] && translations[translationKey][sourceTextLower]) {
-        translation = translations[translationKey][sourceTextLower];
+      // Construct the prompt for the Gemini 2.0 Flash model
+      const prompt = `Translate the following text from ${getLanguageName(sourceLanguage)} to ${getLanguageName(targetLanguage)}: "${sourceText}"`;
+
+      // Prepare the chat history for the API request
+      let chatHistory = [];
+      chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+      // Define the payload for the API request
+      const payload = { contents: chatHistory };
+
+      // API key for Google Cloud Translation (placeholder - in a real app, secure this!)
+      // For Canvas environment, leave apiKey as an empty string; it will be automatically provided.
+      const apiKey = ""; 
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      // Make the API call to the Gemini 2.0 Flash model
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // Parse the JSON response
+      const result = await response.json();
+
+      // Check if the response contains valid translated text
+      if (result.candidates && result.candidates.length > 0 &&
+          result.candidates[0].content && result.candidates[0].content.parts &&
+          result.candidates[0].content.parts.length > 0) {
+        const text = result.candidates[0].content.parts[0].text;
+        setTranslatedText(text); // Update the translated text state
       } else {
-        // Try to find partial matches or word-by-word translation
-        const words = sourceTextLower.split(' ');
-        const translatedWords = words.map(word => {
-          const cleanWord = word.replace(/[^\w]/g, '');
-          return translations[translationKey]?.[cleanWord] || word;
+        // Handle cases where the response structure is unexpected or content is missing
+        console.error('Unexpected API response structure:', result);
+        setTranslatedText('Translation failed: Could not parse API response.');
+        toast({
+          title: "Translation Error",
+          description: "Failed to parse translation response. Please try again.",
+          variant: "destructive"
         });
-        
-        if (translatedWords.some(word => translations[translationKey]?.[word.replace(/[^\w]/g, '')])) {
-          translation = translatedWords.join(' ');
-        } else {
-          // Fallback to a simulated translation service
-          switch (targetLanguage) {
-            case 'es':
-              translation = sourceText.split(' ').map(word => 
-                Math.random() > 0.5 ? word + 'o' : word + 'a'
-              ).join(' ');
-              break;
-            case 'fr':
-              translation = sourceText.split(' ').map(word => 
-                'le ' + word + (Math.random() > 0.5 ? 'é' : 'è')
-              ).join(' ');
-              break;
-            case 'de':
-              translation = sourceText.split(' ').map(word => 
-                word + (Math.random() > 0.5 ? 'en' : 'er')
-              ).join(' ');
-              break;
-            default:
-              translation = `[Translated to ${getLanguageName(targetLanguage)}] ${sourceText}`;
-          }
-        }
       }
-      
-      setTranslatedText(translation);
-      
+
+      // Show success toast notification
       toast({
         title: "Translation Complete",
         description: `Text translated from ${getLanguageName(sourceLanguage)} to ${getLanguageName(targetLanguage)}.`,
       });
-      
+
     } catch (error) {
-      console.error('Translation error:', error);
+      // Log and show error toast notification for any API call failures
+      console.error('Translation API error:', error);
       toast({
         title: "Translation Error",
-        description: "Failed to translate text. Please try again.",
+        description: "Failed to translate text. Please check your network or API key.",
         variant: "destructive"
       });
     } finally {
-      setIsTranslating(false);
+      setIsTranslating(false); // Reset translating status
     }
   };
 
+  /**
+   * Retrieves the full name of a language given its code.
+   * @param code The language code (e.g., 'en', 'es').
+   * @returns The full language name or the code if not found.
+   */
   const getLanguageName = (code: string): string => {
     return languages.find(lang => lang.code === code)?.name || code;
   };
 
+  /**
+   * Retrieves the flag emoji for a given language code.
+   * @param code The language code.
+   * @returns The flag emoji or a generic globe emoji if not found.
+   */
   const getLanguageFlag = (code: string): string => {
     return languages.find(lang => lang.code === code)?.flag || '🌐';
   };
 
+  /**
+   * Copies the given text to the clipboard.
+   * @param text The text to copy.
+   */
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Text copied to clipboard.",
-    });
+    // Using document.execCommand('copy') for broader compatibility in some iframe environments
+    // navigator.clipboard.writeText is generally preferred for modern browsers
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        toast({
+          title: "Copied!",
+          description: "Text copied to clipboard.",
+        });
+      }).catch(err => {
+        console.error('Failed to copy text using navigator.clipboard:', err);
+        // Fallback for older browsers or restricted environments
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          toast({
+            title: "Copied!",
+            description: "Text copied to clipboard (fallback).",
+          });
+        } catch (copyErr) {
+          console.error('Failed to copy text using execCommand:', copyErr);
+          toast({
+            title: "Copy Failed",
+            description: "Could not copy text to clipboard.",
+            variant: "destructive"
+          });
+        }
+        document.body.removeChild(textArea);
+      });
+    } else {
+      // Fallback for very old browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast({
+          title: "Copied!",
+          description: "Text copied to clipboard (fallback).",
+        });
+      } catch (copyErr) {
+        console.error('Failed to copy text using execCommand:', copyErr);
+        toast({
+          title: "Copy Failed",
+          description: "Could not copy text to clipboard.",
+          variant: "destructive"
+        });
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
+  /**
+   * Initiates text-to-speech for the given text in the specified language.
+   * @param text The text to speak.
+   * @param languageCode The language code for speech synthesis.
+   */
   const speakText = (text: string, languageCode: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
@@ -224,19 +228,25 @@ const MultilingualTranslator = () => {
     }
   };
 
+  /**
+   * Swaps the source and target languages and clears the translated text.
+   * If there's translated text, it becomes the new source text.
+   */
   const swapLanguages = () => {
     const tempLang = sourceLanguage;
     setSourceLanguage(targetLanguage);
     setTargetLanguage(tempLang);
-    
+
+    // If there's translated text, move it to the source input for further translation
     if (translatedText) {
       setSourceText(translatedText);
-      setTranslatedText('');
+      setTranslatedText(''); // Clear translated text after swapping
     }
   };
 
   return (
     <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
+      {/* Main Card for Translator Title and Description */}
       <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white animate-neon-flicker">
@@ -249,8 +259,9 @@ const MultilingualTranslator = () => {
         </CardHeader>
       </Card>
 
+      {/* Grid for Source and Target Language Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Source Language */}
+        {/* Source Language Input Card */}
         <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -313,7 +324,7 @@ const MultilingualTranslator = () => {
           </CardContent>
         </Card>
 
-        {/* Target Language */}
+        {/* Target Language Output Card */}
         <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -382,7 +393,7 @@ const MultilingualTranslator = () => {
         </Card>
       </div>
 
-      {/* Translation Controls */}
+      {/* Translation Controls (Swap and Translate Buttons) */}
       <div className="flex justify-center space-x-4">
         <Button
           variant="outline"
@@ -411,13 +422,13 @@ const MultilingualTranslator = () => {
         </Button>
       </div>
 
-      {/* Language Stats */}
+      {/* Language Statistics and Information Card */}
       <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border">
         <CardContent className="p-4">
           <div className="text-center text-sm text-gray-600 dark:text-gray-300">
             <p className="mb-2">
-              <span className="font-medium">{languages.length} languages</span> supported • 
-              <span className="font-medium"> AI-powered</span> translations • 
+              <span className="font-medium">{languages.length} languages</span> supported •
+              <span className="font-medium"> AI-powered</span> translations •
               <span className="font-medium"> Cultural context</span> aware
             </p>
             <p className="text-xs">
