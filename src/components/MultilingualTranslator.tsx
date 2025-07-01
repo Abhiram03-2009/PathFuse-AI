@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -238,9 +237,9 @@ const MultilingualTranslator = () => {
 
   return (
     <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
+          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white animate-neon-flicker">
             <Languages className="w-5 h-5" />
             <span>Multilingual Translator</span>
           </CardTitle>
@@ -252,7 +251,7 @@ const MultilingualTranslator = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Source Language */}
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-gray-900 dark:text-white flex items-center">
@@ -281,7 +280,7 @@ const MultilingualTranslator = () => {
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               placeholder="Enter text to translate..."
-              className="min-h-32 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              className="min-h-32 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 animate-pulse-glow"
               rows={6}
             />
             <div className="flex justify-between items-center mt-4">
@@ -291,7 +290,7 @@ const MultilingualTranslator = () => {
                   size="sm"
                   onClick={() => speakText(sourceText, sourceLanguage)}
                   disabled={!sourceText.trim()}
-                  className="text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                  className="text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300"
                 >
                   <Volume2 className="w-4 h-4 mr-1" />
                   Listen
@@ -301,7 +300,7 @@ const MultilingualTranslator = () => {
                   size="sm"
                   onClick={() => copyToClipboard(sourceText)}
                   disabled={!sourceText.trim()}
-                  className="text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                  className="text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300"
                 >
                   <Copy className="w-4 h-4 mr-1" />
                   Copy
@@ -315,7 +314,7 @@ const MultilingualTranslator = () => {
         </Card>
 
         {/* Target Language */}
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-gray-900 dark:text-white flex items-center">
@@ -340,7 +339,7 @@ const MultilingualTranslator = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="min-h-32 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md">
+            <div className="min-h-32 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md animate-pulse-glow">
               {isTranslating ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -359,7 +358,7 @@ const MultilingualTranslator = () => {
                   size="sm"
                   onClick={() => speakText(translatedText, targetLanguage)}
                   disabled={!translatedText.trim()}
-                  className="text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                  className="text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300"
                 >
                   <Volume2 className="w-4 h-4 mr-1" />
                   Listen
@@ -369,7 +368,7 @@ const MultilingualTranslator = () => {
                   size="sm"
                   onClick={() => copyToClipboard(translatedText)}
                   disabled={!translatedText.trim()}
-                  className="text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                  className="text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300"
                 >
                   <Copy className="w-4 h-4 mr-1" />
                   Copy
@@ -388,7 +387,7 @@ const MultilingualTranslator = () => {
         <Button
           variant="outline"
           onClick={swapLanguages}
-          className="text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+          className="text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300 animate-hover-lift"
         >
           <ArrowRight className="w-4 h-4 mr-2 transform rotate-90" />
           Swap Languages
@@ -396,7 +395,7 @@ const MultilingualTranslator = () => {
         <Button
           onClick={translateText}
           disabled={isTranslating || !sourceText.trim()}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 animate-glow"
         >
           {isTranslating ? (
             <>
@@ -413,7 +412,7 @@ const MultilingualTranslator = () => {
       </div>
 
       {/* Language Stats */}
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border">
         <CardContent className="p-4">
           <div className="text-center text-sm text-gray-600 dark:text-gray-300">
             <p className="mb-2">

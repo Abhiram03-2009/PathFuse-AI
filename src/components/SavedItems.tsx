@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -133,7 +132,7 @@ const SavedItems = () => {
   if (loading) {
     return (
       <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-pulse-glow">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-300 mt-4">Loading your saved items...</p>
@@ -145,9 +144,9 @@ const SavedItems = () => {
 
   return (
     <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
+          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white animate-neon-flicker">
             <BookOpen className="w-5 h-5" />
             <span>Saved Items</span>
           </CardTitle>
@@ -158,12 +157,12 @@ const SavedItems = () => {
       </Card>
 
       <Tabs defaultValue="colleges" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
-          <TabsTrigger value="colleges" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white">
+        <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 neon-border">
+          <TabsTrigger value="colleges" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-300">
             <BookOpen className="w-4 h-4 mr-2" />
             Colleges ({savedColleges.length})
           </TabsTrigger>
-          <TabsTrigger value="jobs" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white">
+          <TabsTrigger value="jobs" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-300">
             <Briefcase className="w-4 h-4 mr-2" />
             Jobs ({savedJobs.length})
           </TabsTrigger>
@@ -171,7 +170,7 @@ const SavedItems = () => {
 
         <TabsContent value="colleges" className="space-y-4">
           {savedColleges.length === 0 ? (
-            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
               <CardContent className="p-8 text-center">
                 <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Saved Colleges</h3>
@@ -183,7 +182,7 @@ const SavedItems = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedColleges.map((college) => (
-                <Card key={college.id} className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <Card key={college.id} className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300 animate-slide-in">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
@@ -193,7 +192,7 @@ const SavedItems = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteSavedCollege(college.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 transition-all duration-300"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -217,7 +216,7 @@ const SavedItems = () => {
                         variant="outline"
                         size="sm"
                         asChild
-                        className="w-full text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        className="w-full text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300 animate-hover-lift"
                       >
                         <a href={college.college_url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="w-3 h-3 mr-2" />
@@ -234,7 +233,7 @@ const SavedItems = () => {
 
         <TabsContent value="jobs" className="space-y-4">
           {savedJobs.length === 0 ? (
-            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
               <CardContent className="p-8 text-center">
                 <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Saved Jobs</h3>
@@ -246,7 +245,7 @@ const SavedItems = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedJobs.map((job) => (
-                <Card key={job.id} className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <Card key={job.id} className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border hover:shadow-lg transition-all duration-300 animate-slide-in">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -261,7 +260,7 @@ const SavedItems = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteSavedJob(job.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 transition-all duration-300"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -285,7 +284,7 @@ const SavedItems = () => {
                         variant="outline"
                         size="sm"
                         asChild
-                        className="w-full text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        className="w-full text-gray-800 dark:text-white bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-400 transition-all duration-300 animate-hover-lift"
                       >
                         <a href={job.job_url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="w-3 h-3 mr-2" />
