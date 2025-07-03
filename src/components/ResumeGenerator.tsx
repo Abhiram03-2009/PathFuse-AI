@@ -34,6 +34,8 @@ const ResumeGenerator = () => {
     email: '',
     phone: '',
     location: '',
+    linkedin: '',
+    portfolio: '',
     summary: ''
   });
   const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -86,8 +88,12 @@ const ResumeGenerator = () => {
   };
 
   const generateResumeContent = () => {
-    let content = `${personalInfo.name}\n`;
-    content += `${personalInfo.email} | ${personalInfo.phone} | ${personalInfo.location}\n\n`;
+    let content = `${personalInfo.name || 'Your Name'}\n`;
+    let contactInfo = [personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(' | ');
+    if (contactInfo) content += `${contactInfo}\n`;
+    let webInfo = [personalInfo.linkedin, personalInfo.portfolio].filter(Boolean).join(' | ');
+    if (webInfo) content += `${webInfo}\n`;
+    content += '\n';
     
     if (personalInfo.summary) {
       content += `PROFESSIONAL SUMMARY\n${personalInfo.summary}\n\n`;
@@ -188,6 +194,26 @@ const ResumeGenerator = () => {
                     value={personalInfo.location}
                     onChange={(e) => setPersonalInfo({...personalInfo, location: e.target.value})}
                     placeholder="New York, NY"
+                    className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="linkedin" className="text-gray-900 dark:text-white">LinkedIn Profile</Label>
+                  <Input
+                    id="linkedin"
+                    value={personalInfo.linkedin}
+                    onChange={(e) => setPersonalInfo({...personalInfo, linkedin: e.target.value})}
+                    placeholder="linkedin.com/in/johndoe"
+                    className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="portfolio" className="text-gray-900 dark:text-white">Portfolio Website</Label>
+                  <Input
+                    id="portfolio"
+                    value={personalInfo.portfolio}
+                    onChange={(e) => setPersonalInfo({...personalInfo, portfolio: e.target.value})}
+                    placeholder="www.johndoe.com"
                     className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
                   />
                 </div>

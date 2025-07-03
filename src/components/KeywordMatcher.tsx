@@ -77,23 +77,42 @@ const KeywordMatcher = () => {
       .filter((word, index, array) => array.indexOf(word) === index);
   };
 
-  const findBestMatches = (resumeKeywords: string[], jobKeywords: string[]): { matched: string[], missing: string[] } => {
+  const calculateWordSimilarity = (word1: string, word2: string): number => {
+    // Exact match
+    if (word1.toLowerCase() === word2.toLowerCase()) return 1.0;
+    
+    // Check if one word contains the other
+    const longer = word1.length > word2.length ? word1.toLowerCase() : word2.toLowerCase();
+    const shorter = word1.length > word2.length ? word2.toLowerCase() : word1.toLowerCase();
+    
+    if (longer.includes(shorter)) {
+      return shorter.length / longer.length;
+    }
+    
+    // Use Levenshtein distance for character-level similarity
+    return calculateSimilarity(word1, word2);
+  };
+
+  const findBestMatches = (resumeKeywords: string[], jobKeywords: string[]): { matched: string[], missing: string[], similarities: Map<string, number> } => {
     const matched: string[] = [];
     const missing: string[] = [];
-    const threshold = 0.7; // 70% similarity threshold
+    const similarities = new Map<string, number>();
+    const threshold = 0.6; // 60% similarity threshold for more accurate matching
 
     jobKeywords.forEach(jobKeyword => {
       let bestMatch = '';
       let bestSimilarity = 0;
 
       resumeKeywords.forEach(resumeKeyword => {
-        const similarity = calculateSimilarity(jobKeyword, resumeKeyword);
+        const similarity = calculateWordSimilarity(jobKeyword, resumeKeyword);
         if (similarity > bestSimilarity) {
           bestSimilarity = similarity;
           bestMatch = resumeKeyword;
         }
       });
 
+      similarities.set(jobKeyword, bestSimilarity);
+      
       if (bestSimilarity >= threshold) {
         matched.push(jobKeyword);
       } else {
@@ -101,7 +120,7 @@ const KeywordMatcher = () => {
       }
     });
 
-    return { matched, missing };
+    return { matched, missing, similarities };
   };
 
   const analyzeKeywords = () => {
@@ -120,26 +139,46 @@ const KeywordMatcher = () => {
       const resumeKeywords = extractKeywords(resumeText);
       const jobKeywords = extractKeywords(jobDescription);
       
-      const { matched, missing } = findBestMatches(resumeKeywords, jobKeywords);
+      const { matched, missing, similarities } = findBestMatches(resumeKeywords, jobKeywords);
       
-      const overallMatch = jobKeywords.length > 0 ? Math.round((matched.length / jobKeywords.length) * 100) : 0;
+      // Calculate weighted match percentage based on similarity scores
+      let totalWeight = 0;
+      let matchedWeight = 0;
       
-      const suggestions = missing.slice(0, 10).map(keyword => 
-        `Consider adding "${keyword}" to your resume`
-      );
+      similarities.forEach((similarity, keyword) => {
+        totalWeight += 1;
+        matchedWeight += similarity;
+      });
+      
+      const overallMatch = totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
+      
+      // Generate contextual suggestions based on missing keywords
+      const suggestions = [];
+      if (missing.length > 0) {
+        suggestions.push(`Add these missing keywords: ${missing.slice(0, 5).join(', ')}`);
+      }
+      if (overallMatch < 70) {
+        suggestions.push("Consider restructuring your resume to better align with job requirements");
+        suggestions.push("Include more specific technical skills and tools mentioned in the posting");
+      }
+      if (matched.length > 0) {
+        suggestions.push("Emphasize and expand on your existing relevant skills");
+      }
+      suggestions.push("Use quantifiable achievements to demonstrate your impact");
+      suggestions.push("Include relevant certifications or continuing education");
 
       setAnalysis({
         overallMatch,
         matchedKeywords: matched,
-        missingKeywords: missing,
-        suggestions
+        missingKeywords: missing.slice(0, 20), // Limit to top 20 missing keywords
+        suggestions: suggestions.slice(0, 5)
       });
 
       setIsAnalyzing(false);
       
       toast({
-        title: "Analysis Complete",
-        description: `Your resume matches ${overallMatch}% of the job requirements.`,
+        title: "Analysis Complete!",
+        description: `Match score: ${overallMatch}% based on keyword similarity analysis.`
       });
     }, 2000);
   };

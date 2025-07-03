@@ -188,15 +188,15 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto max-h-[70vh]">
           <div className="bg-white border rounded-lg p-8 min-h-[600px] shadow-lg">
             <div className="prose max-w-none text-gray-900">
               {content ? (
                 <div>
                   {/* Header with professional styling */}
                   <div className="text-center border-b-2 border-blue-500 pb-4 mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">[Your Name]</h1>
-                    <p className="text-sm text-gray-600">[Your Email] | [Your Phone] | [Your Address]</p>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">{title === 'Resume' ? content.split('\n')[0] || '[Your Name]' : '[Your Name]'}</h1>
+                    <p className="text-sm text-gray-600">{title === 'Resume' ? content.split('\n')[1] || '[Your Email] | [Your Phone] | [Your Address]' : '[Your Email] | [Your Phone] | [Your Address]'}</p>
                     <p className="text-sm text-gray-600">[LinkedIn Profile] | [Portfolio Website]</p>
                   </div>
                   
