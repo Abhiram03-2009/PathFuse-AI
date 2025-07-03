@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, Search, Target, MapPin, Building, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface JobMatch {
   title: string;
@@ -89,49 +90,58 @@ const JobAnalyzer = () => {
 
     setIsAnalyzing(true);
 
-    // Simulate job analysis
-    setTimeout(() => {
-      const mockJobs: JobMatch[] = [
-        {
-          title: "Senior Software Engineer",
-          company: "TechCorp Inc.",
-          location: location === 'Remote' ? 'Remote' : `${location}, USA`,
-          salary: "$120,000 - $160,000",
-          matchPercentage: 95,
-          description: "Join our dynamic team to build cutting-edge software solutions using modern technologies.",
-          requirements: ["5+ years experience", "React/Node.js", "Cloud platforms", "Agile methodology"],
-          benefits: ["Health insurance", "401k matching", "Remote work", "Professional development"]
-        },
-        {
-          title: "Full Stack Developer",
-          company: "StartupXYZ",
-          location: location === 'Remote' ? 'Remote' : `${location}, USA`,
-          salary: "$90,000 - $130,000",
-          matchPercentage: 87,
-          description: "Help us scale our platform and build features that impact millions of users.",
-          requirements: ["3+ years experience", "JavaScript/TypeScript", "Database design", "API development"],
-          benefits: ["Equity options", "Flexible hours", "Health coverage", "Learning budget"]
-        },
-        {
-          title: "Product Manager",
-          company: "Growth Solutions",
-          location: location === 'Remote' ? 'Remote' : `${location}, USA`,
-          salary: "$110,000 - $140,000",
-          matchPercentage: 78,
-          description: "Lead product strategy and work with cross-functional teams to deliver exceptional user experiences.",
-          requirements: ["Product management experience", "Data analysis", "User research", "Roadmap planning"],
-          benefits: ["Performance bonus", "Stock options", "Unlimited PTO", "Team retreats"]
+    try {
+      console.log('Sending job match request:', { skills, industry, location });
+      
+      const skillsArray = skills.split(/[\s,]+/).filter(s => s.trim().length > 0);
+      
+      const { data, error } = await supabase.functions.invoke('job-matcher', {
+        body: { 
+          skills: skillsArray,
+          industry,
+          location,
+          resumeText: resumeFile ? `Resume file: ${resumeFile.name}` : null
         }
-      ];
+      });
 
-      setJobMatches(mockJobs);
-      setIsAnalyzing(false);
+      console.log('Job match response received:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to get job matches');
+      }
+
+      if (!data || !data.jobs) {
+        throw new Error('No job matches received');
+      }
+
+      const formattedJobs: JobMatch[] = data.jobs.map((job: any) => ({
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        matchPercentage: job.matchPercentage,
+        description: job.description,
+        requirements: job.requirements || [],
+        benefits: job.benefits || []
+      }));
+
+      setJobMatches(formattedJobs);
       
       toast({
-        title: "Analysis Complete",
-        description: `Found ${mockJobs.length} job matches based on your profile.`,
+        title: "Real-time Analysis Complete",
+        description: `Found ${formattedJobs.length} current job matches with live market data.`,
       });
-    }, 3000);
+    } catch (error) {
+      console.error('Job analysis error:', error);
+      toast({
+        title: "Analysis Error",
+        description: "Failed to analyze jobs. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (

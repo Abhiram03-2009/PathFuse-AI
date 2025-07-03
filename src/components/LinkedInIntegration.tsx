@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LinkedInProfile {
   name: string;
@@ -54,53 +55,44 @@ const LinkedInIntegration = () => {
     }
 
     setIsAnalyzing(true);
-    const username = extractUsernameFromUrl(linkedInUrl);
 
-    // Simulate LinkedIn profile analysis with realistic data based on URL
-    setTimeout(() => {
-      const mockProfile: LinkedInProfile = {
-        name: username.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Professional User",
-        headline: "Senior Software Engineer | Full Stack Developer | React & Node.js Expert",
-        summary: `Passionate software engineer with 5+ years of experience building scalable web applications. Expertise in React, Node.js, and cloud technologies. Led multiple cross-functional teams to deliver high-impact products. Currently working at a leading tech company focusing on innovative solutions.`,
-        experience: [
-          {
-            title: "Senior Software Engineer",
-            company: "Tech Corp",
-            duration: "2022 - Present",
-            description: "Led development of microservices architecture, improved system performance by 40%, mentored junior developers, implemented CI/CD pipelines"
-          },
-          {
-            title: "Software Engineer",
-            company: "StartupXYZ",
-            duration: "2020 - 2022",
-            description: "Developed full-stack web applications using React and Node.js, collaborated with design team, implemented responsive UI components"
-          },
-          {
-            title: "Junior Developer",
-            company: "Innovation Labs",
-            duration: "2019 - 2020",
-            description: "Built web applications, participated in code reviews, learned modern development practices and agile methodologies"
-          }
-        ],
-        education: [
-          {
-            school: "University of Technology",
-            degree: "Bachelor of Science",
-            field: "Computer Science",
-            year: "2019"
-          }
-        ],
-        skills: ["JavaScript", "React", "Node.js", "Python", "AWS", "Docker", "MongoDB", "PostgreSQL", "Git", "Agile", "TypeScript", "GraphQL"]
-      };
+    try {
+      console.log('Sending LinkedIn analysis request');
+      
+      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+        body: { 
+          action: 'analyze_profile',
+          linkedInUrl
+        }
+      });
 
-      setProfileData(mockProfile);
-      setIsAnalyzing(false);
+      console.log('LinkedIn analysis response received:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to analyze LinkedIn profile');
+      }
+
+      if (!data || !data.profile) {
+        throw new Error('No profile data received');
+      }
+
+      setProfileData(data.profile);
       
       toast({
         title: "Profile Analyzed!",
-        description: "LinkedIn profile data has been extracted and analyzed successfully"
+        description: "LinkedIn profile data has been extracted and analyzed with AI-powered insights"
       });
-    }, 3000);
+    } catch (error) {
+      console.error('LinkedIn analysis error:', error);
+      toast({
+        title: "Analysis Error",
+        description: "Failed to analyze LinkedIn profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const openLinkedInProfile = () => {
@@ -109,113 +101,84 @@ const LinkedInIntegration = () => {
     }
   };
 
-  const generateOptimizedResume = () => {
+  const generateOptimizedResume = async () => {
     if (!profileData) return;
 
-    const optimizedResume = `${profileData.name}
-${profileData.headline}
+    try {
+      console.log('Generating optimized resume');
+      
+      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+        body: { 
+          action: 'generate_resume',
+          profileData
+        }
+      });
 
-PROFESSIONAL SUMMARY
-${profileData.summary}
+      console.log('Resume generation response received:', { data, error });
 
-WORK EXPERIENCE
-${profileData.experience.map(exp => 
-  `${exp.title} at ${exp.company} (${exp.duration})
-${exp.description}`
-).join('\n\n')}
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to generate resume');
+      }
 
-EDUCATION
-${profileData.education.map(edu => 
-  `${edu.degree} in ${edu.field} - ${edu.school} (${edu.year})`
-).join('\n')}
+      if (!data || !data.resumeText) {
+        throw new Error('No resume text received');
+      }
 
-TECHNICAL SKILLS
-${profileData.skills.join(' • ')}
-
-KEY ACHIEVEMENTS
-• Demonstrated leadership in cross-functional team environments
-• Proven track record of delivering scalable software solutions
-• Strong problem-solving abilities with focus on performance optimization
-• Experience with modern development practices and cloud technologies
-• Excellent communication and collaboration skills`;
-
-    setResumeText(optimizedResume);
-    
-    toast({
-      title: "Resume Generated!",
-      description: "Optimized resume created from LinkedIn profile analysis"
-    });
+      setResumeText(data.resumeText);
+      
+      toast({
+        title: "Resume Generated!",
+        description: "AI-optimized resume created from LinkedIn profile with enhanced formatting"
+      });
+    } catch (error) {
+      console.error('Resume generation error:', error);
+      toast({
+        title: "Generation Error",
+        description: "Failed to generate resume. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const analyzeProfileStrengths = () => {
+  const analyzeProfileStrengths = async () => {
     if (!profileData) return;
 
-    const analysis = `COMPREHENSIVE LINKEDIN PROFILE ANALYSIS
+    try {
+      console.log('Generating career insights');
+      
+      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+        body: { 
+          action: 'career_insights',
+          profileData
+        }
+      });
 
-PROFILE OVERVIEW:
-Name: ${profileData.name}
-Current Position: ${profileData.headline}
-Career Level: Senior Professional (5+ years experience)
+      console.log('Career insights response received:', { data, error });
 
-STRENGTHS ANALYSIS:
-✅ Professional headline clearly states expertise and technologies
-✅ Comprehensive summary highlighting years of experience and key skills
-✅ Quantified achievements (40% performance improvement mentioned)
-✅ Progressive career advancement showing growth
-✅ Diverse technical skill set covering full-stack development
-✅ Leadership experience and mentoring capabilities demonstrated
-✅ Educational background aligns with career trajectory
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to generate career insights');
+      }
 
-CONTENT QUALITY SCORE: 88/100
+      if (!data || !data.analysis) {
+        throw new Error('No analysis received');
+      }
 
-KEYWORD OPTIMIZATION:
-Strong presence of industry keywords:
-• Technical Skills: React, Node.js, JavaScript, Python, AWS
-• Role Keywords: Senior Software Engineer, Full Stack Developer
-• Industry Terms: Microservices, CI/CD, Agile, Cloud Technologies
-
-RECOMMENDATIONS FOR IMPROVEMENT:
-🔧 Add industry certifications (AWS, Google Cloud, etc.)
-🔧 Include volunteer work or open-source contributions
-🔧 Add specific project outcomes with metrics
-🔧 Request recommendations from former colleagues
-🔧 Include links to portfolio or GitHub projects
-🔧 Add recent courses or continuous learning activities
-🔧 Consider adding industry publications or speaking engagements
-
-MARKET POSITIONING:
-Your profile positions you well for:
-• Senior Software Engineering roles
-• Technical Lead positions
-• Full-Stack Developer roles
-• Solutions Architect positions
-• Engineering Management tracks
-
-SALARY EXPECTATIONS:
-Based on experience and skills: $120,000 - $160,000 annually
-(varies by location and company size)
-
-NETWORKING OPPORTUNITIES:
-Consider connecting with:
-• Technical leads in similar roles
-• Professionals at target companies
-• Industry thought leaders
-• Alumni from your university
-• Colleagues from previous companies
-
-ATS COMPATIBILITY SCORE: 92/100
-Your profile is excellently optimized for Applicant Tracking Systems with:
-• High keyword density for relevant terms
-• Clear structure and formatting
-• Proper use of industry terminology
-• Quantified achievements and metrics`;
-
-    setAnalysisResult(analysis);
-    
-    toast({
-      title: "Analysis Complete!",
-      description: "Comprehensive profile analysis generated with actionable insights"
-    });
+      setAnalysisResult(data.analysis);
+      
+      toast({
+        title: "Analysis Complete!",
+        description: "AI-powered career insights generated with market data and recommendations"
+      });
+    } catch (error) {
+      console.error('Career insights error:', error);
+      toast({
+        title: "Analysis Error",
+        description: "Failed to generate career insights. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

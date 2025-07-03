@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Languages, ArrowRight, Copy, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define the structure for a language object
 interface Language {
@@ -65,51 +66,36 @@ const MultilingualTranslator = () => {
       return;
     }
 
-    setIsTranslating(true); // Set translating status to true to show loading indicator
+    setIsTranslating(true);
 
     try {
-      // Construct the prompt for the Gemini 2.0 Flash model
-      const prompt = `Translate the following text from ${getLanguageName(sourceLanguage)} to ${getLanguageName(targetLanguage)}: "${sourceText}"`;
-
-      // Prepare the chat history for the API request
-      let chatHistory = [];
-      chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-      // Define the payload for the API request
-      const payload = { contents: chatHistory };
-
-      // API key for Google Cloud Translation (placeholder - in a real app, secure this!)
-      // For Canvas environment, leave apiKey as an empty string; it will be automatically provided.
-      const apiKey = ""; 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      // Make the API call to the Gemini 2.0 Flash model
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      console.log('Sending translation request:', { 
+        text: sourceText.substring(0, 50), 
+        sourceLanguage, 
+        targetLanguage 
+      });
+      
+      const { data, error } = await supabase.functions.invoke('multilingual-translator', {
+        body: { 
+          text: sourceText,
+          sourceLanguage,
+          targetLanguage
+        }
       });
 
-      // Parse the JSON response
-      const result = await response.json();
+      console.log('Translation response received:', { data, error });
 
-      // Check if the response contains valid translated text
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        const text = result.candidates[0].content.parts[0].text;
-        setTranslatedText(text); // Update the translated text state
-      } else {
-        // Handle cases where the response structure is unexpected or content is missing
-        console.error('Unexpected API response structure:', result);
-        setTranslatedText('Translation failed: Could not parse API response.');
-        toast({
-          title: "Translation Error",
-          description: "Failed to parse translation response. Please try again.",
-          variant: "destructive"
-        });
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to get translation');
       }
 
+      if (!data || !data.translatedText) {
+        throw new Error('No translation received');
+      }
+
+      setTranslatedText(data.translatedText);
+      
       // Show success toast notification
       toast({
         title: "Translation Complete",
@@ -117,15 +103,14 @@ const MultilingualTranslator = () => {
       });
 
     } catch (error) {
-      // Log and show error toast notification for any API call failures
-      console.error('Translation API error:', error);
+      console.error('Translation error:', error);
       toast({
-        title: "Translation Error",
-        description: "Failed to translate text. Please check your network or API key.",
+        title: "Translation Error", 
+        description: "Failed to translate text. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsTranslating(false); // Reset translating status
+      setIsTranslating(false);
     }
   };
 

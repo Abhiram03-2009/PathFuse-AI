@@ -78,26 +78,34 @@ const KeywordMatcher = () => {
   };
 
   const calculateWordSimilarity = (word1: string, word2: string): number => {
-    // Exact match
-    if (word1.toLowerCase() === word2.toLowerCase()) return 1.0;
+    const w1 = word1.toLowerCase().trim();
+    const w2 = word2.toLowerCase().trim();
     
-    // Check if one word contains the other
-    const longer = word1.length > word2.length ? word1.toLowerCase() : word2.toLowerCase();
-    const shorter = word1.length > word2.length ? word2.toLowerCase() : word1.toLowerCase();
+    // Exact match gets full score
+    if (w1 === w2) return 1.0;
     
-    if (longer.includes(shorter)) {
-      return shorter.length / longer.length;
+    // Check substring matches (both directions)
+    if (w1.includes(w2) || w2.includes(w1)) {
+      const longer = w1.length > w2.length ? w1 : w2;
+      const shorter = w1.length > w2.length ? w2 : w1;
+      return Math.max(0.8, shorter.length / longer.length);
     }
     
-    // Use Levenshtein distance for character-level similarity
-    return calculateSimilarity(word1, word2);
+    // For very short words, use exact matching only
+    if (w1.length <= 2 || w2.length <= 2) {
+      return w1 === w2 ? 1.0 : 0.0;
+    }
+    
+    // Use Levenshtein distance for longer words
+    const similarity = calculateSimilarity(w1, w2);
+    return similarity > 0.7 ? similarity : 0.0;
   };
 
   const findBestMatches = (resumeKeywords: string[], jobKeywords: string[]): { matched: string[], missing: string[], similarities: Map<string, number> } => {
     const matched: string[] = [];
     const missing: string[] = [];
     const similarities = new Map<string, number>();
-    const threshold = 0.6; // 60% similarity threshold for more accurate matching
+    const threshold = 0.7; // 70% similarity threshold for better matching
 
     jobKeywords.forEach(jobKeyword => {
       let bestMatch = '';
