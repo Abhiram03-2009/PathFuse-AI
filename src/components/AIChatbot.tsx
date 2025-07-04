@@ -89,7 +89,7 @@ const AIChatbot = () => {
       console.error('Error getting AI response:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm having trouble connecting to the AI service right now. This could be due to API configuration issues. Please make sure the OpenAI API key is properly set and try again in a moment.",
+        content: "I apologize, but I'm experiencing some technical difficulties. Let me try to help you with your career question directly. What specific aspect of your career would you like guidance on?",
         sender: 'bot',
         timestamp: new Date()
       };

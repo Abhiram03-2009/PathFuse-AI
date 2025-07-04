@@ -49,7 +49,43 @@ serve(async (req) => {
       const errorData = await response.text();
       console.error('Error details:', errorData);
       
-      // Fallback to a simple mock translation for development
+      // Use OpenAI as fallback for better translations
+      const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a professional translator. Translate the following text from ${sourceLanguage} to ${targetLanguage}. Return only the translated text without any additional commentary.`
+            },
+            {
+              role: 'user',
+              content: text
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.3,
+        }),
+      });
+
+      if (openAIResponse.ok) {
+        const openAIData = await openAIResponse.json();
+        const translatedText = openAIData.choices[0].message.content;
+        
+        return new Response(
+          JSON.stringify({ translatedText }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+      
+      // Final fallback if both APIs fail
       const mockTranslation = `[TRANSLATED from ${sourceLanguage} to ${targetLanguage}]: ${text}`;
       
       return new Response(

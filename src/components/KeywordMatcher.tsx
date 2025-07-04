@@ -91,14 +91,19 @@ const KeywordMatcher = () => {
       return Math.max(0.8, shorter.length / longer.length);
     }
     
-    // For very short words, use exact matching only
+    // Special handling for very short words - be more lenient
     if (w1.length <= 2 || w2.length <= 2) {
+      // For very short words like "yo", check if they're similar
+      if (Math.abs(w1.length - w2.length) <= 1) {
+        const similarity = calculateSimilarity(w1, w2);
+        return similarity > 0.5 ? similarity : 0.0;
+      }
       return w1 === w2 ? 1.0 : 0.0;
     }
     
     // Use Levenshtein distance for longer words
     const similarity = calculateSimilarity(w1, w2);
-    return similarity > 0.7 ? similarity : 0.0;
+    return similarity > 0.6 ? similarity : 0.0; // Lowered threshold for better matching
   };
 
   const findBestMatches = (resumeKeywords: string[], jobKeywords: string[]): { matched: string[], missing: string[], similarities: Map<string, number> } => {
@@ -147,13 +152,26 @@ const KeywordMatcher = () => {
       const resumeKeywords = extractKeywords(resumeText);
       const jobKeywords = extractKeywords(jobDescription);
       
-      const { matched, missing, similarities } = findBestMatches(resumeKeywords, jobKeywords);
+      // Bidirectional matching - check both directions
+      const resumeToJob = findBestMatches(resumeKeywords, jobKeywords);
+      const jobToResume = findBestMatches(jobKeywords, resumeKeywords);
       
-      // Calculate weighted match percentage based on similarity scores
+      // Combine results for comprehensive analysis
+      const allMatched = [...new Set([...resumeToJob.matched, ...jobToResume.matched])];
+      const allMissing = [...new Set([...resumeToJob.missing, ...jobToResume.missing])];
+      
+      // Calculate weighted match percentage from both directions
       let totalWeight = 0;
       let matchedWeight = 0;
       
-      similarities.forEach((similarity, keyword) => {
+      // Weight from resume to job
+      resumeToJob.similarities.forEach((similarity, keyword) => {
+        totalWeight += 1;
+        matchedWeight += similarity;
+      });
+      
+      // Weight from job to resume
+      jobToResume.similarities.forEach((similarity, keyword) => {
         totalWeight += 1;
         matchedWeight += similarity;
       });
@@ -162,14 +180,14 @@ const KeywordMatcher = () => {
       
       // Generate contextual suggestions based on missing keywords
       const suggestions = [];
-      if (missing.length > 0) {
-        suggestions.push(`Add these missing keywords: ${missing.slice(0, 5).join(', ')}`);
+      if (allMissing.length > 0) {
+        suggestions.push(`Add these missing keywords: ${allMissing.slice(0, 5).join(', ')}`);
       }
       if (overallMatch < 70) {
         suggestions.push("Consider restructuring your resume to better align with job requirements");
         suggestions.push("Include more specific technical skills and tools mentioned in the posting");
       }
-      if (matched.length > 0) {
+      if (allMatched.length > 0) {
         suggestions.push("Emphasize and expand on your existing relevant skills");
       }
       suggestions.push("Use quantifiable achievements to demonstrate your impact");
@@ -177,8 +195,8 @@ const KeywordMatcher = () => {
 
       setAnalysis({
         overallMatch,
-        matchedKeywords: matched,
-        missingKeywords: missing.slice(0, 20), // Limit to top 20 missing keywords
+        matchedKeywords: allMatched,
+        missingKeywords: allMissing.slice(0, 20), // Limit to top 20 missing keywords
         suggestions: suggestions.slice(0, 5)
       });
 

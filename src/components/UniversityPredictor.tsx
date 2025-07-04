@@ -152,48 +152,6 @@ const UniversityPredictor = () => {
         </CardHeader>
       </Card>
 
-      {/* Resume Analysis Section */}
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
-            <FileText className="w-5 h-5" />
-            <span>Resume Analysis for University Prediction</span>
-          </CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-300">
-            Paste your resume text to automatically extract academic information and improve prediction accuracy.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="resume-text" className="text-gray-700 dark:text-gray-300">Resume Text</Label>
-            <Textarea
-              id="resume-text"
-              value={resumeText}
-              onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Paste your resume content here. Include GPA, test scores, extracurriculars, awards, work experience, etc."
-              className="min-h-32 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-              rows={6}
-            />
-          </div>
-          <Button
-            onClick={analyzeResumeForUniversity}
-            disabled={isAnalyzingResume || !resumeText.trim()}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-          >
-            {isAnalyzingResume ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                Analyzing Resume...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4 mr-2" />
-                Analyze Resume for University Prediction
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StudentProfileForm 

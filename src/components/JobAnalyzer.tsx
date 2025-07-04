@@ -34,6 +34,45 @@ const JobAnalyzer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
 
+  const saveJob = async (job: JobMatch) => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to save jobs.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Save job to database
+      const { error } = await supabase.from('saved_jobs').insert({
+        job_title: job.title,
+        company_name: job.company,
+        match_percentage: job.matchPercentage,
+        job_url: null, // Could be added later if you have URLs
+        user_id: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Job Saved!",
+        description: `${job.title} at ${job.company} has been saved to your collection.`,
+      });
+    } catch (error) {
+      console.error('Error saving job:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save job. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const usStates = [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
     'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky',
@@ -304,15 +343,25 @@ const JobAnalyzer = () => {
                           {job.location}
                         </p>
                       </div>
-                      <Badge variant="secondary" className={`${
-                        job.matchPercentage >= 90 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                          : job.matchPercentage >= 80 
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                      }`}>
-                        {job.matchPercentage}% Match
-                      </Badge>
+                      <div className="flex flex-col items-end space-y-2">
+                        <Badge variant="secondary" className={`${
+                          job.matchPercentage >= 90 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : job.matchPercentage >= 80 
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                        }`}>
+                          {job.matchPercentage}% Match
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => saveJob(job)}
+                          className="text-xs"
+                        >
+                          Save Job
+                        </Button>
+                      </div>
                     </div>
                     
                     <Progress value={job.matchPercentage} className="mb-2" />
