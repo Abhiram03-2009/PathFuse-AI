@@ -41,6 +41,7 @@ const UniversityPredictor = () => {
   const [showResults, setShowResults] = useState(false);
   const [resumeText, setResumeText] = useState('');
   const [isAnalyzingResume, setIsAnalyzingResume] = useState(false);
+  const [hasCalculatedChances, setHasCalculatedChances] = useState(false);
 
   const handleUniversityToggle = (universityName: string) => {
     setSelectedUniversities(prev => 
@@ -136,6 +137,7 @@ const UniversityPredictor = () => {
 
     setResults(matches.sort((a, b) => b.matchPercentage - a.matchPercentage));
     setShowResults(true);
+    setHasCalculatedChances(true);
   };
 
   return (
@@ -166,6 +168,7 @@ const UniversityPredictor = () => {
           onCalculateChances={calculateChances}
           intendedMajor={studentStats.intendedMajor}
           isDarkMode={isDarkMode}
+          hasCalculatedChances={hasCalculatedChances}
         />
       </div>
 

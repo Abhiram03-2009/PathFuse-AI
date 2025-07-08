@@ -348,7 +348,7 @@ ${profileData.languages.join(' • ')}` : ''}`;
 
         const insights = generateCareerInsights(profileData);
         
-        const detailedAnalysis = `COMPREHENSIVE LINKEDIN PROFILE ANALYSIS
+        const detailedAnalysis = `COMPREHENSIVE LINKEDIN PROFILE ANALYSIS & JOB RECOMMENDATIONS
 
 PROFILE OVERVIEW
 • Name: ${profileData.name}
@@ -387,6 +387,25 @@ Based on your current profile and industry trends, you are well-positioned for:
 • Cross-functional opportunities leveraging your diverse skill set
 • Consulting or advisory positions
 • Entrepreneurial ventures in your area of expertise
+
+RECOMMENDED JOB OPPORTUNITIES
+Based on your skills and experience:
+• ${profileData.headline ? profileData.headline.replace('at', 'roles at top companies like') : 'Advanced positions at leading organizations'}
+• Project management roles leveraging your leadership experience
+• Consulting opportunities in your domain expertise
+• Remote/hybrid positions with competitive compensation packages
+
+TARGET COMPANIES TO APPLY TO
+• Companies similar to ${profileData.experience?.[0]?.company || 'your current organization'}
+• Startups seeking experienced professionals
+• Fortune 500 companies with growth opportunities
+• Organizations with strong remote work cultures
+
+SALARY NEGOTIATIONS TIPS
+• Research market rates: $${(await insights).marketPosition.salaryRange.min.toLocaleString()} - $${(await insights).marketPosition.salaryRange.max.toLocaleString()}
+• Highlight quantifiable achievements from your experience
+• Leverage your ${profileData.skills?.length || 0}+ skills portfolio
+• Consider total compensation including benefits and equity
 
 OPTIMIZATION RECOMMENDATIONS
 • Increase profile completeness to boost visibility by 40%

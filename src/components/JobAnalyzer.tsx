@@ -324,7 +324,7 @@ const JobAnalyzer = () => {
           </CardHeader>
           <CardContent>
             {jobMatches.length > 0 ? (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+                 <div className="space-y-4 max-h-96 overflow-y-auto">
                 {jobMatches.map((job, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${
                     isDarkMode 
@@ -332,16 +332,26 @@ const JobAnalyzer = () => {
                       : 'bg-blue-50/30 border-blue-300/30'
                   }`}>
                     <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{job.title}</h3>
-                        <p className={`text-sm flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <Building className="w-3 h-3 mr-1" />
-                          {job.company}
-                        </p>
-                        <p className={`text-sm flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {job.location}
-                        </p>
+                      <div className="flex items-start space-x-3">
+                        <img 
+                          src={`https://logo.clearbit.com/${job.company.toLowerCase().replace(/\s+/g, '')}.com`}
+                          alt={job.company}
+                          className="w-8 h-8 rounded-lg object-contain bg-white border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${job.company}&size=32&background=random`;
+                          }}
+                        />
+                        <div>
+                          <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{job.title}</h3>
+                          <p className={`text-sm flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <Building className="w-3 h-3 mr-1" />
+                            {job.company}
+                          </p>
+                          <p className={`text-sm flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {job.location}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex flex-col items-end space-y-2">
                         <Badge variant="secondary" className={`${
@@ -353,14 +363,24 @@ const JobAnalyzer = () => {
                         }`}>
                           {job.matchPercentage}% Match
                         </Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => saveJob(job)}
-                          className="text-xs"
-                        >
-                          Save Job
-                        </Button>
+                        <div className="flex flex-col space-y-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => saveJob(job)}
+                            className="text-xs"
+                          >
+                            Save Job
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://${job.company.toLowerCase().replace(/\s+/g, '')}.com/careers`, '_blank')}
+                            className="text-xs"
+                          >
+                            Careers Page
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     

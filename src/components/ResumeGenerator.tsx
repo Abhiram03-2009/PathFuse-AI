@@ -88,6 +88,7 @@ const ResumeGenerator = () => {
   };
 
   const generateResumeContent = () => {
+    // Header with contact information
     let content = `${personalInfo.name || 'Your Name'}\n`;
     let contactInfo = [personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(' | ');
     if (contactInfo) content += `${contactInfo}\n`;
@@ -95,6 +96,7 @@ const ResumeGenerator = () => {
     if (webInfo) content += `${webInfo}\n`;
     content += '\n';
     
+    // Start with professional summary (no need to repeat contact info)
     if (personalInfo.summary) {
       content += `PROFESSIONAL SUMMARY\n${personalInfo.summary}\n\n`;
     }

@@ -11,6 +11,7 @@ interface UniversitySelectorProps {
   onCalculateChances: () => void;
   intendedMajor: string;
   isDarkMode: boolean;
+  hasCalculatedChances?: boolean;
 }
 
 const UniversitySelector: React.FC<UniversitySelectorProps> = ({
@@ -18,7 +19,8 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
   onUniversityToggle,
   onCalculateChances,
   intendedMajor,
-  isDarkMode
+  isDarkMode,
+  hasCalculatedChances = false
 }) => {
   return (
     <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
@@ -52,14 +54,21 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
           ))}
         </div>
         
-        <Button 
-          onClick={onCalculateChances}
-          className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-          disabled={selectedUniversities.length === 0 || !intendedMajor}
-        >
-          <Target className="w-4 h-4 mr-2" />
-          Analyze My Admission Chances
-        </Button>
+        <div className="mt-4 space-y-2">
+          {hasCalculatedChances && (
+            <div className="text-sm text-green-600 dark:text-green-400 text-center">
+              ✓ Admission chances calculated successfully
+            </div>
+          )}
+          <Button 
+            onClick={onCalculateChances}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            disabled={selectedUniversities.length === 0 || !intendedMajor}
+          >
+            <Target className="w-4 h-4 mr-2" />
+            {hasCalculatedChances ? 'Recalculate Admission Chances' : 'Analyze My Admission Chances'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

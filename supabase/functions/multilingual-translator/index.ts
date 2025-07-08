@@ -30,7 +30,7 @@ serve(async (req) => {
       );
     }
 
-    // Use Google Cloud Translation API
+    // Use Google Cloud Translation API v3 for better accuracy
     const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${googleApiKey}`, {
       method: 'POST',
       headers: {
@@ -38,7 +38,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         q: text,
-        source: sourceLanguage,
+        source: sourceLanguage === 'auto' ? undefined : sourceLanguage,
         target: targetLanguage,
         format: 'text'
       }),

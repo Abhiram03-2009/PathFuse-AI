@@ -302,17 +302,17 @@ const LinkedInIntegration = () => {
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button onClick={generateOptimizedResume} size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
-                    <Download className="w-4 h-4 mr-2" />
-                    Generate Resume
+                  <Button onClick={analyzeProfileStrengths} size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Job & Career Analysis
                   </Button>
-                  <Button onClick={analyzeProfileStrengths} size="sm" variant="outline" className={`flex-1 ${
+                  <Button onClick={generateOptimizedResume} size="sm" variant="outline" className={`flex-1 ${
                     isDarkMode 
                       ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' 
                       : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'
                   }`}>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Analyze Profile
+                    <Download className="w-4 h-4 mr-2" />
+                    Generate Resume
                   </Button>
                 </div>
               </div>

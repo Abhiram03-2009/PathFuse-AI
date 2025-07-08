@@ -239,7 +239,7 @@ const MultilingualTranslator = () => {
             <span>Multilingual Translator</span>
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
-            Translate text between 20+ languages with AI-powered accuracy and cultural context.
+            Professional translation powered by Google Translate API with high accuracy and context awareness.
           </CardDescription>
         </CardHeader>
       </Card>
