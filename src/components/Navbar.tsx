@@ -7,7 +7,7 @@ import { LogOut, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import pathFuseLogo from '@/assets/pathfuse-logo.png';
+import pathFuseLogo from '/lovable-uploads/ae5bc441-3df5-4789-a85f-89d17eafc98b.png';
 
 const Navbar = () => {
   const { user, profile, signOut } = useAuth();

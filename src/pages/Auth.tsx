@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
-import pathFuseLogo from '@/assets/pathfuse-logo.png';
+import pathFuseLogo from '/lovable-uploads/ae5bc441-3df5-4789-a85f-89d17eafc98b.png';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
