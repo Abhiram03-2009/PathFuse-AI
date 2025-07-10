@@ -7,7 +7,7 @@ import { LogOut, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import careerCraftLogo from '@/assets/careercraft-logo.png';
+import pathFuseLogo from '@/assets/pathfuse-logo.png';
 
 const Navbar = () => {
   const { user, profile, signOut } = useAuth();
@@ -55,12 +55,12 @@ const Navbar = () => {
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
             <div className={`relative ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl p-3 border neon-border`}>
-              <img src={careerCraftLogo} alt="CareerCraft AI Logo" className="w-12 h-12 object-contain" />
+              <img src={pathFuseLogo} alt="Path Fuse AI Logo" className="w-12 h-12 object-contain" />
             </div>
           </div>
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker">
-              CareerCraft AI
+              Path Fuse AI
             </h1>
             <p className={`text-xs animate-fade-in ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Your AI Career Assistant</p>
           </div>
