@@ -54,12 +54,16 @@ const Navbar = () => {
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
             <div className={`relative ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl p-4 border neon-border`}>
-              <img src="/lovable-uploads/81472227-0dd6-4225-b9a0-2ff50bbe4f1c.png" alt="Resumate AI Logo" className="w-10 h-10 object-contain" />
+              <svg className="w-10 h-10" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" className="fill-gradient-to-r from-cyan-400 to-blue-500"/>
+                <path d="M30 35h40l-5 8h-30v6h25l-5 8h-20v8h35l-5 8h-40z" className="fill-white"/>
+                <circle cx="75" cy="25" r="8" className="fill-purple-400 animate-pulse"/>
+              </svg>
             </div>
           </div>
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker">
-              Resumate AI
+              CareerCraft AI
             </h1>
             <p className={`text-xs animate-fade-in ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Your AI Career Assistant</p>
           </div>
