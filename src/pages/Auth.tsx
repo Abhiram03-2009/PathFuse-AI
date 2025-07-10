@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import careerCraftLogo from '@/assets/careercraft-logo.png';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -114,11 +115,7 @@ const Auth = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow"></div>
                 <div className="relative bg-gray-800/60 backdrop-blur-lg rounded-xl p-3 border border-cyan-400/30 neon-border">
-                  <svg className="w-8 h-8" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="45" className="fill-gradient-to-r from-cyan-400 to-blue-500"/>
-                    <path d="M30 35h40l-5 8h-30v6h25l-5 8h-20v8h35l-5 8h-40z" className="fill-white"/>
-                    <circle cx="75" cy="25" r="8" className="fill-purple-400 animate-pulse"/>
-                  </svg>
+                  <img src={careerCraftLogo} alt="CareerCraft AI Logo" className="w-10 h-10 object-contain" />
                 </div>
               </div>
               <div>
