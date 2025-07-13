@@ -34,6 +34,35 @@ const JobAnalyzer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
 
+  const [savedJobsList, setSavedJobsList] = useState<string[]>([]);
+
+  const fetchSavedJobs = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('saved_jobs')
+          .select('job_title, company_name')
+          .eq('user_id', user.id);
+        
+        if (data) {
+          const savedKeys = data.map(job => `${job.job_title}-${job.company_name}`);
+          setSavedJobsList(savedKeys);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching saved jobs:', error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchSavedJobs();
+  }, []);
+
+  const isJobSaved = (job: JobMatch) => {
+    return savedJobsList.includes(`${job.title}-${job.company}`);
+  };
+
   const saveJob = async (job: JobMatch) => {
     try {
       // Get current user
@@ -43,6 +72,16 @@ const JobAnalyzer = () => {
         toast({
           title: "Authentication Required",
           description: "Please sign in to save jobs.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if already saved
+      if (isJobSaved(job)) {
+        toast({
+          title: "Already Saved",
+          description: "This job is already in your saved list.",
           variant: "destructive"
         });
         return;
@@ -58,6 +97,9 @@ const JobAnalyzer = () => {
       });
 
       if (error) throw error;
+
+      // Update local state
+      setSavedJobsList(prev => [...prev, `${job.title}-${job.company}`]);
 
       toast({
         title: "Job Saved!",
@@ -368,9 +410,10 @@ const JobAnalyzer = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => saveJob(job)}
-                            className="text-xs"
+                            disabled={isJobSaved(job)}
+                            className={`text-xs ${isJobSaved(job) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            Save Job
+                            {isJobSaved(job) ? 'Saved' : 'Save Job'}
                           </Button>
                           <Button
                             size="sm"

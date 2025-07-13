@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,11 +22,42 @@ const SaveCollegeButton: React.FC<SaveCollegeButtonProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
+  useEffect(() => {
+    checkIfSaved();
+  }, [collegeName, user]);
+
+  const checkIfSaved = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('saved_colleges')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('college_name', collegeName)
+        .single();
+      
+      setIsSaved(!!data);
+    } catch (error) {
+      // Not found is expected for unsaved colleges
+      setIsSaved(false);
+    }
+  };
+
   const handleSaveCollege = async () => {
     if (!user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to save colleges.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isSaved) {
+      toast({
+        title: "Already Saved",
+        description: "This college is already in your saved list.",
         variant: "destructive"
       });
       return;

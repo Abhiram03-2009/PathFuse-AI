@@ -1,13 +1,14 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload } from 'lucide-react';
+import { Upload, FileText, Eye, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { StudentStats } from './types';
 import { majors } from './constants';
 
@@ -24,41 +25,98 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 }) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<string>('');
+  const [showPreview, setShowPreview] = useState(false);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Simulate resume parsing
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
+      if (file.type === 'application/pdf' || file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'text/plain') {
+        setUploadedFile(file);
+        setIsAnalyzing(true);
         
-        // Extract GPA if mentioned
-        const gpaMatch = text.match(/GPA[:\s]*(\d+\.\d+)/i);
-        if (gpaMatch) {
-          setStudentStats(prev => ({...prev, gpaWeighted: parseFloat(gpaMatch[1])}));
+        try {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const text = e.target?.result as string;
+            
+            // Use the resume analyzer edge function
+            const { data, error } = await supabase.functions.invoke('resume-analyzer', {
+              body: { 
+                resumeText: text,
+                analysisType: 'university'
+              }
+            });
+
+            if (error) {
+              console.error('Resume analysis error:', error);
+              // Fallback to manual parsing
+              const gpaMatch = text.match(/GPA[:\s]*(\d+\.\d+)/i);
+              if (gpaMatch) {
+                setStudentStats(prev => ({...prev, gpaWeighted: parseFloat(gpaMatch[1])}));
+              }
+              
+              const satMatch = text.match(/SAT[:\s]*(\d{4})/i);
+              if (satMatch) {
+                setStudentStats(prev => ({...prev, satScore: parseInt(satMatch[1])}));
+              }
+              
+              const activitiesMatch = text.match(/(?:activities|extracurricular|involvement)[:\s\n]*([\s\S]*?)(?:\n\n|\n[A-Z]|$)/i);
+              if (activitiesMatch) {
+                setStudentStats(prev => ({...prev, extracurriculars: activitiesMatch[1].trim()}));
+              }
+              
+              setAnalysisResults('File uploaded successfully. Basic parsing completed.');
+            } else if (data?.analysis) {
+              setAnalysisResults(data.analysis);
+              
+              // Update stats if extracted data is available
+              if (data.extractedData) {
+                const extracted = data.extractedData;
+                setStudentStats(prev => ({
+                  ...prev,
+                  gpaUnweighted: extracted.estimatedGPA || prev.gpaUnweighted,
+                  satScore: extracted.satScore || prev.satScore,
+                  actScore: extracted.actScore || prev.actScore,
+                  extracurriculars: extracted.hasLeadershipExperience ? 
+                    (prev.extracurriculars + '\n• Leadership experience detected from resume').trim() : prev.extracurriculars
+                }));
+              }
+            }
+          };
+          
+          reader.readAsText(file);
+          
+          toast({
+            title: "Resume Analyzed",
+            description: `${file.name} has been uploaded and analyzed for academic information.`,
+          });
+        } catch (error) {
+          console.error('Error analyzing resume:', error);
+          toast({
+            title: "Analysis Error",
+            description: "Failed to analyze resume. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsAnalyzing(false);
         }
-        
-        // Extract SAT score if mentioned
-        const satMatch = text.match(/SAT[:\s]*(\d{4})/i);
-        if (satMatch) {
-          setStudentStats(prev => ({...prev, satScore: parseInt(satMatch[1])}));
-        }
-        
-        // Extract activities section
-        const activitiesMatch = text.match(/(?:activities|extracurricular|involvement)[:\s\n]*([\s\S]*?)(?:\n\n|\n[A-Z]|$)/i);
-        if (activitiesMatch) {
-          setStudentStats(prev => ({...prev, extracurriculars: activitiesMatch[1].trim()}));
-        }
-      };
-      
-      reader.readAsText(file);
-      
-      toast({
-        title: "Resume Uploaded",
-        description: `${file.name} has been uploaded and analyzed for academic information.`,
-      });
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF, Word document, or text file.",
+          variant: "destructive"
+        });
+      }
     }
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    setAnalysisResults('');
+    setShowPreview(false);
   };
 
   return (
@@ -72,25 +130,75 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
       <CardContent className="space-y-4">
         {/* File Upload Section */}
         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
-          <div className="text-center">
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Upload your resume or transcript for AI parsing</p>
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              size="sm"
-              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-            >
-              Choose File
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx,.txt"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </div>
+          {!uploadedFile ? (
+            <div className="text-center">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Upload your resume or transcript for AI analysis</p>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                size="sm"
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? 'Analyzing...' : 'Choose File'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                PDF, DOC, DOCX, or TXT files accepted
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">{uploadedFile.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {(uploadedFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  {analysisResults && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPreview(!showPreview)}
+                      className="text-gray-700 dark:text-gray-300"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      {showPreview ? 'Hide' : 'Show'} Analysis
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={removeFile}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {showPreview && analysisResults && (
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Analysis Results:</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    {analysisResults}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>

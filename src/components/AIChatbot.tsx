@@ -21,7 +21,7 @@ const AIChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your AI Career Coach powered by GPT-4. I can help you with resume tips, interview preparation, career advice, and job search strategies. What would you like to know?",
+      content: "Hello! I'm your AI Career Coach powered by GPT-4. I can help you with resume optimization, cover letter writing, interview preparation, salary negotiation, career transitions, and job search strategies. What specific career challenge can I help you with today?",
       sender: 'bot',
       timestamp: new Date()
     }

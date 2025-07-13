@@ -47,7 +47,7 @@ const CoverLetterGenerator = () => {
         day: 'numeric' 
       });
 
-      // Header with contact information at the top
+      // Header with all contact information at the top in professional format
       let letterHeader = '';
       if (personalInfo.name) {
         letterHeader += `${personalInfo.name}\n`;
