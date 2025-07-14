@@ -63,7 +63,37 @@ serve(async (req) => {
       }
     }
 
-    // Fallback to OpenAI if Google Translate failed or isn't available
+    // Try free translation APIs if Google isn't available
+    if (!translatedText) {
+      try {
+        // Try LibreTranslate API (free alternative)
+        const libreResponse = await fetch('https://libretranslate.de/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: text,
+            source: sourceLanguage === 'auto' ? 'auto' : sourceLanguage,
+            target: targetLanguage,
+            format: 'text'
+          }),
+        });
+
+        if (libreResponse.ok) {
+          const libreData = await libreResponse.json();
+          if (libreData.translatedText) {
+            translatedText = libreData.translatedText;
+            translationMethod = 'libretranslate';
+            console.log('Translation completed via LibreTranslate');
+          }
+        }
+      } catch (error) {
+        console.log('LibreTranslate failed, trying fallback:', error);
+      }
+    }
+
+    // Fallback to OpenAI if other services failed
     if (!translatedText && openAIApiKey) {
       try {
         const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -77,27 +107,28 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: `You are a professional translator with expertise in ${sourceLanguage} and ${targetLanguage}. Translate the following text accurately, preserving meaning, tone, and cultural context. Return only the translated text without any additional commentary.`
+                content: `You are a professional translator. Translate from ${sourceLanguage} to ${targetLanguage}. Return only the translation, no explanations.`
               },
               {
                 role: 'user',
                 content: text
               }
             ],
-            max_tokens: 2000,
+            max_tokens: 1000,
             temperature: 0.1,
           }),
         });
 
         if (openAIResponse.ok) {
           const openAIData = await openAIResponse.json();
-          translatedText = openAIData.choices[0].message.content;
-          translationMethod = 'openai';
-          console.log('Translation completed via OpenAI');
+          if (openAIData.choices && openAIData.choices[0] && openAIData.choices[0].message) {
+            translatedText = openAIData.choices[0].message.content;
+            translationMethod = 'openai';
+            console.log('Translation completed via OpenAI');
+          }
         }
       } catch (error) {
         console.log('OpenAI translation failed:', error);
-        translationMethod = 'offline';
       }
     }
 

@@ -6,7 +6,7 @@ import { LogOut, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import pathFuseLogo from '/lovable-uploads/ae5bc441-3df5-4789-a85f-89d17eafc98b.png';
+import pathFuseLogo from '/lovable-uploads/2817281e-9731-4737-81c6-d08df8c7ed17.png';
 const Navbar = () => {
   const {
     user,
