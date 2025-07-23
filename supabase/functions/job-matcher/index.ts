@@ -1,4 +1,4 @@
-import { serve } from 'std/server'; // Supabase edge function API
+import { serve } from "https://deno.land/std@0.152.0/http/server.ts"; // Corrected import path
 
 // Replace with your Adzuna API key and App ID
 const API_KEY = "***REMOVED-ADZUNA-KEY***"; // Your Adzuna API key
