@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ const AIChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your AI Career Coach powered by GPT-4. I can help you with resume optimization, cover letter writing, interview preparation, salary negotiation, career transitions, and job search strategies. What specific career challenge can I help you with today?",
+      content: "Hello! I'm your AI Career Coach powered by Llama AI. I can help you with resume optimization, cover letter writing, interview preparation, salary negotiation, career transitions, and job search strategies. What specific career challenge can I help you with today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -54,13 +53,14 @@ const AIChatbot = () => {
     setIsTyping(true);
 
     try {
-      console.log('Sending message to AI:', messageText);
+      console.log('Sending message to Llama AI:', messageText);
       
+      // Call Supabase function with the message, using Llama AI model
       const { data, error } = await supabase.functions.invoke('chat-gpt', {
         body: { message: messageText }
       });
 
-      console.log('AI Response received:', { data, error });
+      console.log('Llama AI Response received:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -79,10 +79,10 @@ const AIChatbot = () => {
       };
 
       setMessages(prev => [...prev, botMessage]);
-      
+
       toast({
         title: "Response received",
-        description: "AI Career Coach has responded to your question.",
+        description: "Llama AI Career Coach has responded to your question.",
       });
       
     } catch (error) {
@@ -115,7 +115,7 @@ const AIChatbot = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
             <MessageCircle className="w-5 h-5" />
-            <span>AI Career Coach (GPT-4)</span>
+            <span>AI Career Coach (Llama AI)</span>
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
             Get personalized career advice, interview tips, and job search strategies from your AI assistant.
