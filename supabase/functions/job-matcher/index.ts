@@ -1,15 +1,10 @@
-import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useState } from "react";
 
-// Supabase connection (use your own credentials here)
-const supabase = createClient(
-  "https://xyzcompany.supabase.co", // replace with yours
-  "your-publishable-api-key"       // securely load in production
-);
+// Replace with your Adzuna API key and App ID
+const API_KEY = "***REMOVED-ADZUNA-KEY***"; // Your Adzuna API key
+const APP_ID = "***REMOVED-ADZUNA-APPID***"; // Your Adzuna App ID
 
 const fetchRealJobs = async (skills: string[], location: string) => {
-  const API_KEY = "***REMOVED-ADZUNA-KEY***"; // Your Adzuna API key
-  const APP_ID = "***REMOVED-ADZUNA-APPID***"; // Your Adzuna App ID
   const API_URL = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${APP_ID}&app_key=${API_KEY}&results_per_page=20&what=${encodeURIComponent(skills.join(' '))}&where=${encodeURIComponent(location)}`;
 
   try {
@@ -40,32 +35,35 @@ const fetchRealJobs = async (skills: string[], location: string) => {
 const calculateJobMatch = (job: any, skills: string[]) => {
   let matchScore = 0;
   const jobText = job.description.toLowerCase();
-  
+
   // For each skill, check if it appears in the job description
   skills.forEach(skill => {
     if (jobText.includes(skill.toLowerCase())) {
       matchScore += 10; // Add score for each matched skill
     }
   });
-  
+
   return Math.min(100, matchScore); // Max score is 100
 };
 
 const calculateMarketInsights = (jobs: any[]) => {
   const remoteJobs = jobs.filter(job => job.isRemote);
   const totalJobs = jobs.length;
-  
-  // Calculate average salary
+
+  // Calculate average salary, handling missing or single salary values
   const avgSalary = jobs.reduce((sum, job) => {
-    const salaryParts = job.salary.split(' - ');
-    if (salaryParts.length === 2) {
+    if (job.salary !== 'Competitive salary' && job.salary.includes(' - ')) {
+      const salaryParts = job.salary.split(' - ');
       const minSalary = parseInt(salaryParts[0].replace('$', '').replace(',', ''), 10);
       const maxSalary = parseInt(salaryParts[1].replace('$', '').replace(',', ''), 10);
       return sum + (minSalary + maxSalary) / 2;
+    } else if (job.salary !== 'Competitive salary') {
+      const salary = parseInt(job.salary.replace('$', '').replace(',', ''), 10);
+      return sum + salary;
     }
     return sum;
   }, 0) / totalJobs;
-  
+
   const topCompanies = [...new Set(jobs.map(job => job.company))].slice(0, 5);
 
   return {
@@ -82,29 +80,39 @@ export default function JobMatcher() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [insights, setInsights] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = async () => {
     setLoading(true);
     setJobs([]);
     setInsights(null);
+    setError(null);
 
-    // Fetch jobs from Adzuna API
-    const fetchedJobs = await fetchRealJobs(skills, state);
-    
-    // Calculate match score
-    const scoredJobs = fetchedJobs.map((job) => ({
-      ...job,
-      matchScore: calculateJobMatch(job, skills),
-    }));
+    try {
+      const fetchedJobs = await fetchRealJobs(skills, state);
 
-    // Set the job list
-    setJobs(scoredJobs);
-    
-    // Calculate market insights
-    const marketInsights = calculateMarketInsights(scoredJobs);
-    setInsights(marketInsights);
+      if (!fetchedJobs.length) {
+        setError('No jobs found for your criteria.');
+      }
 
-    setLoading(false);
+      // Calculate match score
+      const scoredJobs = fetchedJobs.map((job) => ({
+        ...job,
+        matchScore: calculateJobMatch(job, skills),
+      }));
+
+      // Set the job list
+      setJobs(scoredJobs);
+
+      // Calculate market insights
+      const marketInsights = calculateMarketInsights(scoredJobs);
+      setInsights(marketInsights);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setError('There was an issue fetching job data.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -118,7 +126,7 @@ export default function JobMatcher() {
         placeholder="Enter a U.S. state (e.g., Pennsylvania)"
         className="border px-3 py-2 rounded w-full"
       />
-      
+
       <input
         type="text"
         value={skills.join(", ")}
@@ -136,10 +144,12 @@ export default function JobMatcher() {
 
       {loading && <p>Loading jobs...</p>}
 
+      {error && <p className="text-red-600">{error}</p>}
+
       {jobs.length > 0 && (
         <div className="mt-4 space-y-3">
           {jobs.map((job) => (
-            <div key={job.id} className="border p-3 rounded shadow-sm">
+            <div key={job.title} className="border p-3 rounded shadow-sm">
               <h3 className="font-semibold text-lg">{job.title}</h3>
               <p>{job.company} - {job.location}</p>
               <p className="text-sm text-gray-600">Skills: {job.skills.join(", ")}</p>
@@ -159,7 +169,7 @@ export default function JobMatcher() {
         </div>
       )}
 
-      {jobs.length === 0 && !loading && (
+      {jobs.length === 0 && !loading && !error && (
         <p className="text-gray-500">No matches found yet.</p>
       )}
     </div>
