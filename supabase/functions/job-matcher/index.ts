@@ -4,34 +4,44 @@ import { serve } from "https://deno.land/std@0.152.0/http/server.ts"; // Correct
 const API_KEY = "***REMOVED-ADZUNA-KEY***"; // Your Adzuna API key
 const APP_ID = "***REMOVED-ADZUNA-APPID***"; // Your Adzuna App ID
 
+// Fetch jobs from Adzuna API
 const fetchRealJobs = async (skills: string[], location: string) => {
   const API_URL = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${APP_ID}&app_key=${API_KEY}&results_per_page=20&what=${encodeURIComponent(skills.join(' '))}&where=${encodeURIComponent(location)}`;
 
   try {
     const response = await fetch(API_URL);
+
+    // Check if the response is okay
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from Adzuna: ${response.statusText}`);
+    }
+
     const data = await response.json();
 
-    if (data.results && data.results.length > 0) {
-      return data.results.map((job: any) => ({
-        title: job.title,
-        company: job.company.display_name,
-        location: job.location.display_name,
-        salary: job.salary_min && job.salary_max
-          ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
-          : 'Competitive salary',
-        description: job.description ? job.description.substring(0, 200) + '...' : 'Join our team and make an impact.',
-        jobUrl: job.redirect_url,
-        isRemote: job.title.toLowerCase().includes('remote'),
-      }));
-    } else {
-      return [];
+    // Ensure the data format is valid
+    if (!data || !data.results || data.results.length === 0) {
+      throw new Error('No results found or invalid data format.');
     }
+
+    // Map through the results and format the data
+    return data.results.map((job: any) => ({
+      title: job.title,
+      company: job.company.display_name,
+      location: job.location.display_name,
+      salary: job.salary_min && job.salary_max
+        ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
+        : 'Competitive salary',
+      description: job.description ? job.description.substring(0, 200) + '...' : 'Join our team and make an impact.',
+      jobUrl: job.redirect_url,
+      isRemote: job.title.toLowerCase().includes('remote'),
+    }));
   } catch (error) {
     console.error('Error fetching job data:', error);
-    return [];
+    return []; // Return an empty array in case of error
   }
 };
 
+// Calculate match score based on skills
 const calculateJobMatch = (job: any, skills: string[]) => {
   let matchScore = 0;
   const jobText = job.description.toLowerCase();
@@ -46,6 +56,7 @@ const calculateJobMatch = (job: any, skills: string[]) => {
   return Math.min(100, matchScore); // Max score is 100
 };
 
+// Calculate market insights (e.g., total jobs, remote jobs, average salary, top companies)
 const calculateMarketInsights = (jobs: any[]) => {
   const remoteJobs = jobs.filter(job => job.isRemote);
   const totalJobs = jobs.length;
@@ -64,6 +75,7 @@ const calculateMarketInsights = (jobs: any[]) => {
     return sum;
   }, 0) / totalJobs;
 
+  // Get the top 5 companies based on frequency of appearance
   const topCompanies = [...new Set(jobs.map(job => job.company))].slice(0, 5);
 
   return {
@@ -76,31 +88,42 @@ const calculateMarketInsights = (jobs: any[]) => {
 
 // Main function for the Supabase Edge Function
 serve(async (req) => {
-  const { skills, location } = await req.json();
+  try {
+    // Parse the incoming JSON body
+    const { skills, location } = await req.json();
 
-  // Fetch jobs from the Adzuna API
-  const fetchedJobs = await fetchRealJobs(skills, location);
+    // Check if the necessary parameters (skills and location) are provided
+    if (!skills || !location) {
+      return new Response(JSON.stringify({ error: 'Skills and location are required.' }), { status: 400 });
+    }
 
-  // If no jobs were found, return a meaningful message
-  if (!fetchedJobs.length) {
-    return new Response(JSON.stringify({ error: 'No jobs found for your criteria.' }), { status: 404 });
+    // Fetch jobs from the Adzuna API
+    const fetchedJobs = await fetchRealJobs(skills, location);
+
+    // If no jobs were found, return a meaningful message
+    if (!fetchedJobs.length) {
+      return new Response(JSON.stringify({ error: 'No jobs found for your criteria.' }), { status: 404 });
+    }
+
+    // Calculate match score for each job
+    const scoredJobs = fetchedJobs.map((job) => ({
+      ...job,
+      matchScore: calculateJobMatch(job, skills),
+    }));
+
+    // Calculate market insights
+    const marketInsights = calculateMarketInsights(scoredJobs);
+
+    // Return the job matches and market insights in a JSON response
+    return new Response(
+      JSON.stringify({
+        jobs: scoredJobs,
+        insights: marketInsights,
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error processing the request:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error.' }), { status: 500 });
   }
-
-  // Calculate match score for each job
-  const scoredJobs = fetchedJobs.map((job) => ({
-    ...job,
-    matchScore: calculateJobMatch(job, skills),
-  }));
-
-  // Calculate market insights
-  const marketInsights = calculateMarketInsights(scoredJobs);
-
-  // Return the job matches and market insights in a JSON response
-  return new Response(
-    JSON.stringify({
-      jobs: scoredJobs,
-      insights: marketInsights,
-    }),
-    { headers: { 'Content-Type': 'application/json' } }
-  );
 });
