@@ -1,12 +1,11 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Using Groq API as a free alternative to OpenAI
-const groqApiKey = Deno.env.get('GROQ_API_KEY') || 'gsk_demo_key_for_testing';
+// Using provided Groq API key
+const groqApiKey = '***REMOVED-GROQ-KEY***';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // Allows all origins, you might want to restrict this for production
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -17,7 +16,6 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
 
   try {
     const { message } = await req.json();
@@ -57,6 +55,7 @@ serve(async (req) => {
       }),
     });
 
+    // Check for errors from Groq API
     if (!response.ok) {
       console.error('Groq API error:', response.status, response.statusText);
       const errorData = await response.text();
@@ -67,6 +66,7 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Groq response received');
     
+    // Ensure the response from Groq contains the expected data structure
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Invalid response from Groq');
     }
