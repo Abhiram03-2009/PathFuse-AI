@@ -186,11 +186,11 @@ const JobAnalyzer = () => {
         company: job.company,
         location: job.location,
         salary: job.salary,
-        matchPercentage: job.matchPercentage,
+        matchPercentage: Math.min(job.matchPercentage, 100), // Ensure match percentage is not greater than 100%
         description: job.description,
         requirements: job.requirements || [],
         benefits: job.benefits || []
-      }));
+      })).filter((job) => job.location.toLowerCase().includes(location.toLowerCase()));
 
       setJobMatches(formattedJobs);
       
@@ -266,7 +266,9 @@ const JobAnalyzer = () => {
                 </SelectTrigger>
                 <SelectContent className={`${isDarkMode ? 'bg-gray-900 border-cyan-400/30' : 'bg-white border-blue-300/50'}`}>
                   {industries.map((ind) => (
-                    <SelectItem key={ind} value={ind} className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{ind}</SelectItem>
+                    <SelectItem key={ind} value={ind} className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {ind}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -278,19 +280,17 @@ const JobAnalyzer = () => {
                 <SelectTrigger className={`${isDarkMode ? 'bg-gray-900/50 border-cyan-400/30 text-white' : 'bg-white border-blue-300/50 text-gray-900'}`}>
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
-                <SelectContent className={`${isDarkMode ? 'bg-gray-900 border-cyan-400/30' : 'bg-white border-blue-300/50'}`}>
+                <SelectContent className={`${isDarkMode ? 'bg-gray-900 border-cyan-400/30 max-h-60' : 'bg-white border-blue-300/50 max-h-60'}`}>
                   {usStates.map((state) => (
-                    <SelectItem key={state} value={state} className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{state}</SelectItem>
+                    <SelectItem key={state} value={state} className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {state}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <Button
-              onClick={analyzeJobs}
-              disabled={isAnalyzing}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
+            <Button onClick={analyzeJobs} disabled={isAnalyzing} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               {isAnalyzing ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -306,10 +306,10 @@ const JobAnalyzer = () => {
           </CardContent>
         </Card>
 
-        {/* Display Job Matches */}
+        {/* Job Matches */}
         <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
           <CardHeader>
-            <CardTitle className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Job Matches</CardTitle>
+            <CardTitle className="text-lg">Job Matches</CardTitle>
           </CardHeader>
           <CardContent>
             {jobMatches.length > 0 ? (
@@ -343,33 +343,19 @@ const JobAnalyzer = () => {
                           {job.matchPercentage}% Match
                         </Badge>
                         <div className="flex flex-col space-y-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => saveJob(job)}
-                            disabled={isJobSaved(job)}
-                            className={`text-xs ${isJobSaved(job) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => saveJob(job)} disabled={isJobSaved(job)} className={`text-xs ${isJobSaved(job) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                             {isJobSaved(job) ? 'Saved' : 'Save Job'}
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`https://${job.company.toLowerCase().replace(/\s+/g, '')}.com/careers`, '_blank')}
-                            className="text-xs"
-                          >
+                          <Button size="sm" variant="outline" onClick={() => window.open(`https://${job.company.toLowerCase().replace(/\s+/g, '')}.com/careers`, '_blank')} className="text-xs">
                             Careers Page
                           </Button>
                         </div>
                       </div>
                     </div>
-
                     <Progress value={job.matchPercentage} className="mb-2" />
-
                     <p className={`text-sm mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {job.salary}
                     </p>
-
                     <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {job.description}
                     </p>
