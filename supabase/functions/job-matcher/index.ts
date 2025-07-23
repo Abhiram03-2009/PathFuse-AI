@@ -13,6 +13,7 @@ const fetchRealJobs = async (skills: string[], location: string) => {
 
     if (data.results && data.results.length > 0) {
       return data.results.map((job: any) => ({
+        id: job.id,  // Ensure a unique identifier is used for keys
         title: job.title,
         company: job.company.display_name,
         location: job.location.display_name,
@@ -149,10 +150,10 @@ export default function JobMatcher() {
       {jobs.length > 0 && (
         <div className="mt-4 space-y-3">
           {jobs.map((job) => (
-            <div key={job.title} className="border p-3 rounded shadow-sm">
+            <div key={job.id} className="border p-3 rounded shadow-sm">
               <h3 className="font-semibold text-lg">{job.title}</h3>
               <p>{job.company} - {job.location}</p>
-              <p className="text-sm text-gray-600">Skills: {job.skills.join(", ")}</p>
+              <p className="text-sm text-gray-600">Skills: {skills.join(", ")}</p>
               <p className="text-green-700 font-medium">Match Score: {job.matchScore}%</p>
               <a href={job.jobUrl} className="text-blue-600">Apply Now</a>
             </div>
