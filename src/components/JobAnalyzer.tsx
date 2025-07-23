@@ -1,98 +1,89 @@
-// components/JobMatcher.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-type JobMatch = {
+// Supabase connection
+const supabase = createClient(
+  "https://xyzcompany.supabase.co", // replace with yours
+  "your-publishable-api-key"       // securely load in production
+);
+
+interface Job {
+  id: string;
   title: string;
   company: string;
   location: string;
-  matchScore: number; // 0-100
-};
+  state: string;
+  skills: string[];
+  match_score: number;
+}
 
 export default function JobMatcher() {
   const [state, setState] = useState("");
-  const [resume, setResume] = useState("");
-  const [matches, setMatches] = useState<JobMatch[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  async function handleMatch() {
-    if (!state || !resume) return setError("Please fill all fields.");
-
+  const fetchJobs = async () => {
     setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/match-jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state, resume }),
-      });
+    setJobs([]);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch matches.");
-      setMatches(data.matches);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("*")
+      .ilike("state", `%${state}%`)
+      .limit(20); // limit for performance
+
+    if (error) {
+      console.error("Error fetching jobs:", error.message);
       setLoading(false);
+      return;
     }
-  }
+
+    // Simulate match scoring based on availability
+    const scored = data.map((job: any) => ({
+      ...job,
+      match_score: Math.min(100, Math.floor(Math.random() * 90 + 10)), // random until backend is done
+    }));
+
+    setJobs(scored);
+    setLoading(false);
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Job Matcher Analyzer</h1>
+    <div className="p-6 max-w-xl mx-auto space-y-4">
+      <h2 className="text-xl font-bold">Job Match Analyzer</h2>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Select U.S. State</label>
-        <input
-          type="text"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          placeholder="e.g., Pennsylvania"
-          className="mt-1 p-2 border rounded w-full"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Paste Resume</label>
-        <textarea
-          rows={6}
-          value={resume}
-          onChange={(e) => setResume(e.target.value)}
-          placeholder="Paste your resume here"
-          className="mt-1 p-2 border rounded w-full"
-        />
-      </div>
+      <input
+        type="text"
+        value={state}
+        onChange={(e) => setState(e.target.value)}
+        placeholder="Enter a U.S. state (e.g., Pennsylvania)"
+        className="border px-3 py-2 rounded w-full"
+      />
 
       <button
-        onClick={handleMatch}
-        className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-        disabled={loading}
+        onClick={fetchJobs}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
-        {loading ? "Analyzing..." : "Find Matches"}
+        Analyze Matches
       </button>
 
-      {error && <p className="text-red-600 mt-2">{error}</p>}
+      {loading && <p>Loading jobs...</p>}
 
-      {matches.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-3">Top Matches:</h2>
-          <ul className="space-y-3">
-            {matches.map((job, idx) => (
-              <li
-                key={idx}
-                className="border p-4 rounded shadow-sm bg-white hover:shadow-md transition"
-              >
-                <div className="font-bold text-lg">{job.title}</div>
-                <div className="text-gray-700">
-                  {job.company} – {job.location}
-                </div>
-                <div className="text-green-600 font-semibold">
-                  Match Score: {Math.min(100, Math.round(job.matchScore))}%
-                </div>
-              </li>
-            ))}
-          </ul>
+      {jobs.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {jobs.map((job) => (
+            <div key={job.id} className="border p-3 rounded shadow-sm">
+              <h3 className="font-semibold text-lg">{job.title}</h3>
+              <p>{job.company} - {job.location}, {job.state}</p>
+              <p className="text-sm text-gray-600">Skills: {job.skills.join(", ")}</p>
+              <p className="text-green-700 font-medium">Match Score: {job.match_score}%</p>
+            </div>
+          ))}
         </div>
+      )}
+
+      {jobs.length === 0 && !loading && (
+        <p className="text-gray-500">No matches found yet.</p>
       )}
     </div>
   );
