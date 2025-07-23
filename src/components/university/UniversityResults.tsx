@@ -33,7 +33,7 @@ const UniversityResults: React.FC<UniversityResultsProps> = ({
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+    <Card id="university-results" className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
       <CardHeader>
         <CardTitle className="text-xl text-gray-900 dark:text-white flex items-center space-x-2">
           <TrendingUp className="w-5 h-5" />

@@ -123,6 +123,24 @@ const UniversityPredictor = () => {
       return;
     }
 
+    // Check minimum requirements
+    if (!studentStats.gpaUnweighted && !studentStats.gpaWeighted) {
+      toast({
+        title: "GPA Required",
+        description: "Please enter at least your unweighted or weighted GPA.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!studentStats.satScore && !studentStats.actScore) {
+      toast({
+        title: "Test Score Required", 
+        description: "Please enter either your SAT or ACT score.",
+        variant: "destructive"
+      });
+      return;
+    }
     const matches = selectedUniversities.map(universityName => {
       const university = topUniversities.find(u => u.name === universityName)!;
       const matchPercentage = calculateMatchPercentage(university, studentStats);
@@ -138,6 +156,14 @@ const UniversityPredictor = () => {
     setResults(matches.sort((a, b) => b.matchPercentage - a.matchPercentage));
     setShowResults(true);
     setHasCalculatedChances(true);
+    
+    // Scroll to results
+    setTimeout(() => {
+      const resultsElement = document.getElementById('university-results');
+      if (resultsElement) {
+        resultsElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   return (

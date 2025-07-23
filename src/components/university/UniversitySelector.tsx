@@ -63,7 +63,7 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
           <Button 
             onClick={onCalculateChances}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-            disabled={selectedUniversities.length === 0 || !intendedMajor}
+            disabled={selectedUniversities.length === 0}
           >
             <Target className="w-4 h-4 mr-2" />
             {hasCalculatedChances ? 'Recalculate Admission Chances' : 'Analyze My Admission Chances'}

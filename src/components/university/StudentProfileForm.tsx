@@ -217,7 +217,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="gpaUnweighted" className="text-gray-900 dark:text-white">Unweighted GPA</Label>
+            <Label htmlFor="gpaUnweighted" className="text-gray-900 dark:text-white">Unweighted GPA *</Label>
             <Input
               id="gpaUnweighted"
               type="number"
@@ -243,7 +243,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="satScore" className="text-gray-900 dark:text-white">SAT Score</Label>
+            <Label htmlFor="satScore" className="text-gray-900 dark:text-white">SAT Score *</Label>
             <Input
               id="satScore"
               type="number"

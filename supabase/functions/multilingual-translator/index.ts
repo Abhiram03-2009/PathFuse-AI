@@ -1,8 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+// Using MyMemory API (free Google Translate alternative)
+const myMemoryApiKey = Deno.env.get('MYMEMORY_API_KEY') || 'demo';
+const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || 'demo';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,34 +33,56 @@ serve(async (req) => {
     }
 
     let translatedText = '';
-    let translationMethod = 'google';
+    let translationMethod = 'mymemory';
 
-    // Try Google Translate API first if available
-    if (googleApiKey) {
+    // Try MyMemory API first (free Google Translate alternative)
+    try {
+      const myMemoryResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLanguage}|${targetLanguage}&de=${myMemoryApiKey}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (myMemoryResponse.ok) {
+        const myMemoryData = await myMemoryResponse.json();
+        if (myMemoryData.responseData && myMemoryData.responseData.translatedText) {
+          translatedText = myMemoryData.responseData.translatedText;
+          console.log('Translation completed via MyMemory API');
+        }
+      }
+    } catch (error) {
+      console.log('MyMemory API failed, trying RapidAPI:', error);
+    }
+
+    // Try RapidAPI Google Translate if MyMemory fails
+    if (!translatedText && rapidApiKey !== 'demo') {
       try {
-        const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${googleApiKey}`, {
+        const rapidResponse = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {
           method: 'POST',
           headers: {
+            'X-RapidAPI-Key': rapidApiKey,
+            'X-RapidAPI-Host': 'google-translate1.p.rapidapi.com',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             q: text,
-            source: sourceLanguage === 'auto' ? undefined : sourceLanguage,
+            source: sourceLanguage,
             target: targetLanguage,
             format: 'text'
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (rapidResponse.ok) {
+          const data = await rapidResponse.json();
           if (data.data && data.data.translations && data.data.translations[0]) {
             translatedText = data.data.translations[0].translatedText;
-            console.log('Translation completed via Google Translate');
+            translationMethod = 'rapidapi';
+            console.log('Translation completed via RapidAPI Google Translate');
           }
         }
       } catch (error) {
-        console.log('Google Translate failed, trying OpenAI:', error);
-        translationMethod = 'openai';
+        console.log('RapidAPI failed, trying LibreTranslate:', error);
       }
     }
 

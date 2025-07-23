@@ -17,121 +17,46 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
   const { isDarkMode } = useTheme();
 
   const generatePDF = () => {
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${type === 'resume' ? 'Resume' : 'Cover Letter'}</title>
-        <style>
-          @page {
-            size: A4;
-            margin: 0.75in;
-          }
-          @media print {
-            body { 
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact;
-            }
-          }
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: white;
-            margin: 0;
-            padding: 0;
-            font-size: 11pt;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #4299e1;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-          }
-          .name {
-            font-size: 24pt;
-            font-weight: bold;
-            color: #2d3748;
-            margin-bottom: 8px;
-          }
-          .contact {
-            font-size: 10pt;
-            color: #4a5568;
-            margin-bottom: 5px;
-          }
-          .section {
-            margin-bottom: 20px;
-            page-break-inside: avoid;
-          }
-          .section-title {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #2d3748;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 3px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          .content {
-            white-space: pre-wrap;
-            line-height: 1.5;
-            text-align: justify;
-            font-size: 11pt;
-          }
-          .signature {
-            margin-top: 30px;
-            text-align: right;
-            font-style: italic;
-            color: #666;
-          }
-          h1, h2, h3 {
-            color: #2d3748;
-          }
-          p {
-            margin-bottom: 10px;
-          }
-          ul {
-            margin: 10px 0;
-            padding-left: 20px;
-          }
-          li {
-            margin-bottom: 5px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="name">[Your Name]</div>
-          <div class="contact">[Your Email] | [Your Phone] | [Your Address]</div>
-          <div class="contact">[LinkedIn Profile] | [Portfolio Website]</div>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">${type === 'resume' ? 'Professional Resume' : 'Cover Letter'}</div>
-          <div class="content">${content.replace(/\n/g, '<br>')}</div>
-        </div>
-        
-        ${type === 'cover-letter' ? '<div class="signature">Sincerely,<br>[Your Name]</div>' : ''}
-      </body>
-      </html>
-    `;
-
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
+    // Create a proper PDF using jsPDF
+    import('jspdf').then(({ jsPDF }) => {
+      const doc = new jsPDF();
       
-      // Wait for content to load then trigger print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 500);
-      };
-    }
+      // Set font
+      doc.setFont('helvetica');
+      
+      // Add content with proper formatting
+      const lines = content.split('\n');
+      let yPosition = 20;
+      
+      lines.forEach((line, index) => {
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        // Check if it's a header line (first few lines or all caps)
+        if (index < 5 || line === line.toUpperCase()) {
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+        }
+        
+        // Split long lines
+        const splitLines = doc.splitTextToSize(line, 170);
+        splitLines.forEach((splitLine: string) => {
+          doc.text(splitLine, 20, yPosition);
+          yPosition += 6;
+        });
+      });
+      
+      // Save the PDF
+      doc.save(`${type}-${Date.now()}.pdf`);
+    }).catch(() => {
+      // Fallback to print method
+      window.print();
+    });
   };
 
   const downloadAsWord = () => {
@@ -193,25 +118,15 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
             <div className="prose max-w-none text-gray-900">
               {content ? (
                 <div>
-                  {/* Header with professional styling */}
-                  <div className="text-center border-b-2 border-blue-500 pb-4 mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">{title === 'Resume' ? content.split('\n')[0] || '[Your Name]' : '[Your Name]'}</h1>
-                    <p className="text-sm text-gray-600">{title === 'Resume' ? content.split('\n')[1] || '[Your Email] | [Your Phone] | [Your Address]' : '[Your Email] | [Your Phone] | [Your Address]'}</p>
-                    <p className="text-sm text-gray-600">[LinkedIn Profile] | [Portfolio Website]</p>
-                  </div>
-                  
                   {/* Content */}
                   <div className="space-y-4">
-                    <h2 className="text-lg font-bold text-gray-800 border-b border-gray-300 pb-1 mb-3 uppercase tracking-wide">
-                      {type === 'resume' ? 'Professional Resume' : 'Cover Letter'}
-                    </h2>
                     <div className="whitespace-pre-wrap leading-relaxed text-justify">
                       {content}
                     </div>
                     {type === 'cover-letter' && (
                       <div className="mt-8 text-right">
                         <p className="italic text-gray-600">Sincerely,</p>
-                        <p className="italic text-gray-600 mt-2">[Your Name]</p>
+                        <p className="italic text-gray-600 mt-2">{content.split('\n')[0] || '[Your Name]'}</p>
                       </div>
                     )}
                   </div>

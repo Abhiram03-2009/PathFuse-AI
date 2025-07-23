@@ -1,13 +1,147 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || 'demo_key';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Real-time job market data with actual posting patterns
-const getLatestJobs = (skills: string[], industry: string, location: string) => {
+// Function to fetch real job data from multiple APIs
+const fetchRealTimeJobs = async (skills: string[], industry: string, location: string, resumeText?: string) => {
+  const jobs = [];
+  
+  try {
+    // Try JSearch API (RapidAPI) for real job data
+    const searchQuery = skills.slice(0, 3).join(' ') + ' ' + industry;
+    
+    const jsearchResponse = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(searchQuery)}&page=1&num_pages=1&date_posted=today`, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
+      }
+    });
+
+    if (jsearchResponse.ok) {
+      const jsearchData = await jsearchResponse.json();
+      if (jsearchData.data && jsearchData.data.length > 0) {
+        jsearchData.data.slice(0, 10).forEach((job: any) => {
+          const matchPercentage = calculateJobMatch(job, skills, resumeText);
+          jobs.push({
+            title: job.job_title,
+            company: job.employer_name,
+            location: job.job_city ? `${job.job_city}, ${job.job_state || job.job_country}` : location,
+            salary: job.job_min_salary && job.job_max_salary ? 
+              `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}` : 
+              'Competitive salary',
+            matchPercentage,
+            description: job.job_description ? job.job_description.substring(0, 200) + '...' : 'Join our team and make an impact.',
+            requirements: extractRequirements(job.job_description || ''),
+            benefits: extractBenefits(job.job_description || ''),
+            jobUrl: job.job_apply_link,
+            postedDate: job.job_posted_at_datetime_utc,
+            isRemote: job.job_is_remote || false
+          });
+        });
+      }
+    }
+  } catch (error) {
+    console.error('JSearch API failed:', error);
+  }
+
+  // Fallback to Adzuna API if JSearch fails
+  if (jobs.length === 0) {
+    try {
+      const adzunaResponse = await fetch(`https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=demo&app_key=demo&results_per_page=10&what=${encodeURIComponent(searchQuery)}&where=${encodeURIComponent(location)}`);
+      
+      if (adzunaResponse.ok) {
+        const adzunaData = await adzunaResponse.json();
+        if (adzunaData.results && adzunaData.results.length > 0) {
+          adzunaData.results.forEach((job: any) => {
+            const matchPercentage = calculateJobMatch(job, skills, resumeText);
+            jobs.push({
+              title: job.title,
+              company: job.company.display_name,
+              location: job.location.display_name,
+              salary: job.salary_min && job.salary_max ? 
+                `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}` : 
+                'Competitive salary',
+              matchPercentage,
+              description: job.description ? job.description.substring(0, 200) + '...' : 'Exciting opportunity to grow your career.',
+              requirements: extractRequirements(job.description || ''),
+              benefits: ['Health insurance', 'Professional development', 'Competitive salary'],
+              jobUrl: job.redirect_url,
+              postedDate: job.created,
+              isRemote: job.title.toLowerCase().includes('remote')
+            });
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Adzuna API failed:', error);
+    }
+  }
+
+  // If all APIs fail, return enhanced mock data based on real companies
+  if (jobs.length === 0) {
+    return getFallbackJobs(skills, industry, location, resumeText);
+  }
+
+  return jobs.sort((a, b) => b.matchPercentage - a.matchPercentage);
+};
+
+const calculateJobMatch = (job: any, skills: string[], resumeText?: string): number => {
+  let matchScore = 60; // Base score
+  
+  const jobText = (job.job_description || job.description || '').toLowerCase();
+  const skillsText = skills.join(' ').toLowerCase();
+  
+  // Check skill matches
+  skills.forEach(skill => {
+    if (jobText.includes(skill.toLowerCase())) {
+      matchScore += 8;
+    }
+  });
+  
+  // Resume analysis bonus
+  if (resumeText) {
+    const resumeLower = resumeText.toLowerCase();
+    if (resumeLower.includes('senior') || resumeLower.includes('lead')) matchScore += 10;
+    if (resumeLower.includes('manager') || resumeLower.includes('director')) matchScore += 15;
+  }
+  
+  return Math.min(95, matchScore);
+};
+
+const extractRequirements = (description: string): string[] => {
+  const requirements = [];
+  const desc = description.toLowerCase();
+  
+  if (desc.includes('bachelor') || desc.includes('degree')) requirements.push('Bachelor\'s degree');
+  if (desc.includes('experience')) requirements.push('Relevant experience');
+  if (desc.includes('javascript')) requirements.push('JavaScript');
+  if (desc.includes('python')) requirements.push('Python');
+  if (desc.includes('react')) requirements.push('React');
+  if (desc.includes('node')) requirements.push('Node.js');
+  
+  return requirements.slice(0, 5);
+};
+
+const extractBenefits = (description: string): string[] => {
+  const benefits = [];
+  const desc = description.toLowerCase();
+  
+  if (desc.includes('health') || desc.includes('medical')) benefits.push('Health insurance');
+  if (desc.includes('401k') || desc.includes('retirement')) benefits.push('401k matching');
+  if (desc.includes('remote')) benefits.push('Remote work options');
+  if (desc.includes('pto') || desc.includes('vacation')) benefits.push('Paid time off');
+  
+  return benefits.length > 0 ? benefits : ['Competitive benefits package'];
+};
+
+const getFallbackJobs = (skills: string[], industry: string, location: string, resumeText?: string) => {
   const currentDate = new Date();
   
   // Industry-specific companies
@@ -127,8 +261,8 @@ serve(async (req) => {
       );
     }
 
-    // Get latest job postings with real-time data
-    const jobMatches = getLatestJobs(skills, industry, location);
+    // Get real-time job postings
+    const jobMatches = await fetchRealTimeJobs(skills, industry, location, resumeText);
     
     // Add market insights
     const marketInsights = {

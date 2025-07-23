@@ -6,85 +6,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enhanced LinkedIn profile analysis using OpenAI
-const analyzeLinkedInProfileWithAI = async (linkedInUrl: string) => {
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+// Real LinkedIn profile scraping using RapidAPI
+const scrapeLinkedInProfile = async (linkedInUrl: string) => {
+  const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not configured');
+  if (!rapidApiKey || rapidApiKey === 'demo') {
+    throw new Error('RapidAPI key not configured for LinkedIn scraping');
   }
 
   try {
-    // Use AI to analyze and extract profile information from LinkedIn URL
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    // Use LinkedIn Profile Scraper API
+    const response = await fetch(`https://linkedin-profile-scraper-api.p.rapidapi.com/linkedin?url=${encodeURIComponent(linkedInUrl)}`, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a LinkedIn profile analyzer. Based on the LinkedIn profile URL provided, create a realistic professional profile. Since you cannot access the actual LinkedIn page, create a professional profile that matches the username extracted from the URL. The profile should be detailed and realistic for a working professional.
-
-Return the response in this exact JSON format:
-{
-  "name": "Full Name (without numbers or special characters)",
-  "headline": "Professional title and key expertise",
-  "industry": "Industry sector",
-  "location": "City, State/Country",
-  "connections": number,
-  "summary": "Professional summary paragraph",
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "duration": "Start - End",
-      "location": "Location",
-      "description": "Key responsibilities and achievements"
-    }
-  ],
-  "education": [
-    {
-      "school": "University Name",
-      "degree": "Degree Type",
-      "field": "Field of Study",
-      "year": "Year Range"
-    }
-  ],
-  "skills": ["skill1", "skill2", "skill3"],
-  "certifications": ["certification1"],
-  "languages": ["language1"]
-}`
-          },
-          {
-            role: 'user',
-            content: `Create a realistic LinkedIn profile for this URL: ${linkedInUrl}. Make it professional and detailed with specific achievements and real-world experience.`
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'linkedin-profile-scraper-api.p.rapidapi.com'
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`LinkedIn scraper API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const profileContent = data.choices[0].message.content;
     
-    try {
-      const profile = JSON.parse(profileContent);
-      return profile;
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse AI-generated profile');
+    if (data.success && data.data) {
+      const profileData = data.data;
+      return {
+        name: profileData.name || 'Professional User',
+        headline: profileData.headline || 'Professional',
+        industry: profileData.industry || 'Professional Services',
+        location: profileData.location || 'United States',
+        connections: profileData.connections || 500,
+        summary: profileData.summary || profileData.about || 'Experienced professional with a track record of success.',
+        experience: profileData.experience || [],
+        education: profileData.education || [],
+        skills: profileData.skills || [],
+        certifications: profileData.certifications || [],
+        languages: profileData.languages || ['English']
+      };
+    } else {
+      throw new Error('No profile data returned from scraper');
     }
   } catch (error) {
-    console.error('OpenAI profile analysis failed:', error);
+    console.error('LinkedIn scraping failed:', error);
     throw error;
   }
 };
@@ -287,11 +252,11 @@ serve(async (req) => {
         let profile;
         
         try {
-          // Try to generate AI-powered profile first
-          profile = await analyzeLinkedInProfileWithAI(linkedInUrl);
-          console.log('Successfully generated AI profile for:', username);
+          // Try to scrape real LinkedIn profile first
+          profile = await scrapeLinkedInProfile(linkedInUrl);
+          console.log('Successfully scraped LinkedIn profile for:', username);
         } catch (error) {
-          console.error('AI profile generation failed, using fallback:', error);
+          console.error('LinkedIn scraping failed, using fallback:', error);
           // Fall back to cleaned-up generic profile
           profile = generateFallbackProfile(username);
         }
