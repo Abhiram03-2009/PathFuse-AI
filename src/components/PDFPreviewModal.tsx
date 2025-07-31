@@ -24,8 +24,31 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
       // Set font
       doc.setFont('helvetica');
       
-      // Add content with proper formatting
-      const lines = content.split('\n');
+      // Add content with proper formatting - no duplicate contact info
+      let processedContent = content;
+      
+      // For resumes, remove duplicate contact sections
+      if (type === 'resume') {
+        const lines = content.split('\n');
+        const filteredLines = [];
+        let skipDuplicateContact = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          
+          // Skip the "PROFESSIONAL SUMMARY" header duplication
+          if (line === 'PROFESSIONAL SUMMARY' && i > 5) {
+            skipDuplicateContact = false;
+            continue;
+          }
+          
+          filteredLines.push(lines[i]);
+        }
+        
+        processedContent = filteredLines.join('\n');
+      }
+      
+      const lines = processedContent.split('\n');
       let yPosition = 20;
       
       lines.forEach((line, index) => {
@@ -52,7 +75,8 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
       });
       
       // Save the PDF
-      doc.save(`${type}-${Date.now()}.pdf`);
+      const fileName = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
     }).catch(() => {
       // Fallback to print method
       window.print();

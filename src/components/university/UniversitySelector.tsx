@@ -25,7 +25,7 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
   return (
     <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
       <CardHeader>
-        <CardTitle className="text-lg text-gray-900 dark:text-white">Select Universities ({topUniversities.length} available)</CardTitle>
+        <CardTitle className="text-lg text-gray-900 dark:text-white">Select Universities (Top 50 Available)</CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-300">
           Choose universities for personalized admission probability analysis
         </CardDescription>

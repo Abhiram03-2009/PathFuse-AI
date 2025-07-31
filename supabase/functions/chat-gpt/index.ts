@@ -1,8 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Using provided Groq API key
-const groqApiKey = '***REMOVED-GROQ-KEY***';
+// Using Groq API (free alternative to OpenAI)
+const groqApiKey = Deno.env.get('GROQ_API_KEY') || '***REMOVED-GROQ-KEY***';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Allows all origins, you might want to restrict this for production

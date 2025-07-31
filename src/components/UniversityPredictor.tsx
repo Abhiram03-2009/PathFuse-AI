@@ -123,17 +123,20 @@ const UniversityPredictor = () => {
       return;
     }
 
-    // Check minimum requirements
-    if (!studentStats.gpaUnweighted && !studentStats.gpaWeighted) {
+    // Check minimum requirements - only GPA and test scores required
+    const hasGPA = studentStats.gpaUnweighted > 0 || studentStats.gpaWeighted > 0;
+    const hasTestScore = studentStats.satScore > 0 || studentStats.actScore > 0;
+    
+    if (!hasGPA) {
       toast({
         title: "GPA Required",
-        description: "Please enter at least your unweighted or weighted GPA.",
+        description: "Please enter your GPA to calculate admission chances.",
         variant: "destructive"
       });
       return;
     }
 
-    if (!studentStats.satScore && !studentStats.actScore) {
+    if (!hasTestScore) {
       toast({
         title: "Test Score Required", 
         description: "Please enter either your SAT or ACT score.",
@@ -141,6 +144,7 @@ const UniversityPredictor = () => {
       });
       return;
     }
+    
     const matches = selectedUniversities.map(universityName => {
       const university = topUniversities.find(u => u.name === universityName)!;
       const matchPercentage = calculateMatchPercentage(university, studentStats);

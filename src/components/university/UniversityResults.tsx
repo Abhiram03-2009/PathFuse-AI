@@ -25,6 +25,13 @@ const UniversityResults: React.FC<UniversityResultsProps> = ({
     return 'bg-red-500';
   };
 
+  const getMatchTextColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-700 dark:text-green-300';
+    if (percentage >= 60) return 'text-yellow-700 dark:text-yellow-300';
+    if (percentage >= 40) return 'text-orange-700 dark:text-orange-300';
+    return 'text-red-700 dark:text-red-300';
+  };
+
   const getMatchLabel = (percentage: number) => {
     if (percentage >= 80) return 'Excellent Match';
     if (percentage >= 60) return 'Good Match';

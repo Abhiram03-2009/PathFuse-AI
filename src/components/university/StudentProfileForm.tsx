@@ -202,7 +202,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         </div>
 
         <div>
-          <Label htmlFor="intendedMajor" className="text-gray-900 dark:text-white">Intended Major *</Label>
+          <Label htmlFor="intendedMajor" className="text-gray-900 dark:text-white">Intended Major</Label>
           <Select value={studentStats.intendedMajor} onValueChange={(value) => setStudentStats(prev => ({...prev, intendedMajor: value}))}>
             <SelectTrigger className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
               <SelectValue placeholder="Select your intended major" />
@@ -226,6 +226,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.gpaUnweighted || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, gpaUnweighted: parseFloat(e.target.value) || 0}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 3.8"
             />
           </div>
           <div>
@@ -237,6 +238,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.gpaWeighted || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, gpaWeighted: parseFloat(e.target.value) || 0}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 4.2"
             />
           </div>
         </div>
@@ -251,6 +253,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.satScore || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, satScore: parseInt(e.target.value) || 0}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 1450"
             />
           </div>
           <div>
@@ -262,6 +265,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.actScore || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, actScore: parseInt(e.target.value) || 0}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 32"
             />
           </div>
         </div>
@@ -275,6 +279,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.classRank || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, classRank: parseInt(e.target.value) || 1}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 15"
             />
           </div>
           <div>
@@ -285,6 +290,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               value={studentStats.totalStudents || ''}
               onChange={(e) => setStudentStats(prev => ({...prev, totalStudents: parseInt(e.target.value) || 100}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+              placeholder="e.g., 400"
             />
           </div>
         </div>
@@ -297,11 +303,12 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
             value={studentStats.apCourses || ''}
             onChange={(e) => setStudentStats(prev => ({...prev, apCourses: parseInt(e.target.value) || 0}))}
             className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="e.g., 8"
           />
         </div>
         
         <div>
-          <Label htmlFor="extracurriculars" className="text-gray-900 dark:text-white">Extracurricular Activities</Label>
+          <Label htmlFor="extracurriculars" className="text-gray-900 dark:text-white">Extracurricular Activities (Optional - can be parsed from resume)</Label>
           <Textarea
             id="extracurriculars"
             placeholder="List your extracurricular activities, leadership roles, volunteer work, research, internships, awards, etc. Be specific about your involvement and impact."
