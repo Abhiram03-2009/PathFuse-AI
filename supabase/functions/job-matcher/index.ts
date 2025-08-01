@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Real-time job APIs
-
 const JSearchApiKey = Deno.env.get('JSEARCHAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 
 const corsHeaders = {
