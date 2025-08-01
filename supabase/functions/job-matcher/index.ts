@@ -66,7 +66,7 @@ const fetchJSearchJobs = async (query: string, location: string) => {
     const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&num_pages=1`, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Key': JSearchApiKey,
         'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
       }
     });
@@ -99,45 +99,6 @@ const fetchJSearchJobs = async (query: string, location: string) => {
     return [];
   } catch (error) {
     console.error('JSearch API error:', error);
-    return [];
-  }
-};
-
-// Fetch jobs from Adzuna API as backup
-const fetchAdzunaJobs = async (skills: string[], location: string) => {
-  try {
-    const query = skills.join(' ');
-    const API_URL = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_API_KEY}&results_per_page=20&what=${encodeURIComponent(query)}&where=${encodeURIComponent(location)}`;
-    
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-      throw new Error(`Adzuna API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      return data.results.map((job: any) => ({
-        title: job.title,
-        company: job.company.display_name,
-        location: job.location.display_name,
-        salary: job.salary_min && job.salary_max
-          ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
-          : 'Competitive salary',
-        description: job.description ? job.description.substring(0, 300) + '...' : 'Join our team and make an impact.',
-        jobUrl: job.redirect_url,
-        requirements: [],
-        benefits: [],
-        isRemote: job.title.toLowerCase().includes('remote'),
-        postedDate: job.created,
-        source: 'adzuna'
-      }));
-    }
-    
-    return [];
-  } catch (error) {
-    console.error('Adzuna API error:', error);
     return [];
   }
 };
@@ -197,25 +158,10 @@ serve(async (req) => {
     // Create search query based on skills and industry
     const searchQuery = industry ? `${skills.join(' ')} ${industry}` : skills.join(' ');
     
-    // Fetch jobs from multiple sources
-    let allJobs = [];
-    
-    // Try JSearch first (more current data)
+    // Fetch jobs from JSearch API
     const jSearchJobs = await fetchJSearchJobs(searchQuery, location);
-    allJobs.push(...jSearchJobs);
-    
-    // Add Adzuna jobs as backup
-    if (allJobs.length < 10) {
-      const adzunaJobs = await fetchAdzunaJobs(skills, location);
-      allJobs.push(...adzunaJobs);
-    }
 
-    // Remove duplicates based on title and company
-    const uniqueJobs = allJobs.filter((job, index, self) => 
-      index === self.findIndex(j => j.title === job.title && j.company === job.company)
-    );
-
-    if (uniqueJobs.length === 0) {
+    if (jSearchJobs.length === 0) {
       return new Response(
         JSON.stringify({ error: 'No current job openings found for your criteria.' }), 
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -223,7 +169,7 @@ serve(async (req) => {
     }
 
     // Calculate match scores
-    const scoredJobs = uniqueJobs.map((job) => ({
+    const scoredJobs = jSearchJobs.map((job) => ({
       ...job,
       matchPercentage: calculateJobMatch(job, resumeAnalysis, skills),
     })).sort((a, b) => b.matchPercentage - a.matchPercentage);
