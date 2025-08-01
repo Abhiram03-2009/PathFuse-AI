@@ -65,7 +65,7 @@ const analyzeResume = (resumeText: string) => {
 // Fetch real-time jobs from JSearch API (RapidAPI)
 const fetchJSearchJobs = async (query: string, location: string) => {
   try {
-    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=2&date_posted=week&employment_types=FULLTIME%2CPARTTIME&remote_jobs_only=false`, {
+    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&num_pages=1`, {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': RAPIDAPI_KEY,
