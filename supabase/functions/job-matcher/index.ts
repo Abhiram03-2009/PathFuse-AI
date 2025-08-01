@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Real-time job APIs
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || 'demo';
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 const ADZUNA_API_KEY = Deno.env.get('ADZUNA_API_KEY') || "***REMOVED-ADZUNA-KEY***";
 const ADZUNA_APP_ID = Deno.env.get('ADZUNA_APP_ID') || "***REMOVED-ADZUNA-APPID***";
 
