@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Translation APIs
-const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || 'demo_key';
+const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 const googleTranslateKey = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
