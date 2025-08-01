@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Translation APIs
-const JSearchApiKey = Deno.env.get('JSEARCHAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
