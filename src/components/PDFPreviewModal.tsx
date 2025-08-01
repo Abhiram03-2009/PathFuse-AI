@@ -24,29 +24,8 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
       // Set font
       doc.setFont('helvetica');
       
-      // Add content with proper formatting - no duplicate contact info
+      // Add content with proper formatting
       let processedContent = content;
-      
-      // For resumes, remove duplicate contact sections
-      if (type === 'resume') {
-        const lines = content.split('\n');
-        const filteredLines = [];
-        let skipDuplicateContact = false;
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          
-          // Skip the "PROFESSIONAL SUMMARY" header duplication
-          if (line === 'PROFESSIONAL SUMMARY' && i > 5) {
-            skipDuplicateContact = false;
-            continue;
-          }
-          
-          filteredLines.push(lines[i]);
-        }
-        
-        processedContent = filteredLines.join('\n');
-      }
       
       const lines = processedContent.split('\n');
       let yPosition = 20;
@@ -77,9 +56,18 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
       // Save the PDF
       const fileName = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
-    }).catch(() => {
-      // Fallback to print method
-      window.print();
+    }).catch((error) => {
+      console.error('PDF generation failed:', error);
+      // Create downloadable text file as fallback
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     });
   };
 

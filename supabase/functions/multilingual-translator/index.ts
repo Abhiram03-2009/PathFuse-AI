@@ -2,7 +2,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Translation APIs
-const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || 'demo';
+const rapidApiKey = Deno.env.get('RAPIDAPI_KEY') || 'demo_key';
+const googleTranslateKey = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
@@ -35,7 +36,36 @@ serve(async (req) => {
     let translatedText = '';
     let translationMethod = 'rapidapi';
 
-    // Try RapidAPI Google Translate first
+    // Try Google Cloud Translation API first if available
+    if (googleTranslateKey) {
+      try {
+        const googleResponse = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${googleTranslateKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: text,
+            source: sourceLanguage,
+            target: targetLanguage,
+            format: 'text'
+          }),
+        });
+
+        if (googleResponse.ok) {
+          const googleData = await googleResponse.json();
+          if (googleData.data && googleData.data.translations && googleData.data.translations[0]) {
+            translatedText = googleData.data.translations[0].translatedText;
+            translationMethod = 'google_cloud';
+            console.log('Translation completed via Google Cloud Translation API');
+          }
+        }
+      } catch (error) {
+        console.log('Google Cloud API failed, trying RapidAPI:', error);
+      }
+    }
+
+    // Try RapidAPI Google Translate as backup
     if (rapidApiKey !== 'demo') {
       try {
         const rapidResponse = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {

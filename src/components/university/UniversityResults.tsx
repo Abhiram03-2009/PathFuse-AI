@@ -59,7 +59,10 @@ const UniversityResults: React.FC<UniversityResultsProps> = ({
                   <img 
                     src={university.logo} 
                     alt={university.name} 
-                    className="w-16 h-16 object-contain rounded-lg bg-white p-2"
+                    className="w-16 h-16 object-contain rounded-lg bg-white p-2 border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(university.name)}&size=64&background=random&color=fff`;
+                    }}
                   />
                   <div className="flex-1">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">

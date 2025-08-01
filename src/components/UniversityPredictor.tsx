@@ -123,7 +123,7 @@ const UniversityPredictor = () => {
       return;
     }
 
-    // Check minimum requirements - only GPA and test scores required
+    // Check minimum requirements - only GPA and one test score required
     const hasGPA = studentStats.gpaUnweighted > 0 || studentStats.gpaWeighted > 0;
     const hasTestScore = studentStats.satScore > 0 || studentStats.actScore > 0;
     
@@ -138,8 +138,8 @@ const UniversityPredictor = () => {
 
     if (!hasTestScore) {
       toast({
-        title: "Test Score Required", 
-        description: "Please enter either your SAT or ACT score.",
+        title: "Test Score Required",
+        description: "Please enter either your SAT or ACT score to proceed.",
         variant: "destructive"
       });
       return;

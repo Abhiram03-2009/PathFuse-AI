@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Real-time job APIs
-const JSEARCH_API_KEY = Deno.env.get('RAPIDAPI_KEY') || 'demo';
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || 'demo';
 const ADZUNA_API_KEY = Deno.env.get('ADZUNA_API_KEY') || "***REMOVED-ADZUNA-KEY***";
 const ADZUNA_APP_ID = Deno.env.get('ADZUNA_APP_ID') || "***REMOVED-ADZUNA-APPID***";
 
@@ -65,10 +65,10 @@ const analyzeResume = (resumeText: string) => {
 // Fetch real-time jobs from JSearch API (RapidAPI)
 const fetchJSearchJobs = async (query: string, location: string) => {
   try {
-    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=1&date_posted=today&employment_types=FULLTIME%2CPARTTIME%2CCONTRACTOR&job_requirements=under_3_years_experience%2Cmore_than_3_years_experience&remote_jobs_only=false`, {
+    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=2&date_posted=week&employment_types=FULLTIME%2CPARTTIME&remote_jobs_only=false`, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': JSEARCH_API_KEY,
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
         'X-RapidAPI-Host': 'jsearch.p.rapidapi.com'
       }
     });
@@ -88,11 +88,12 @@ const fetchJSearchJobs = async (query: string, location: string) => {
           ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
           : job.job_salary || 'Competitive salary',
         description: job.job_description ? job.job_description.substring(0, 300) + '...' : 'Join our team and make an impact.',
-        jobUrl: job.job_apply_link,
+        jobUrl: job.job_apply_link || `https://${job.employer_name.toLowerCase().replace(/\s+/g, '')}.com/careers`,
         requirements: job.job_required_skills || [],
         benefits: job.job_benefits || [],
         isRemote: job.job_is_remote || false,
         postedDate: job.job_posted_at_datetime_utc,
+        jobId: job.job_id,
         source: 'jsearch'
       }));
     }

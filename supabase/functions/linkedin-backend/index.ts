@@ -13,22 +13,27 @@ const corsHeaders = {
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
   console.log('Attempting to scrape LinkedIn profile:', linkedInUrl);
 
-  // Try multiple LinkedIn scraping APIs
+  // Try multiple LinkedIn scraping APIs with enhanced error handling
   const scrapingMethods = [
     {
-      name: 'LinkedIn Profile Scraper',
-      url: `https://linkedin-profile-scraper-api.p.rapidapi.com/linkedin?url=${encodeURIComponent(linkedInUrl)}`,
-      host: 'linkedin-profile-scraper-api.p.rapidapi.com'
+      name: 'LinkedIn Profile Data API',
+      url: `https://linkedin-profile-data.p.rapidapi.com/linkedin-profile?url=${encodeURIComponent(linkedInUrl)}`,
+      host: 'linkedin-profile-data.p.rapidapi.com'
     },
     {
-      name: 'Fresh LinkedIn Profile Data',
-      url: `https://fresh-linkedin-profile-data.p.rapidapi.com/get-linkedin-profile?linkedin_url=${encodeURIComponent(linkedInUrl)}`,
-      host: 'fresh-linkedin-profile-data.p.rapidapi.com'
+      name: 'LinkedIn Scraper API',
+      url: `https://linkedin-scraper-api.p.rapidapi.com/v1/profile?url=${encodeURIComponent(linkedInUrl)}`,
+      host: 'linkedin-scraper-api.p.rapidapi.com'
     },
     {
-      name: 'LinkedIn Data Scraper',
-      url: `https://linkedin-data-scraper.p.rapidapi.com/person?url=${encodeURIComponent(linkedInUrl)}`,
-      host: 'linkedin-data-scraper.p.rapidapi.com'
+      name: 'Real-time LinkedIn Data',
+      url: `https://real-time-linkedin-data.p.rapidapi.com/get-profile?url=${encodeURIComponent(linkedInUrl)}`,
+      host: 'real-time-linkedin-data.p.rapidapi.com'
+    },
+    {
+      name: 'LinkedIn Public Profile',
+      url: `https://linkedin-public-profile.p.rapidapi.com/profile?url=${encodeURIComponent(linkedInUrl)}`,
+      host: 'linkedin-public-profile.p.rapidapi.com'
     }
   ];
 
@@ -52,14 +57,16 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
           // Handle different response formats
           let profileData = null;
           
-          if (data.success && data.data) {
-            profileData = data.data;
-          } else if (data.data) {
+          if (data.success !== false && data.data) {
             profileData = data.data;
           } else if (data.profile) {
             profileData = data.profile;
           } else if (data.person) {
             profileData = data.person;
+          } else if (data.result) {
+            profileData = data.result;
+          } else if (data.data) {
+            profileData = data.data;
           } else if (data.name || data.headline) {
             profileData = data;
           }
@@ -69,15 +76,17 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
             return {
               name: profileData.name || profileData.fullName || profileData.full_name || 'Professional User',
               headline: profileData.headline || profileData.title || profileData.current_position || 'Professional',
-              industry: profileData.industry || profileData.industryName || 'Professional Services',
+              industry: profileData.industry || profileData.industryName || profileData.sector || 'Professional Services',
               location: profileData.location || profileData.geo || profileData.address || 'United States',
               connections: profileData.connections || profileData.connectionsCount || Math.floor(Math.random() * 1000) + 500,
               summary: profileData.summary || profileData.about || profileData.description || 'Experienced professional with a track record of success.',
-              experience: profileData.experience || profileData.experiences || profileData.work_history || [],
-              education: profileData.education || profileData.educations || profileData.schools || [],
-              skills: profileData.skills || profileData.skillsList || [],
+              experience: profileData.experience || profileData.experiences || profileData.work_history || profileData.positions || [],
+              education: profileData.education || profileData.educations || profileData.schools || profileData.educationHistory || [],
+              skills: profileData.skills || profileData.skillsList || profileData.topSkills || [],
               certifications: profileData.certifications || profileData.certificates || [],
               languages: profileData.languages || ['English'],
+              followers: profileData.followers || profileData.followerCount || 0,
+              posts: profileData.posts || profileData.activityCount || 0,
               profileUrl: linkedInUrl
             };
           }

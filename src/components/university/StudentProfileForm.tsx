@@ -217,7 +217,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="gpaUnweighted" className="text-gray-900 dark:text-white">Unweighted GPA *</Label>
+            <Label htmlFor="gpaUnweighted" className="text-gray-900 dark:text-white">Unweighted GPA * (Required)</Label>
             <Input
               id="gpaUnweighted"
               type="number"
@@ -227,10 +227,11 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               onChange={(e) => setStudentStats(prev => ({...prev, gpaUnweighted: parseFloat(e.target.value) || 0}))}
               className="text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="e.g., 3.8"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="gpaWeighted" className="text-gray-900 dark:text-white">Weighted GPA</Label>
+            <Label htmlFor="gpaWeighted" className="text-gray-900 dark:text-white">Weighted GPA (Optional)</Label>
             <Input
               id="gpaWeighted"
               type="number"
@@ -245,7 +246,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="satScore" className="text-gray-900 dark:text-white">SAT Score *</Label>
+            <Label htmlFor="satScore" className="text-gray-900 dark:text-white">SAT Score * (Required - OR ACT)</Label>
             <Input
               id="satScore"
               type="number"
@@ -257,7 +258,7 @@ const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
             />
           </div>
           <div>
-            <Label htmlFor="actScore" className="text-gray-900 dark:text-white">ACT Score</Label>
+            <Label htmlFor="actScore" className="text-gray-900 dark:text-white">ACT Score (Alternative to SAT)</Label>
             <Input
               id="actScore"
               type="number"
