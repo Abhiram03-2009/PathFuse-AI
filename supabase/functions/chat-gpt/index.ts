@@ -1,8 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Using Hugging Face API (free alternative to OpenAI)
-const huggingFaceApiKey = Deno.env.get('HUGGINGFACE_API_KEY') || 'hf_demo_key';
+// Using Groq API (free alternative to OpenAI)
+const groqApiKey = Deno.env.get('GROQ_API_KEY') || '***REMOVED-GROQ-KEY***';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Allows all origins, you might want to restrict this for production
@@ -31,49 +31,47 @@ serve(async (req) => {
       );
     }
 
-    // Use Hugging Face Inference API (free alternative)
-    const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-large', {
+    // Use Groq API (free alternative with Llama models)
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${huggingFaceApiKey}`,
+        'Authorization': `Bearer ${groqApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        inputs: `Career Coach: ${message}`,
-        parameters: {
-          max_length: 500,
-          temperature: 0.7,
-          do_sample: true
-        }
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional AI Career Coach. Provide expert guidance on resumes, cover letters, interviews, salary negotiation, job searching, career transitions, and professional development. Give specific, actionable advice tailored to each user\'s situation. Keep responses concise yet comprehensive.'
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
       }),
     });
 
-    // Check for errors from Hugging Face API
+    // Check for errors from Groq API
     if (!response.ok) {
-      console.error('Hugging Face API error:', response.status, response.statusText);
+      console.error('Groq API error:', response.status, response.statusText);
       const errorData = await response.text();
       console.error('Error details:', errorData);
-      throw new Error(`Hugging Face API error: ${response.status}`);
+      throw new Error(`Groq API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Hugging Face response received');
+    console.log('Groq response received');
     
-    // Handle Hugging Face response format
-    let reply = '';
-    if (Array.isArray(data) && data[0] && data[0].generated_text) {
-      reply = data[0].generated_text;
-    } else if (data.generated_text) {
-      reply = data.generated_text;
-    } else {
-      throw new Error('Invalid response from Hugging Face');
+    // Ensure the response from Groq contains the expected data structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response from Groq');
     }
 
-    // Clean up the response
-    reply = reply.replace(`Career Coach: ${message}`, '').trim();
-    if (!reply) {
-      reply = "I'm here to help with your career questions. Could you please provide more specific details about what you'd like assistance with?";
-    }
+    const reply = data.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ reply }),
