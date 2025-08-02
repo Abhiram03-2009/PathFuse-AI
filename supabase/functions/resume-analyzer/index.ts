@@ -213,6 +213,7 @@ IMPROVEMENT RECOMMENDATIONS:
 3. Strengthen professional summary with value proposition
 4. Add technical skills relevant to your field
 5. Include professional development and continuous learning`;
+      }
       
       analysisMethod = 'basic';
     }
