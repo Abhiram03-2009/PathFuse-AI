@@ -70,7 +70,7 @@ const MultilingualTranslator = () => {
 
     try {
       console.log('Sending translation request:', { 
-        text: sourceText.substring(0, 50), 
+        textLength: sourceText.length,
         sourceLanguage, 
         targetLanguage 
       });
@@ -97,16 +97,35 @@ const MultilingualTranslator = () => {
       setTranslatedText(data.translatedText);
       
       // Show success toast notification
+      const methodInfo = data.method === 'rapidapi_google' ? ' (Google Translate)' : 
+                         data.method === 'mymemory' ? ' (MyMemory)' : 
+                         data.method === 'libretranslate' ? ' (LibreTranslate)' : '';
+      
       toast({
         title: "Translation Complete",
-        description: `Text translated from ${getLanguageName(sourceLanguage)} to ${getLanguageName(targetLanguage)}.`,
+        description: `Text translated from ${getLanguageName(sourceLanguage)} to ${getLanguageName(targetLanguage)}${methodInfo}.`,
       });
 
+      console.log('Translation completed successfully:', {
+        method: data.method,
+        confidence: data.confidence,
+        originalLength: sourceText.length,
+        translatedLength: data.translatedText.length
+      });
     } catch (error) {
       console.error('Translation error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to translate text. Please try again.";
+      if (error.message.includes('service error')) {
+        errorMessage = "Translation service is temporarily unavailable.";
+      } else if (error.message.includes('No translation received')) {
+        errorMessage = "Translation service returned empty result.";
+      }
+      
       toast({
         title: "Translation Error", 
-        description: "Failed to translate text. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

@@ -129,13 +129,18 @@ const LinkedInIntegration = () => {
       
       toast({
         title: "Resume Generated!",
-        description: "AI-optimized resume created from LinkedIn profile with enhanced formatting"
+        description: `Professional resume generated from ${profileData.name}'s LinkedIn profile.`
       });
+       
+       console.log('Resume generation completed:', {
+         resumeLength: data.resumeText.length,
+         profileSource: data.profileSource
+       });
     } catch (error) {
       console.error('Resume generation error:', error);
       toast({
         title: "Generation Error",
-        description: "Failed to generate resume. Please try again.",
+        description: "Failed to generate resume from profile data. Please try again.",
         variant: "destructive"
       });
     }
@@ -169,13 +174,18 @@ const LinkedInIntegration = () => {
       
       toast({
         title: "Analysis Complete!",
-        description: "AI-powered career insights generated with market data and recommendations"
+        description: `Comprehensive career analysis completed for ${profileData.name}.`
       });
+       
+       console.log('Career insights completed:', {
+         analysisLength: data.analysis.length,
+         profileAnalyzed: data.profileAnalyzed
+       });
     } catch (error) {
       console.error('Career insights error:', error);
       toast({
         title: "Analysis Error",
-        description: "Failed to generate career insights. Please try again.",
+        description: "Failed to generate career insights from profile. Please try again.",
         variant: "destructive"
       });
     }

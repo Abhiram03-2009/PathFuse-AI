@@ -145,10 +145,10 @@ const JobAnalyzer = () => {
   };
 
   const analyzeJobs = async () => {
-    if (!skills.trim() && !resumeFile) {
+    if (!skills.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please provide your skills or upload a resume.",
+        description: "Please provide your skills to find job matches.",
         variant: "destructive"
       });
       return;
@@ -166,19 +166,50 @@ const JobAnalyzer = () => {
     setIsAnalyzing(true);
 
     try {
+      console.log('Starting job analysis with:', { skills, industry, location, hasResume: !!resumeFile });
+      
       const skillsArray = skills.split(/[\s,]+/).filter(s => s.trim().length > 0);
+      
+      // Read resume file if uploaded
+      let resumeText = '';
+      if (resumeFile) {
+        try {
+          resumeText = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = reject;
+            reader.readAsText(resumeFile);
+          });
+          console.log('Resume file read successfully, length:', resumeText.length);
+        } catch (error) {
+          console.error('Error reading resume file:', error);
+          toast({
+            title: "File Error",
+            description: "Could not read the uploaded resume file.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
       
       const { data, error } = await supabase.functions.invoke('job-matcher', {
         body: { 
           skills: skillsArray,
           industry,
           location,
-          resumeText: resumeFile ? resumeFile.name : null
+          resumeText
         }
       });
 
+      console.log('Job matcher response:', { data, error });
+
       if (error) {
+        console.error('Supabase function error:', error);
         throw new Error(error.message || 'Failed to get job matches');
+      }
+
+      if (!data || !data.jobs) {
+        throw new Error('No job data received from API');
       }
 
       const formattedJobs: JobMatch[] = data.jobs.map((job: any) => ({
@@ -186,23 +217,37 @@ const JobAnalyzer = () => {
         company: job.company,
         location: job.location,
         salary: job.salary,
-        matchPercentage: Math.min(job.matchPercentage, 100), // Ensure match percentage is not greater than 100%
+        matchPercentage: Math.min(Math.max(job.matchPercentage, 10), 100),
         description: job.description,
         requirements: job.requirements || [],
         benefits: job.benefits || []
-      })).filter((job) => job.location.toLowerCase().includes(location.toLowerCase()));
+      }));
 
       setJobMatches(formattedJobs);
       
       toast({
-        title: "Real-time Analysis Complete",
-        description: `Found ${formattedJobs.length} current job matches with live market data.`,
+        title: "Job Analysis Complete",
+        description: `Found ${formattedJobs.length} job matches${data.insights?.dataSource === 'live' ? ' with real-time data' : ''}.`,
       });
+       
+       console.log('Job analysis completed successfully:', {
+         jobCount: formattedJobs.length,
+         avgMatch: formattedJobs.reduce((sum, job) => sum + job.matchPercentage, 0) / formattedJobs.length
+       });
     } catch (error) {
       console.error('Job analysis error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to analyze jobs. Please try again.";
+      if (error.message.includes('Skills and location are required')) {
+        errorMessage = "Please provide both skills and location preferences.";
+      } else if (error.message.includes('No job data received')) {
+        errorMessage = "No job matches found. Try different skills or location.";
+      }
+      
       toast({
         title: "Analysis Error",
-        description: "Failed to analyze jobs. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

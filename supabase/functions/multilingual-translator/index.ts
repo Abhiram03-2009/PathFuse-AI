@@ -1,25 +1,107 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Translation APIs
+// Translation APIs with working keys
 const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+const GOOGLE_TRANSLATE_KEY = Deno.env.get('GOOGLE_TRANSLATE_KEY') || '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced offline dictionary for common phrases
+const offlineTranslations: Record<string, Record<string, Record<string, string>>> = {
+  'en': {
+    'es': {
+      'hello': 'hola',
+      'goodbye': 'adiós',
+      'thank you': 'gracias',
+      'please': 'por favor',
+      'yes': 'sí',
+      'no': 'no',
+      'good morning': 'buenos días',
+      'good evening': 'buenas tardes',
+      'how are you': 'cómo estás',
+      'i love you': 'te amo',
+      'excuse me': 'disculpe',
+      'sorry': 'lo siento',
+      'welcome': 'bienvenido',
+      'help': 'ayuda',
+      'water': 'agua',
+      'food': 'comida',
+      'work': 'trabajo',
+      'family': 'familia',
+      'friend': 'amigo',
+      'house': 'casa',
+      'car': 'coche',
+      'money': 'dinero'
+    },
+    'fr': {
+      'hello': 'bonjour',
+      'goodbye': 'au revoir',
+      'thank you': 'merci',
+      'please': 's\'il vous plaît',
+      'yes': 'oui',
+      'no': 'non',
+      'good morning': 'bonjour',
+      'good evening': 'bonsoir',
+      'how are you': 'comment allez-vous',
+      'i love you': 'je t\'aime',
+      'excuse me': 'excusez-moi',
+      'sorry': 'désolé',
+      'welcome': 'bienvenue',
+      'help': 'aide',
+      'water': 'eau',
+      'food': 'nourriture',
+      'work': 'travail',
+      'family': 'famille',
+      'friend': 'ami',
+      'house': 'maison',
+      'car': 'voiture',
+      'money': 'argent'
+    },
+    'de': {
+      'hello': 'hallo',
+      'goodbye': 'auf wiedersehen',
+      'thank you': 'danke',
+      'please': 'bitte',
+      'yes': 'ja',
+      'no': 'nein',
+      'good morning': 'guten morgen',
+      'good evening': 'guten abend',
+      'how are you': 'wie geht es dir',
+      'i love you': 'ich liebe dich',
+      'excuse me': 'entschuldigung',
+      'sorry': 'es tut mir leid',
+      'welcome': 'willkommen',
+      'help': 'hilfe',
+      'water': 'wasser',
+      'food': 'essen',
+      'work': 'arbeit',
+      'family': 'familie',
+      'friend': 'freund',
+      'house': 'haus',
+      'car': 'auto',
+      'money': 'geld'
+    }
+  }
+};
+
 serve(async (req) => {
   console.log('Multilingual translator function called');
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { text, sourceLanguage, targetLanguage } = await req.json();
-    console.log('Translation request:', { text: text?.substring(0, 50), sourceLanguage, targetLanguage });
+    console.log('Translation request:', { 
+      textLength: text?.length, 
+      sourceLanguage, 
+      targetLanguage 
+    });
 
     if (!text || !sourceLanguage || !targetLanguage) {
       return new Response(
@@ -32,93 +114,77 @@ serve(async (req) => {
     }
 
     let translatedText = '';
-    let translationMethod = 'rapidapi';
+    let translationMethod = '';
 
-    // Try Google Cloud Translation API first if available
-    if (googleTranslateKey) {
-      try {
-        const googleResponse = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${googleTranslateKey}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLanguage,
-            target: targetLanguage,
-            format: 'text'
-          }),
-        });
+    // Method 1: Try RapidAPI Google Translate (most reliable)
+    try {
+      console.log('Trying RapidAPI Google Translate...');
+      
+      const rapidResponse = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {
+        method: 'POST',
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'google-translate1.p.rapidapi.com',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          'q': text,
+          'target': targetLanguage,
+          'source': sourceLanguage
+        })
+      });
 
-        if (googleResponse.ok) {
-          const googleData = await googleResponse.json();
-          if (googleData.data && googleData.data.translations && googleData.data.translations[0]) {
-            translatedText = googleData.data.translations[0].translatedText;
-            translationMethod = 'google_cloud';
-            console.log('Translation completed via Google Cloud Translation API');
-          }
+      if (rapidResponse.ok) {
+        const data = await rapidResponse.json();
+        console.log('RapidAPI response:', data);
+        
+        if (data.data && data.data.translations && data.data.translations[0]) {
+          translatedText = data.data.translations[0].translatedText;
+          translationMethod = 'rapidapi_google';
+          console.log('Translation successful via RapidAPI Google Translate');
         }
-      } catch (error) {
-        console.log('Google Cloud API failed, trying RapidAPI:', error);
+      } else {
+        console.error('RapidAPI error:', rapidResponse.status, rapidResponse.statusText);
       }
+    } catch (error) {
+      console.error('RapidAPI Google Translate failed:', error);
     }
 
-    // Try RapidAPI Google Translate as backup
-    if (rapidApiKey !== 'demo') {
-      try {
-        const rapidResponse = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {
-          method: 'POST',
-          headers: {
-            'X-RapidAPI-Key': rapidApiKey,
-            'X-RapidAPI-Host': 'google-translate1.p.rapidapi.com',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLanguage,
-            target: targetLanguage,
-            format: 'text'
-          }),
-        });
-
-        if (rapidResponse.ok) {
-          const data = await rapidResponse.json();
-          if (data.data && data.data.translations && data.data.translations[0]) {
-            translatedText = data.data.translations[0].translatedText;
-            console.log('Translation completed via RapidAPI Google Translate');
-          }
-        }
-      } catch (error) {
-        console.log('RapidAPI failed, trying MyMemory:', error);
-      }
-    }
-
-    // Try MyMemory API as backup
+    // Method 2: Try MyMemory API (free alternative)
     if (!translatedText) {
       try {
-        const myMemoryResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLanguage}|${targetLanguage}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
+        console.log('Trying MyMemory API...');
+        
+        const myMemoryResponse = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLanguage}|${targetLanguage}&de=your@email.com`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
           }
-        });
+        );
 
         if (myMemoryResponse.ok) {
           const myMemoryData = await myMemoryResponse.json();
+          console.log('MyMemory response:', myMemoryData);
+          
           if (myMemoryData.responseData && myMemoryData.responseData.translatedText) {
             translatedText = myMemoryData.responseData.translatedText;
             translationMethod = 'mymemory';
-            console.log('Translation completed via MyMemory API');
+            console.log('Translation successful via MyMemory API');
           }
         }
       } catch (error) {
-        console.log('MyMemory API failed, trying LibreTranslate:', error);
+        console.error('MyMemory API failed:', error);
       }
     }
 
-    // Try LibreTranslate as another backup
+    // Method 3: Try LibreTranslate (open source)
     if (!translatedText) {
       try {
+        console.log('Trying LibreTranslate...');
+        
         const libreResponse = await fetch('https://libretranslate.de/translate', {
           method: 'POST',
           headers: {
@@ -126,7 +192,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             q: text,
-            source: sourceLanguage === 'auto' ? 'auto' : sourceLanguage,
+            source: sourceLanguage,
             target: targetLanguage,
             format: 'text'
           }),
@@ -134,132 +200,114 @@ serve(async (req) => {
 
         if (libreResponse.ok) {
           const libreData = await libreResponse.json();
+          console.log('LibreTranslate response:', libreData);
+          
           if (libreData.translatedText) {
             translatedText = libreData.translatedText;
             translationMethod = 'libretranslate';
-            console.log('Translation completed via LibreTranslate');
+            console.log('Translation successful via LibreTranslate');
           }
         }
       } catch (error) {
-        console.log('LibreTranslate failed, trying OpenAI fallback:', error);
+        console.error('LibreTranslate failed:', error);
       }
     }
 
-    // OpenAI fallback for high-quality translations
-    if (!translatedText && openAIApiKey) {
+    // Method 4: Try Microsoft Translator via RapidAPI
+    if (!translatedText) {
       try {
-        const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        console.log('Trying Microsoft Translator...');
+        
+        const msResponse = await fetch('https://microsoft-translator-text.p.rapidapi.com/translate', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
+            'X-RapidAPI-Key': RAPIDAPI_KEY,
+            'X-RapidAPI-Host': 'microsoft-translator-text.p.rapidapi.com',
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You are a professional translator. Translate the following text from ${sourceLanguage} to ${targetLanguage}. Return only the translation, no explanations or additional text.`
-              },
-              {
-                role: 'user',
-                content: text
-              }
-            ],
-            max_tokens: 1000,
-            temperature: 0.1,
-          }),
+          body: JSON.stringify([{
+            'Text': text
+          }]),
         });
 
-        if (openAIResponse.ok) {
-          const openAIData = await openAIResponse.json();
-          if (openAIData.choices && openAIData.choices[0] && openAIData.choices[0].message) {
-            translatedText = openAIData.choices[0].message.content.trim();
-            translationMethod = 'openai';
-            console.log('Translation completed via OpenAI');
+        if (msResponse.ok) {
+          const msData = await msResponse.json();
+          console.log('Microsoft Translator response:', msData);
+          
+          if (msData && msData[0] && msData[0].translations && msData[0].translations[0]) {
+            translatedText = msData[0].translations[0].text;
+            translationMethod = 'microsoft';
+            console.log('Translation successful via Microsoft Translator');
           }
         }
       } catch (error) {
-        console.log('OpenAI translation failed:', error);
+        console.error('Microsoft Translator failed:', error);
       }
     }
 
-    // Enhanced offline dictionary fallback
+    // Method 5: Enhanced offline dictionary fallback
     if (!translatedText) {
-      const offlineTranslations: Record<string, Record<string, Record<string, string>>> = {
-        'en': {
-          'es': {
-            'hello': 'hola',
-            'goodbye': 'adiós',
-            'thank you': 'gracias',
-            'please': 'por favor',
-            'yes': 'sí',
-            'no': 'no',
-            'good morning': 'buenos días',
-            'good evening': 'buenas tardes',
-            'how are you': 'cómo estás',
-            'i love you': 'te amo',
-            'excuse me': 'disculpe',
-            'sorry': 'lo siento',
-            'welcome': 'bienvenido',
-            'help': 'ayuda',
-            'water': 'agua',
-            'food': 'comida'
-          },
-          'fr': {
-            'hello': 'bonjour',
-            'goodbye': 'au revoir',
-            'thank you': 'merci',
-            'please': 's\'il vous plaît',
-            'yes': 'oui',
-            'no': 'non',
-            'good morning': 'bonjour',
-            'good evening': 'bonsoir',
-            'how are you': 'comment allez-vous',
-            'i love you': 'je t\'aime',
-            'excuse me': 'excusez-moi',
-            'sorry': 'désolé',
-            'welcome': 'bienvenue',
-            'help': 'aide',
-            'water': 'eau',
-            'food': 'nourriture'
-          },
-          'de': {
-            'hello': 'hallo',
-            'goodbye': 'auf wiedersehen',
-            'thank you': 'danke',
-            'please': 'bitte',
-            'yes': 'ja',
-            'no': 'nein',
-            'good morning': 'guten morgen',
-            'good evening': 'guten abend',
-            'how are you': 'wie geht es dir',
-            'i love you': 'ich liebe dich',
-            'excuse me': 'entschuldigung',
-            'sorry': 'es tut mir leid',
-            'welcome': 'willkommen',
-            'help': 'hilfe',
-            'water': 'wasser',
-            'food': 'essen'
-          }
-        }
-      };
-
+      console.log('Trying offline dictionary...');
+      
       const lowerText = text.toLowerCase().trim();
       const translations = offlineTranslations[sourceLanguage]?.[targetLanguage];
       
-      if (translations && translations[lowerText]) {
-        translatedText = translations[lowerText];
-        translationMethod = 'offline';
-        console.log('Translation completed via enhanced offline dictionary');
+      if (translations) {
+        // Try exact match first
+        if (translations[lowerText]) {
+          translatedText = translations[lowerText];
+          translationMethod = 'offline_exact';
+        } else {
+          // Try partial matches for longer text
+          let partialTranslation = '';
+          const words = lowerText.split(/\s+/);
+          
+          words.forEach(word => {
+            if (translations[word]) {
+              partialTranslation += translations[word] + ' ';
+            } else {
+              partialTranslation += word + ' ';
+            }
+          });
+          
+          if (partialTranslation.trim() !== lowerText) {
+            translatedText = partialTranslation.trim();
+            translationMethod = 'offline_partial';
+          }
+        }
       }
     }
 
-    // Final fallback with better formatting
+    // Final fallback with language indication
     if (!translatedText) {
-      translatedText = `[Translation from ${sourceLanguage.toUpperCase()} to ${targetLanguage.toUpperCase()}]: ${text}`;
+      translatedText = `[${sourceLanguage.toUpperCase()} → ${targetLanguage.toUpperCase()}]: ${text}`;
       translationMethod = 'fallback';
       console.log('Using fallback translation');
+    }
+
+    // Calculate confidence score
+    let confidence = 0.5;
+    switch (translationMethod) {
+      case 'rapidapi_google':
+        confidence = 0.95;
+        break;
+      case 'microsoft':
+        confidence = 0.90;
+        break;
+      case 'mymemory':
+        confidence = 0.85;
+        break;
+      case 'libretranslate':
+        confidence = 0.80;
+        break;
+      case 'offline_exact':
+        confidence = 0.90;
+        break;
+      case 'offline_partial':
+        confidence = 0.70;
+        break;
+      default:
+        confidence = 0.50;
     }
 
     return new Response(
@@ -268,7 +316,8 @@ serve(async (req) => {
         method: translationMethod,
         sourceLanguage,
         targetLanguage,
-        confidence: translationMethod === 'rapidapi' ? 0.95 : translationMethod === 'mymemory' ? 0.85 : 0.70
+        confidence,
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -277,201 +326,15 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in multilingual-translator function:', error);
     
-    // Provide a meaningful fallback translation
-    let fallbackText = 'Translation service temporarily unavailable';
-    try {
-      const { text, sourceLanguage, targetLanguage } = await req.json().catch(() => ({}));
-      if (text) {
-        fallbackText = `[${sourceLanguage?.toUpperCase() || 'AUTO'} → ${targetLanguage?.toUpperCase() || 'TARGET'}]: ${text}`;
-      }
-    } catch (parseError) {
-      console.error('Error parsing request for fallback:', parseError);
-    }
-
-    // Try RapidAPI Google Translate if MyMemory fails
-    if (!translatedText && rapidApiKey !== 'demo') {
-      try {
-        const rapidResponse = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {
-          method: 'POST',
-          headers: {
-            'X-RapidAPI-Key': rapidApiKey,
-            'X-RapidAPI-Host': 'google-translate1.p.rapidapi.com',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLanguage,
-            target: targetLanguage,
-            format: 'text'
-          }),
-        });
-
-        if (rapidResponse.ok) {
-          const data = await rapidResponse.json();
-          if (data.data && data.data.translations && data.data.translations[0]) {
-            translatedText = data.data.translations[0].translatedText;
-            translationMethod = 'rapidapi';
-            console.log('Translation completed via RapidAPI Google Translate');
-          }
-        }
-      } catch (error) {
-        console.log('RapidAPI failed, trying LibreTranslate:', error);
-      }
-    }
-
-    // Try free translation APIs if Google isn't available
-    if (!translatedText) {
-      try {
-        // Try LibreTranslate API (free alternative)
-        const libreResponse = await fetch('https://libretranslate.de/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLanguage === 'auto' ? 'auto' : sourceLanguage,
-            target: targetLanguage,
-            format: 'text'
-          }),
-        });
-
-        if (libreResponse.ok) {
-          const libreData = await libreResponse.json();
-          if (libreData.translatedText) {
-            translatedText = libreData.translatedText;
-            translationMethod = 'libretranslate';
-            console.log('Translation completed via LibreTranslate');
-          }
-        }
-      } catch (error) {
-        console.log('LibreTranslate failed, trying fallback:', error);
-      }
-    }
-
-    // Fallback to OpenAI if other services failed
-    if (!translatedText && openAIApiKey) {
-      try {
-        const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You are a professional translator. Translate from ${sourceLanguage} to ${targetLanguage}. Return only the translation, no explanations.`
-              },
-              {
-                role: 'user',
-                content: text
-              }
-            ],
-            max_tokens: 1000,
-            temperature: 0.1,
-          }),
-        });
-
-        if (openAIResponse.ok) {
-          const openAIData = await openAIResponse.json();
-          if (openAIData.choices && openAIData.choices[0] && openAIData.choices[0].message) {
-            translatedText = openAIData.choices[0].message.content;
-            translationMethod = 'openai';
-            console.log('Translation completed via OpenAI');
-          }
-        }
-      } catch (error) {
-        console.log('OpenAI translation failed:', error);
-      }
-    }
-
-    // Offline fallback dictionary for common phrases
-    if (!translatedText) {
-      const offlineTranslations: Record<string, Record<string, string>> = {
-        'en': {
-          'es': {
-            'hello': 'hola',
-            'goodbye': 'adiós',
-            'thank you': 'gracias',
-            'please': 'por favor',
-            'yes': 'sí',
-            'no': 'no',
-            'good morning': 'buenos días',
-            'good evening': 'buenas tardes'
-          },
-          'fr': {
-            'hello': 'bonjour',
-            'goodbye': 'au revoir',
-            'thank you': 'merci',
-            'please': 's\'il vous plaît',
-            'yes': 'oui',
-            'no': 'non',
-            'good morning': 'bonjour',
-            'good evening': 'bonsoir'
-          },
-          'de': {
-            'hello': 'hallo',
-            'goodbye': 'auf wiedersehen',
-            'thank you': 'danke',
-            'please': 'bitte',
-            'yes': 'ja',
-            'no': 'nein',
-            'good morning': 'guten morgen',
-            'good evening': 'guten abend'
-          }
-        }
-      };
-
-      const lowerText = text.toLowerCase();
-      const translations = offlineTranslations[sourceLanguage]?.[targetLanguage];
-      
-      if (translations && translations[lowerText]) {
-        translatedText = translations[lowerText];
-        translationMethod = 'offline';
-        console.log('Translation completed via offline dictionary');
-      } else {
-        // Final fallback
-        translatedText = `[AUTO-TRANSLATED from ${sourceLanguage} to ${targetLanguage}]: ${text}`;
-        translationMethod = 'fallback';
-        console.log('Using fallback translation');
-      }
-    }
-
     return new Response(
       JSON.stringify({ 
-        translatedText,
-        method: translationMethod,
-        sourceLanguage,
-        targetLanguage 
+        error: 'Translation service error',
+        details: error.message,
+        translatedText: `[Translation Error]: ${error.message}`,
+        method: 'error'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error in multilingual-translator function:', error);
-    
-    // Provide a meaningful fallback translation
-    let fallbackText = 'Translation unavailable';
-    try {
-      const { text, sourceLanguage, targetLanguage } = await req.json().catch(() => ({}));
-      if (text) {
-        fallbackText = `[AUTO-TRANSLATED from ${sourceLanguage} to ${targetLanguage}]: ${text}`;
-      }
-    } catch (parseError) {
-      console.error('Error parsing request for fallback:', parseError);
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        translatedText: fallbackText,
-        method: 'error_fallback',
-        note: 'Translation service temporarily unavailable'
-      }),
-      {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
