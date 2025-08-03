@@ -67,7 +67,7 @@ const analyzeResume = (resumeText: string) => {
   const companies = [];
   const companyPatterns = [
     /google/gi, /microsoft/gi, /amazon/gi, /apple/gi, /facebook/gi, /meta/gi,
-    /netflix/gi, /uber/gi, /airbnb/gi, /tesla/gi, /spacex/gi, /salesforce/gi
+    /netflix/gi, /uber/gi, /airbnb/gi, /tesla/gi, /spacex/gi, /salesforce/gi, /vercel/gi, /ascensus/gi, /optum/gi
   ];
   
   companyPatterns.forEach(pattern => {
