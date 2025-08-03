@@ -9,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Resume analysis function remains unchanged.
+// Resume analysis function remains unchanged. It is well-optimized.
 const analyzeResume = (resumeText: string) => {
     if (!resumeText) return { skills: [], experience: [], seniority: 'entry', companies: [] };
     const text = resumeText.toLowerCase();
@@ -56,39 +56,30 @@ const analyzeResume = (resumeText: string) => {
     return { skills: [...new Set(techSkills)], experience: [...new Set(experience)], seniority, companies: [...new Set(companies)] };
 };
 
-// **NEW**: A dedicated function to build a highly specific, location-aware query.
-const buildHyperLocalQuery = (skills: string[], industry: string, location: string): string => {
-    let queryParts: string[] = [];
-
-    // Prioritize industry to ensure it's always included in the search
+// **REFINED**: This function now ONLY builds the keyword query.
+const buildSearchQuery = (skills: string[], industry: string): string => {
+    const queryParts: string[] = [];
     if (industry && industry.toLowerCase() !== 'any') {
         queryParts.push(industry);
     }
-
-    // Add unique skills, but don't let them overwhelm the query
     if (skills && skills.length > 0) {
         queryParts.push(...skills.slice(0, 3));
     }
-
-    // If no industry or skills, use a generic term
+    // If for some reason there are no skills or industry, search for all "jobs"
     if (queryParts.length === 0) {
-        queryParts.push('jobs');
+        return 'jobs';
     }
-
-    // **CRITICAL**: Append "in [location]" to force geographical filtering.
-    // Appending ", US" helps the API better disambiguate common location names.
-    return `${queryParts.join(' ')} in ${location}, US`;
+    return [...new Set(queryParts)].join(' ');
 };
 
-// **REFINED**: Fetches jobs using the new hyperlocal query and less restrictive filters.
-const fetchJSearchJobs = async (query: string) => {
+// **CRITICAL FIX**: This function now takes `query` and `location` as separate arguments
+// and uses the API's dedicated `location` parameter for filtering.
+const fetchJSearchJobs = async (query: string, location: string) => {
   try {
-    console.log('Fetching jobs from JSearch API with hyperlocal query:', { query });
+    console.log('Fetching jobs from JSearch API with query:', { query, location });
 
-    // **CRITICAL CHANGES**:
-    // 1. Removed `employment_types=FULLTIME` to include all job types (fixes "0 results" for sales/healthcare).
-    // 2. Increased `num_pages` to '2' to get a wider pool of real, local jobs to rank.
-    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&page=1&num_pages=2&date_posted=month&radius=100`, {
+    // The API URL now uses both `query` and `location` parameters for a precise search.
+    const response = await fetch(`https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&page=1&num_pages=2&date_posted=month&radius=100`, {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': JSEARCH_API_KEY,
@@ -109,8 +100,7 @@ const fetchJSearchJobs = async (query: string) => {
       return data.data.map((job: any) => ({
         title: job.job_title || 'Professional Role',
         company: job.employer_name || 'Local Business',
-        // **GUARANTEED**: Displays City and State when available.
-        location: job.job_city && job.job_state ? `${job.job_city}, ${job.job_state}` : job.job_country,
+        location: job.job_city && job.job_state ? `${job.job_city}, ${job.job_state}` : location, // Display city/state
         salary: job.job_min_salary && job.job_max_salary 
           ? `$${job.job_min_salary.toLocaleString()} - $${job.job_max_salary.toLocaleString()}`
           : 'Salary not listed',
@@ -137,29 +127,22 @@ const calculateJobMatch = (job: any, resumeAnalysis: any, userSkills: string[]) 
     const jobText = (job.description + ' ' + job.title + ' ' + (job.requirements?.join(' ') || '')).toLowerCase();
     const allSkills = [...new Set([...resumeAnalysis.skills, ...userSkills.map(s => s.toLowerCase())])];
     let skillMatches = 0;
-    allSkills.forEach(skill => {
-        if (jobText.includes(skill)) {
-            skillMatches++;
-            matchScore += 8;
-        }
-    });
+    allSkills.forEach(skill => { if (jobText.includes(skill)) { skillMatches++; matchScore += 8; } });
     const jobRequiresExperience = /senior|lead|principal|manager|director|vp|head of/i.test(jobText);
     const jobIsEntry = /junior|entry|associate|intern|graduate/i.test(jobText);
     if (resumeAnalysis.seniority === 'senior' && jobRequiresExperience) matchScore += 20;
     else if (resumeAnalysis.seniority === 'entry' && jobIsEntry) matchScore += 20;
     else if (resumeAnalysis.seniority === 'mid' && !jobRequiresExperience && !jobIsEntry) matchScore += 20;
     else matchScore += 10;
-    resumeAnalysis.companies.forEach(company => {
-        if (job.company?.toLowerCase().includes(company)) matchScore += 10;
-    });
+    resumeAnalysis.companies.forEach(company => { if (job.company?.toLowerCase().includes(company)) matchScore += 10; });
     if (job.isRemote) matchScore += 5;
     const baseMatch = Math.max(15, skillMatches * 5);
     return Math.min(100, Math.max(matchScore, baseMatch));
 };
 
-// **REFINED**: Main server handler now uses the hyperlocal query builder.
+// **REFINED**: Main server handler now uses the corrected, separated query and location logic.
 serve(async (req) => {
-  console.log('Hyperlocal job matcher function invoked.');
+  console.log('State-specific job matcher function invoked.');
   
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -167,34 +150,34 @@ serve(async (req) => {
     const { skills, location, industry, resumeText } = await req.json();
     console.log('Received job matching request:', { skillsCount: skills?.length, location, industry, hasResume: !!resumeText });
 
-    if (!skills || !location || !industry) {
-      return new Response(JSON.stringify({ error: 'Skills, location, and industry are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!location || !industry) {
+      return new Response(JSON.stringify({ error: 'Location and industry are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const resumeAnalysis = analyzeResume(resumeText);
-    const combinedSkills = [...new Set([...skills, ...resumeAnalysis.skills])];
+    const combinedSkills = [...new Set([...(skills || []), ...resumeAnalysis.skills])];
     
-    // **USE THE NEW QUERY BUILDER** to create the perfect, location-specific query.
-    const hyperlocalQuery = buildHyperLocalQuery(combinedSkills, industry, location);
+    // 1. Build the keyword query (e.g., "Sales")
+    const searchQuery = buildSearchQuery(combinedSkills, industry);
     
-    // Fetch jobs using the new, improved query.
-    const allJobs = await fetchJSearchJobs(hyperlocalQuery);
+    // 2. Pass the keyword query and the location state separately to the API fetcher.
+    const allJobs = await fetchJSearchJobs(searchQuery, `${location}, US`);
 
     if (allJobs.length === 0) {
         console.log('No live jobs found for the specified criteria. Returning empty results.');
     }
 
-    // Score, sort, and return the real, local jobs that were found.
+    // Score and sort the jobs that were returned from the correct state.
     const scoredJobs = allJobs
-        .map((job) => ({ ...job, matchPercentage: calculateJobMatch(job, resumeAnalysis, skills) }))
+        .map((job) => ({ ...job, matchPercentage: calculateJobMatch(job, resumeAnalysis, skills || []) }))
         .sort((a, b) => b.matchPercentage - a.matchPercentage)
-        .slice(0, 20); // Show the top 20 matched real jobs.
+        .slice(0, 20);
 
     const remoteJobs = scoredJobs.filter(job => job.isRemote).length;
     const topCompanies = [...new Set(scoredJobs.map(job => job.company))].slice(0, 5);
     const avgMatch = scoredJobs.length > 0 ? scoredJobs.reduce((sum, job) => sum + job.matchPercentage, 0) / scoredJobs.length : 0;
 
-    console.log(`Returning ${scoredJobs.length} real, local jobs with avg match ${avgMatch.toFixed(1)}%`);
+    console.log(`Returning ${scoredJobs.length} jobs from ${location} with avg match ${avgMatch.toFixed(1)}%`);
 
     return new Response(
       JSON.stringify({
