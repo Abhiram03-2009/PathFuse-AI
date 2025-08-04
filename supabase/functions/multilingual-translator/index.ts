@@ -1,130 +1,112 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
+const offlineTranslations = { 'en': { 'es': { 'hello': 'hola' } } };
 
-const offlineTranslations: Record<string, Record<string, Record<string, string>>> = {
-  'en': { 'es': { 'hello': 'hola', 'thank you': 'gracias' }, 'fr': { 'hello': 'bonjour', 'thank you': 'merci' }, 'de': { 'hello': 'hallo', 'thank you': 'danke' } }
-};
-
-// --- Primary Live API (LibreTranslate) ---
+// --- API Functions ---
 const translateWithLibre = async (text: string, source: string, target: string): Promise<string | null> => {
   const url = 'https://libretranslate.de/translate';
-  console.log(`Tier 1: Attempting translation with LibreTranslate API`);
+  console.log(`Tier 1: Attempting with LibreTranslate`);
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: text, source, target, format: 'text' })
-    });
-    if (!response.ok) {
-      console.error(`LibreTranslate API returned non-2xx status: ${response.status}`);
-      return null;
-    }
-    const jsonData = await response.json();
-    if (jsonData && jsonData.translatedText) {
-      console.log('Tier 1 Success: Translated with LibreTranslate.');
-      return jsonData.translatedText;
-    }
-    return null;
-  } catch (error) {
-    console.error(`Tier 1 Error: Critical failure calling LibreTranslate API.`, error.message);
-    return null;
-  }
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: text, source, target, format: 'text' }) });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.translatedText || null;
+  } catch (e) { return null; }
 };
 
-// --- Secondary Live API (MyMemory) ---
-// This API is often better at handling untranslatable words like names.
 const translateWithMyMemory = async (text: string, source: string, target: string): Promise<string | null> => {
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`;
-  console.log(`Tier 2: Attempting translation with MyMemory API`);
+  console.log(`Tier 2: Attempting with MyMemory`);
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`MyMemory API returned non-2xx status: ${response.status}`);
-      return null;
-    }
-    const jsonData = await response.json();
-    if (jsonData?.responseData?.translatedText) {
-      console.log('Tier 2 Success: Translated with MyMemory.');
-      return jsonData.responseData.translatedText;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d?.responseData?.translatedText || null;
+  } catch (e) { return null; }
+};
+
+const translateOffline = (text: string, source: string, target: string): string | null => {
+  console.log('Tier 3: Attempting offline fallback.');
+  return offlineTranslations[source]?.[target]?.[text.toLowerCase().trim()] || null;
+};
+
+// --- NEW: Dedicated Transliteration Function for non-Latin scripts ---
+const transliterateText = async (text: string, lang: string): Promise<string | null> => {
+  const nonLatinScripts = ['ar', 'hi', 'ja', 'ko', 'ru', 'zh', 'zh-TW', 'el', 'he', 'th', 'ta', 'te'];
+  if (!nonLatinScripts.includes(lang)) return null;
+  
+  console.log(`Transliteration required for ${lang}. Calling API.`);
+  try {
+    const url = 'https://google-input-tools.p.rapidapi.com/transliteration';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': 'google-input-tools.p.rapidapi.com', 'content-type': 'application/json' },
+      body: JSON.stringify({ lang, text })
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data && data[0]) {
+      console.log('Transliteration successful.');
+      return data[0];
     }
     return null;
   } catch (error) {
-    console.error(`Tier 2 Error: Critical failure calling MyMemory API.`, error.message);
+    console.error('Transliteration API failed:', error.message);
     return null;
   }
 };
 
-// --- Offline Fallback ---
-const translateOffline = (text: string, source: string, target: string): string | null => {
-  console.log('Tier 3: Attempting offline dictionary fallback.');
-  const lowerText = text.toLowerCase().trim();
-  const translation = offlineTranslations[source]?.[target]?.[lowerText];
-  if (translation) {
-    console.log('Tier 3 Success: Translated with offline dictionary.');
-    return translation;
-  }
-  return null;
-};
-
-// --- Main Server Logic with Multi-Tiered Strategy ---
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
   try {
-    const body = await req.json();
-    const { text, sourceLanguage, targetLanguage } = body;
-    if (!text || !sourceLanguage || !targetLanguage) {
-      return new Response(JSON.stringify({ error: 'Missing required parameters.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const { text, sourceLanguage, targetLanguage } = await req.json();
+    if (!text || !sourceLanguage || !targetLanguage) return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
 
     let translatedText: string | null = null;
-    let translationMethod = '';
-    let confidence = 0.5;
+    let transliteration: string | null = null;
+    let method = 'unavailable';
 
-    // --- The Waterfall Strategy ---
-    
+    // --- Smart Retry Logic ---
+    const sourceWords = text.trim().split(/\s+/).length;
+
     // 1. Try Primary API
     translatedText = await translateWithLibre(text, sourceLanguage, targetLanguage);
     if (translatedText) {
-      translationMethod = 'live_api_primary';
-      confidence = 0.92;
-    } else {
-      // 2. If Primary fails, try Secondary API
-      translatedText = await translateWithMyMemory(text, sourceLanguage, targetLanguage);
-      if (translatedText) {
-        translationMethod = 'live_api_secondary';
-        confidence = 0.88;
+      const translatedWords = translatedText.trim().split(/\s+/).length;
+      // If the word count is suspiciously low (name was likely dropped), invalidate the result to force a retry.
+      if (sourceWords > translatedWords + 1 && sourceWords > 2) {
+        console.log(`Word drop detected (source: ${sourceWords}, translated: ${translatedWords}). Invalidating result.`);
+        translatedText = null; 
       } else {
-        // 3. If both live APIs fail, try Offline
-        translatedText = translateOffline(text, sourceLanguage, targetLanguage);
-        if (translatedText) {
-          translationMethod = 'offline_dictionary';
-          confidence = 0.90;
-        } else {
-          // 4. If ALL methods fail
-          translationMethod = 'unavailable';
-          confidence = 0.0;
-          translatedText = `[Translation currently unavailable]`;
-          console.log('All translation methods failed. Returning fallback message.');
-        }
+        method = 'live_api_primary';
       }
     }
 
-    return new Response(
-      JSON.stringify({ translatedText, method: translationMethod, confidence }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // 2. If Primary failed or was invalidated, try Secondary API
+    if (!translatedText) {
+      translatedText = await translateWithMyMemory(text, sourceLanguage, targetLanguage);
+      if (translatedText) method = 'live_api_secondary';
+    }
+
+    // 3. If both live APIs fail, try Offline
+    if (!translatedText) {
+      translatedText = translateOffline(text, sourceLanguage, targetLanguage);
+      if (translatedText) method = 'offline_dictionary';
+    }
+    
+    // 4. After a successful translation, attempt transliteration if needed
+    if (translatedText) {
+      transliteration = await transliterateText(translatedText, targetLanguage);
+    } else {
+      translatedText = `[Translation currently unavailable]`;
+    }
+
+    return new Response(JSON.stringify({ translatedText, transliteration, method }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    console.error('Critical error in main server function:', error.message);
-    return new Response(
-      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 });
