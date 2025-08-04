@@ -172,7 +172,7 @@ const UniversityPredictor = () => {
 
   return (
     <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
             <GraduationCap className="w-5 h-5" />
