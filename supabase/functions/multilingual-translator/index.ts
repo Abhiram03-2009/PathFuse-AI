@@ -37,6 +37,7 @@ const translateWithLibre = async (text: string, source: string, target: string):
 };
 
 // --- Secondary Live API (MyMemory) ---
+// This API is often better at handling untranslatable words like names.
 const translateWithMyMemory = async (text: string, source: string, target: string): Promise<string | null> => {
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`;
   console.log(`Tier 2: Attempting translation with MyMemory API`);
