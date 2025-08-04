@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// The primary RapidAPI key for the Google Translate service.
+// The primary RapidAPI key. This will be used for the new API endpoint.
 const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 
 const corsHeaders = {
@@ -9,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Offline dictionary for common phrases, used as a fallback.
+// Offline dictionary remains as a high-speed fallback for common phrases.
 const offlineTranslations: Record<string, Record<string, Record<string, string>>> = {
   'en': {
     'es': { 'hello': 'hola', 'thank you': 'gracias' /* ... more phrases */ },
@@ -18,45 +18,68 @@ const offlineTranslations: Record<string, Record<string, Record<string, string>>
   }
 };
 
-// --- CORE TRANSLATION LOGIC ---
-// This function now robustly calls the correct Google Translate API.
+// --- THE CORRECTED CORE LOGIC ---
+// This function is now updated to call the exact API from your new documentation.
 const translateOnline = async (text: string, source: string, target: string) => {
   try {
-    console.log(`Attempting translation with RapidAPI Google Translate: ${source} -> ${target}`);
-    
-    // This is the correct endpoint for translation, not the Maps API.
-    const response = await fetch('https://google-translate1.p.rapidapi.com/language/translate/v2', {
+    const url = 'https://google-api31.p.rapidapi.com/gtranslate';
+    const host = 'google-api31.p.rapidapi.com';
+
+    console.log(`Attempting translation with the correct API (${host}): ${source} -> ${target}`);
+
+    // The options object now precisely matches your documentation.
+    const options = {
       method: 'POST',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'google-translate1.p.rapidapi.com',
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': host,
+        'Content-Type': 'application/json' // Using JSON as specified
       },
-      // The body must be URL-encoded, which is handled by URLSearchParams.
-      body: new URLSearchParams({ q: text, target, source })
-    });
+      // The body is now a JSON object, stringified for the request.
+      body: JSON.stringify({
+        text: text,
+        to: target,
+        from_lang: source
+      })
+    };
+
+    const response = await fetch(url, options);
 
     if (!response.ok) {
-      console.error('RapidAPI Error:', response.status, await response.text());
-      return null; // Return null on API error to allow fallback.
+      console.error(`API Error from ${host}:`, response.status, await response.text());
+      return null; // Fail gracefully to allow for offline fallback.
     }
 
-    const data = await response.json();
-    if (data.data?.translations?.[0]?.translatedText) {
-      console.log('Translation successful via RapidAPI.');
-      return data.data.translations[0].translatedText;
+    // Per your documentation, the result is expected as text.
+    const resultText = await response.text();
+
+    // Some APIs return a JSON object as a string, e.g. `{"translated":"Bonjour"}`.
+    // Others might return a raw string like `"Bonjour"`. This handles both cases.
+    try {
+      const jsonData = JSON.parse(resultText);
+      const translated = jsonData.translated || jsonData.text || jsonData.result;
+      if (translated) {
+        console.log('Translation successful (parsed JSON response).');
+        return translated;
+      }
+    } catch (e) {
+      // It's not a JSON object, so it's likely the raw translated text.
+      if (resultText) {
+        console.log('Translation successful (raw text response).');
+        // This removes any leading/trailing quotes if the API returns `"Bonjour"`.
+        return resultText.replace(/^"|"$/g, '');
+      }
     }
     
-    console.warn('RapidAPI response was OK but contained no translation.');
+    console.warn(`API at ${host} responded OK but the result was empty.`);
     return null;
 
   } catch (error) {
-    console.error('Network or system error during RapidAPI call:', error);
-    return null; // Return null on network error.
+    console.error(`Network or system error during API call to ${host}:`, error);
+    return null;
   }
 };
 
-// This function provides the offline fallback.
 const translateOffline = (text: string, source: string, target: string): string | null => {
   const lowerText = text.toLowerCase().trim();
   const translation = offlineTranslations[source]?.[target]?.[lowerText];
@@ -67,51 +90,42 @@ const translateOffline = (text: string, source: string, target: string): string 
   return null;
 };
 
-
+// Main server logic
 serve(async (req) => {
-  console.log('Multilingual translator function invoked.');
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const { text, sourceLanguage, targetLanguage } = await req.json();
     if (!text || !sourceLanguage || !targetLanguage) {
-      return new Response(JSON.stringify({ error: 'Text, source, and target language are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Missing required parameters.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     let translatedText: string | null = null;
     let translationMethod = '';
     let confidence = 0.5;
 
-    // Step 1: Attempt live translation via the primary API.
+    // Step 1: Attempt live translation with the newly configured API.
     translatedText = await translateOnline(text, sourceLanguage, targetLanguage);
     if (translatedText) {
       translationMethod = 'live_api_google';
       confidence = 0.95;
-    }
-
-    // Step 2: If the live API fails, fall back to the offline dictionary.
-    if (!translatedText) {
+    } else {
+      // Step 2: If live API fails, fall back to the offline dictionary.
       translatedText = translateOffline(text, sourceLanguage, targetLanguage);
       if (translatedText) {
         translationMethod = 'offline_dictionary';
         confidence = 0.90;
+      } else {
+        // Step 3: If all else fails, provide a clear failure message.
+        translationMethod = 'unavailable';
+        confidence = 0.0;
+        translatedText = `[Translation currently unavailable]`;
+        console.log('All translation methods failed. Returning fallback message.');
       }
     }
 
-    // Step 3: If all else fails, provide a clear "no translation" message.
-    if (!translatedText) {
-      translationMethod = 'unavailable';
-      confidence = 0.0;
-      translatedText = `[No translation available for this phrase]`;
-      console.log('All translation methods failed. Returning fallback message.');
-    }
-
     return new Response(
-      JSON.stringify({ 
-        translatedText,
-        method: translationMethod,
-        confidence,
-      }),
+      JSON.stringify({ translatedText, method: translationMethod, confidence }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
