@@ -193,7 +193,7 @@ const LinkedInIntegration = () => {
 
   return (
     <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-      <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
+      <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border animate-fade-in`}>
         <CardHeader>
           <CardTitle className={`flex items-center space-x-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             <Linkedin className="w-5 h-5 text-blue-600" />
