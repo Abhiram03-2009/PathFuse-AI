@@ -1,8 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// The primary RapidAPI key. This will be used for the new API endpoint.
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+// This backend no longer requires a RapidAPI key, removing the point of failure.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,64 +17,43 @@ const offlineTranslations: Record<string, Record<string, Record<string, string>>
   }
 };
 
-// --- THE CORRECTED CORE LOGIC ---
-// This function is now updated to call the exact API from your new documentation.
-const translateOnline = async (text: string, source: string, target: string) => {
+// --- THE NEW, RELIABLE CORE LOGIC ---
+// This function uses the public LibreTranslate API, which does not require a key.
+const translateWithLiveAPI = async (text: string, source: string, target: string) => {
   try {
-    const url = 'https://translateai.p.rapidapi.com/google/translate/text';
-    const host = 'translateai.p.rapidapi.com';
+    const url = 'https://libretranslate.de/translate';
+    console.log(`Attempting translation with the reliable public API (${url}): ${source} -> ${target}`);
 
-    console.log(`Attempting translation with the correct API (${host}): ${source} -> ${target}`);
-
-    // The options object now precisely matches your documentation.
     const options = {
       method: 'POST',
-      headers: {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': host,
-        'Content-Type': 'application/json' // Using JSON as specified
-      },
-      // The body is now a JSON object, stringified for the request.
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: text,
-        to: target,
-        from_lang: source
+        q: text,
+        source: source,
+        target: target,
+        format: 'text'
       })
     };
 
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      console.error(`API Error from ${host}:`, response.status, await response.text());
+      console.error(`Public API Error from ${url}:`, response.status, await response.text());
       return null; // Fail gracefully to allow for offline fallback.
     }
 
-    // Per your documentation, the result is expected as text.
-    const resultText = await response.text();
-
-    // Some APIs return a JSON object as a string, e.g. `{"translated":"Bonjour"}`.
-    // Others might return a raw string like `"Bonjour"`. This handles both cases.
-    try {
-      const jsonData = JSON.parse(resultText);
-      const translated = jsonData.translated || jsonData.text || jsonData.result;
-      if (translated) {
-        console.log('Translation successful (parsed JSON response).');
-        return translated;
-      }
-    } catch (e) {
-      // It's not a JSON object, so it's likely the raw translated text.
-      if (resultText) {
-        console.log('Translation successful (raw text response).');
-        // This removes any leading/trailing quotes if the API returns `"Bonjour"`.
-        return resultText.replace(/^"|"$/g, '');
-      }
+    const jsonData = await response.json();
+    
+    if (jsonData && jsonData.translatedText) {
+      console.log('Translation successful via public API.');
+      return jsonData.translatedText;
     }
     
-    console.warn(`API at ${host} responded OK but the result was empty.`);
+    console.warn(`API at ${url} responded OK but the result was empty or malformed.`);
     return null;
 
   } catch (error) {
-    console.error(`Network or system error during API call to ${host}:`, error);
+    console.error(`Network or system error during public API call to ${url}:`, error);
     return null;
   }
 };
@@ -104,13 +82,14 @@ serve(async (req) => {
     let translationMethod = '';
     let confidence = 0.5;
 
-    // Step 1: Attempt live translation with the newly configured API.
-    translatedText = await translateOnline(text, sourceLanguage, targetLanguage);
+    // Step 1: Attempt live translation with the new, key-less public API.
+    translatedText = await translateWithLiveAPI(text, sourceLanguage, targetLanguage);
     if (translatedText) {
-      translationMethod = 'live_api_google';
-      confidence = 0.95;
+      translationMethod = 'live_api_public';
+      confidence = 0.92; // High confidence for a reliable live service.
     } else {
-      // Step 2: If live API fails, fall back to the offline dictionary.
+      // Step 2: If the live API is down or fails, fall back to the offline dictionary.
+      console.log('Live API failed, attempting offline fallback.');
       translatedText = translateOffline(text, sourceLanguage, targetLanguage);
       if (translatedText) {
         translationMethod = 'offline_dictionary';
