@@ -33,7 +33,7 @@ const translateOffline = (text: string, source: string, target: string): string 
   return offlineTranslations[source]?.[target]?.[text.toLowerCase().trim()] || null;
 };
 
-// --- NEW: Dedicated Transliteration Function for non-Latin scripts ---
+// --- Dedicated Transliteration Function for non-Latin scripts ---
 const transliterateText = async (text: string, lang: string): Promise<string | null> => {
   const nonLatinScripts = ['ar', 'hi', 'ja', 'ko', 'ru', 'zh', 'zh-TW', 'el', 'he', 'th', 'ta', 'te'];
   if (!nonLatinScripts.includes(lang)) return null;
@@ -68,36 +68,28 @@ serve(async (req) => {
     let translatedText: string | null = null;
     let transliteration: string | null = null;
     let method = 'unavailable';
-
-    // --- Smart Retry Logic ---
     const sourceWords = text.trim().split(/\s+/).length;
 
-    // 1. Try Primary API
     translatedText = await translateWithLibre(text, sourceLanguage, targetLanguage);
     if (translatedText) {
       const translatedWords = translatedText.trim().split(/\s+/).length;
-      // If the word count is suspiciously low (name was likely dropped), invalidate the result to force a retry.
       if (sourceWords > translatedWords + 1 && sourceWords > 2) {
-        console.log(`Word drop detected (source: ${sourceWords}, translated: ${translatedWords}). Invalidating result.`);
         translatedText = null; 
       } else {
         method = 'live_api_primary';
       }
     }
 
-    // 2. If Primary failed or was invalidated, try Secondary API
     if (!translatedText) {
       translatedText = await translateWithMyMemory(text, sourceLanguage, targetLanguage);
       if (translatedText) method = 'live_api_secondary';
     }
 
-    // 3. If both live APIs fail, try Offline
     if (!translatedText) {
       translatedText = translateOffline(text, sourceLanguage, targetLanguage);
       if (translatedText) method = 'offline_dictionary';
     }
     
-    // 4. After a successful translation, attempt transliteration if needed
     if (translatedText) {
       transliteration = await transliterateText(translatedText, targetLanguage);
     } else {
