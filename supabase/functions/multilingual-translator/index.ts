@@ -22,8 +22,8 @@ const offlineTranslations: Record<string, Record<string, Record<string, string>>
 // This function is now updated to call the exact API from your new documentation.
 const translateOnline = async (text: string, source: string, target: string) => {
   try {
-    const url = 'https://google-api31.p.rapidapi.com/gtranslate';
-    const host = 'google-api31.p.rapidapi.com';
+    const url = 'https://translateai.p.rapidapi.com/google/translate/text';
+    const host = 'translateai.p.rapidapi.com';
 
     console.log(`Attempting translation with the correct API (${host}): ${source} -> ${target}`);
 
