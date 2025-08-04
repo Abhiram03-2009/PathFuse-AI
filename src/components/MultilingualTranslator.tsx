@@ -168,7 +168,7 @@ const MultilingualTranslator = () => {
       {/* Main Card for Translator Title and Description */}
       <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white animate-neon-flicker">
+          <CardTitle className="flex items-center space-x-2 text-gray-900 dark:text-white">
             <Languages className="w-5 h-5" />
             <span>Multilingual Translator</span>
           </CardTitle>
