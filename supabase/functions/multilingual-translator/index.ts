@@ -7,80 +7,77 @@ const corsHeaders = {
 };
 
 const offlineTranslations: Record<string, Record<string, Record<string, string>>> = {
-  'en': {
-    'es': { 'hello': 'hola', 'thank you': 'gracias' },
-    'fr': { 'hello': 'bonjour', 'thank you': 'merci' },
-    'de': { 'hello': 'hallo', 'thank you': 'danke' }
-  }
+  'en': { 'es': { 'hello': 'hola', 'thank you': 'gracias' }, 'fr': { 'hello': 'bonjour', 'thank you': 'merci' }, 'de': { 'hello': 'hallo', 'thank you': 'danke' } }
 };
 
-// --- THE BULLETPROOF API FUNCTION ---
-// This function is now hardened to prevent crashes from external API failures.
-const translateWithLiveAPI = async (text: string, source: string, target: string): Promise<string | null> => {
+// --- Primary Live API (LibreTranslate) ---
+const translateWithLibre = async (text: string, source: string, target: string): Promise<string | null> => {
   const url = 'https://libretranslate.de/translate';
-  console.log(`Attempting robust translation with public API (${url})`);
-
+  console.log(`Tier 1: Attempting translation with LibreTranslate API`);
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        q: text,
-        source: source,
-        target: target,
-        format: 'text'
-      })
+      body: JSON.stringify({ q: text, source, target, format: 'text' })
     });
-
-    // If the API returns an error status (like 500, 429, etc.)
     if (!response.ok) {
-      // Log the exact error response from the API and fail gracefully.
-      const errorBody = await response.text();
-      console.error(`Public API returned non-2xx status: ${response.status}. Body: ${errorBody}`);
+      console.error(`LibreTranslate API returned non-2xx status: ${response.status}`);
       return null;
     }
-
-    // This block now safely handles cases where the API returns a non-JSON response.
     const jsonData = await response.json();
-    
     if (jsonData && jsonData.translatedText) {
-      console.log('Translation successful via public API.');
+      console.log('Tier 1 Success: Translated with LibreTranslate.');
       return jsonData.translatedText;
     }
-    
-    console.warn(`API responded OK but result was malformed: ${JSON.stringify(jsonData)}`);
     return null;
-
   } catch (error) {
-    // This catches network errors (e.g., API is down) AND JSON parsing errors.
-    console.error(`Critical error during API call or JSON parsing for ${url}:`, error.message);
-    return null; // Ensures the function never crashes.
+    console.error(`Tier 1 Error: Critical failure calling LibreTranslate API.`, error.message);
+    return null;
   }
 };
 
+// --- Secondary Live API (MyMemory) ---
+const translateWithMyMemory = async (text: string, source: string, target: string): Promise<string | null> => {
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`;
+  console.log(`Tier 2: Attempting translation with MyMemory API`);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`MyMemory API returned non-2xx status: ${response.status}`);
+      return null;
+    }
+    const jsonData = await response.json();
+    if (jsonData?.responseData?.translatedText) {
+      console.log('Tier 2 Success: Translated with MyMemory.');
+      return jsonData.responseData.translatedText;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Tier 2 Error: Critical failure calling MyMemory API.`, error.message);
+    return null;
+  }
+};
+
+// --- Offline Fallback ---
 const translateOffline = (text: string, source: string, target: string): string | null => {
+  console.log('Tier 3: Attempting offline dictionary fallback.');
   const lowerText = text.toLowerCase().trim();
   const translation = offlineTranslations[source]?.[target]?.[lowerText];
   if (translation) {
-    console.log('Translation found in offline dictionary.');
+    console.log('Tier 3 Success: Translated with offline dictionary.');
     return translation;
   }
   return null;
 };
 
-// --- Main Server Logic ---
+// --- Main Server Logic with Multi-Tiered Strategy ---
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const body = await req.json();
-    // Added detailed logging to see exactly what the frontend is sending.
-    console.log('Received request body:', JSON.stringify(body));
-
     const { text, sourceLanguage, targetLanguage } = body;
-
     if (!text || !sourceLanguage || !targetLanguage) {
-      console.error('Validation failed: Missing required parameters.');
       return new Response(JSON.stringify({ error: 'Missing required parameters.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -88,35 +85,41 @@ serve(async (req) => {
     let translationMethod = '';
     let confidence = 0.5;
 
-    // Step 1: Attempt live translation with the hardened function.
-    translatedText = await translateWithLiveAPI(text, sourceLanguage, targetLanguage);
+    // --- The Waterfall Strategy ---
+    
+    // 1. Try Primary API
+    translatedText = await translateWithLibre(text, sourceLanguage, targetLanguage);
     if (translatedText) {
-      translationMethod = 'live_api_public';
+      translationMethod = 'live_api_primary';
       confidence = 0.92;
     } else {
-      // Step 2: If the robust live API function returns null, we know it failed. Fall back.
-      console.log('Live API failed. Attempting offline fallback.');
-      translatedText = translateOffline(text, sourceLanguage, targetLanguage);
+      // 2. If Primary fails, try Secondary API
+      translatedText = await translateWithMyMemory(text, sourceLanguage, targetLanguage);
       if (translatedText) {
-        translationMethod = 'offline_dictionary';
-        confidence = 0.90;
+        translationMethod = 'live_api_secondary';
+        confidence = 0.88;
       } else {
-        // Step 3: If all else fails, provide a clear failure message.
-        translationMethod = 'unavailable';
-        confidence = 0.0;
-        translatedText = `[Translation currently unavailable]`;
-        console.log('All translation methods failed. Returning fallback message.');
+        // 3. If both live APIs fail, try Offline
+        translatedText = translateOffline(text, sourceLanguage, targetLanguage);
+        if (translatedText) {
+          translationMethod = 'offline_dictionary';
+          confidence = 0.90;
+        } else {
+          // 4. If ALL methods fail
+          translationMethod = 'unavailable';
+          confidence = 0.0;
+          translatedText = `[Translation currently unavailable]`;
+          console.log('All translation methods failed. Returning fallback message.');
+        }
       }
     }
 
-    // This is a success (200) response. The function itself did not crash.
     return new Response(
       JSON.stringify({ translatedText, method: translationMethod, confidence }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    // This outer catch now only catches fundamental errors, like if the request itself is malformed.
     console.error('Critical error in main server function:', error.message);
     return new Response(
       JSON.stringify({ error: 'Internal Server Error', details: error.message }),
