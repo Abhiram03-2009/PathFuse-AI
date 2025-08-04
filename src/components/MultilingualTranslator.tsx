@@ -93,8 +93,6 @@ const MultilingualTranslator = () => {
 
       setTranslatedText(data.translatedText);
       
-      // --- THIS IS THE SMALL, OPTIONAL CHANGE ---
-      // It now correctly displays the source of the translation for better user feedback.
       let methodInfo = '';
       if (data.method === 'live_api_public') {
         methodInfo = '(Live API)';
