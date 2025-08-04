@@ -132,7 +132,7 @@ const SavedItems = () => {
   if (loading) {
     return (
       <div className={`space-y-6 ${isDarkMode ? 'dark' : ''}`}>
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-pulse-glow animate-fade-in">
+        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 neon-border animate-fade-in">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-300 mt-4">Loading your saved items...</p>
