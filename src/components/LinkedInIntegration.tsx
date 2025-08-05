@@ -80,7 +80,7 @@ const LinkedInIntegration = () => {
       }
 
       setProfileData(data.profile);
-      
+    
       toast({
         title: "Profile Analyzed!",
         description: "LinkedIn profile data has been extracted and analyzed with AI-powered insights"
