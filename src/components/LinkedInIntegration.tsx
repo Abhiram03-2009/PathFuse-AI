@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +54,9 @@ const LinkedInIntegration = () => {
     }
 
     setIsAnalyzing(true);
+    setProfileData(null);
+    setResumeText('');
+    setAnalysisResult('');
 
     try {
       console.log('Sending LinkedIn analysis request');
@@ -126,6 +128,7 @@ const LinkedInIntegration = () => {
       }
 
       setResumeText(data.resumeText);
+      setAnalysisResult(''); // Clear other results
       
       toast({
         title: "Resume Generated!",
@@ -171,6 +174,7 @@ const LinkedInIntegration = () => {
       }
 
       setAnalysisResult(data.analysis);
+      setResumeText(''); // Clear other results
       
       toast({
         title: "Analysis Complete!",
@@ -234,12 +238,12 @@ const LinkedInIntegration = () => {
               <Button 
                 onClick={analyzeLinkedInProfile}
                 disabled={isAnalyzing || !linkedInUrl}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {isAnalyzing ? (
                   <>
                     <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                    Analyzing Profile...
+                    Analyzing...
                   </>
                 ) : (
                   <>
@@ -312,9 +316,9 @@ const LinkedInIntegration = () => {
                 </div>
 
                 <div className="flex space-x-2 pt-2">
-                  <Button onClick={analyzeProfileStrengths} size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
+                  <Button onClick={analyzeProfileStrengths} size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Job & Career Analysis
+                    Career Analysis
                   </Button>
                   <Button onClick={generateOptimizedResume} size="sm" variant="outline" className={`flex-1 ${
                     isDarkMode 
