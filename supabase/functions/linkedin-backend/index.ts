@@ -1,85 +1,78 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// This key must be valid for the "Company Intel" API.
+// This key must be for the "Fresh Linkedin Scraper API".
 const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
-// --- FINAL VERSION: Using the "Company Intel" API ---
+const API_HOST = 'fresh-linkedin-scraper-api.p.rapidapi.com';
+
+// --- FINAL VERSION: Using the "Fresh Linkedin Scraper API" ---
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
-  console.log("--- Starting scrapeLinkedInProfile with 'Company Intel' API ---");
-  if (!RAPIDAPI_KEY || RAPIDAPI_KEY.includes('YOUR_KEY')) {
-    console.error("CRITICAL: RAPIDAPI_KEY is not set in environment variables.");
-    throw new Error("API key is not configured.");
+  console.log("--- Starting 2-Step Scrape with 'Fresh Linkedin Scraper API' ---");
+
+  // --- STEP 1: Resolve the public URL to get the LinkedIn URN ---
+  let urn: string;
+  try {
+    const resolveUrl = `https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/resolve?url=${encodeURIComponent(linkedInUrl)}`;
+    console.log(`Step 1: Resolving URN for ${linkedInUrl}`);
+    const urnResponse = await fetch(resolveUrl, {
+      headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST }
+    });
+    if (!urnResponse.ok) throw new Error(`Failed to resolve URN. Status: ${urnResponse.status}`);
+    const urnData = await urnResponse.json();
+    if (!urnData || !urnData.urn) throw new Error("Could not find URN in the response.");
+    urn = urnData.urn;
+    console.log(`Step 1 Success: Found URN -> ${urn}`);
+  } catch (error) {
+    console.error("CRITICAL: Failed during URN resolution.", error.message);
+    throw new Error("Could not resolve LinkedIn URL to a URN.");
   }
 
-  const url = 'https://company-intel.p.rapidapi.com/profile';
-  const host = 'company-intel.p.rapidapi.com';
-
-  // This API requires the profile URL in the body of a POST request.
-  const requestBody = {
-    profile_url: linkedInUrl
-  };
-
-  console.log(`Calling Company Intel API for: ${linkedInUrl}`);
-
+  // --- STEP 2: Fetch all profile sections in parallel using the URN ---
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': host,
-        'Content-Type': 'application/json'
-      },
-      // The body MUST be stringified. This is a critical step.
-      body: JSON.stringify(requestBody)
-    });
+    console.log("Step 2: Fetching profile details in parallel.");
+    const aboutPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/about?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
+    const experiencePromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/experience?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
+    const educationPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/education?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`API call failed with status ${response.status}:`, errorBody);
-      throw new Error(`API returned a non-OK status: ${response.status}. Check logs.`);
+    const responses = await Promise.all([aboutPromise, experiencePromise, educationPromise]);
+
+    for (const res of responses) {
+      if (!res.ok) throw new Error(`One of the detail fetches failed. Status: ${res.status}`);
     }
 
-    const data = await response.json();
+    const [aboutData, experienceData, educationData] = await Promise.all(responses.map(res => res.json()));
     
-    // Check if the API returned any data.
-    if (!data || !data.full_name) {
-      console.error("API call was successful, but the response was empty or invalid.", data);
-      throw new Error("API returned no valid profile data.");
-    }
-    
-    console.log("Successfully received data from Company Intel API.");
-
-    // --- Normalize the data to fit your frontend's structure ---
+    // --- STEP 3: Combine and Normalize the data for the frontend ---
     const profile = {
-      name: data.full_name || 'Name Not Found',
-      headline: data.headline || 'No headline available',
-      summary: data.summary || 'No summary available',
-      experience: (data.experiences || []).map((exp: any) => ({
-        title: exp.title || 'N/A',
+      name: aboutData.data?.full_name || 'Name Not Found',
+      headline: aboutData.data?.headline || 'No headline available',
+      summary: aboutData.data?.about || 'No summary available',
+      experience: (experienceData.data?.experiences || []).map((exp: any) => ({
+        title: exp.position || 'N/A',
         company: exp.company_name || 'N/A',
-        duration: exp.duration || 'N/A',
+        duration: exp.duration_in_string || 'N/A',
         description: exp.description || 'N/A'
       })),
-      education: (data.education || []).map((edu: any) => ({
+      education: (educationData.data?.educations || []).map((edu: any) => ({
         school: edu.school_name || 'N/A',
-        degree: edu.degree || 'N/A',
+        degree: edu.degree_name || 'N/A',
         field: edu.field_of_study || 'N/A',
-        year: edu.duration || 'N/A'
+        year: edu.date_range || 'N/A'
       })),
-      skills: (data.skills || []).map((s: any) => s.skill_name) // Assuming skills is an array of objects
+      skills: aboutData.data?.skills || [] // Skills seem to be in the 'about' endpoint
     };
     
-    console.log(`Successfully parsed profile for: ${profile.name}`);
+    console.log(`Step 2 Success: Successfully parsed profile for: ${profile.name}`);
     return profile;
 
   } catch (error) {
-    console.error(`--- Full error in scrapeLinkedInProfile: ${error.message} ---`);
-    throw error;
+    console.error("CRITICAL: Failed during parallel data fetch.", error.message);
+    throw new Error("Could not fetch profile details using the URN.");
   }
 };
 
@@ -89,15 +82,13 @@ const extractUsernameFromUrl = (url: string): string => {
 };
 
 const generateEnhancedFallbackProfile = (username: string, linkedInUrl: string) => {
-  console.log("--- Fallback triggered. This means the Company Intel API call failed. Check logs above. ---");
+  console.log("--- Fallback triggered. This means the Fresh Scraper API call failed. Check logs above. ---");
   let cleanName = username.replace(/[-_]/g, ' ').replace(/\d+/g, '').replace(/[^a-zA-Z\s]/g, ' ').split(' ').filter(word => word.length > 1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ').trim() || 'LinkedIn Professional';
   return { name: cleanName, headline: 'Senior Specialist | Technology Expert', summary: 'An accomplished professional with extensive experience.', experience: [{ title: 'Senior Specialist', company: 'Global Tech Firm', duration: '2021 - Present', description: 'Leading strategic initiatives.' }], education: [{ school: 'Top-Tier University', degree: 'Master of Business Administration', field: 'Business Strategy', year: '2018' }], skills: ['Strategic Planning', 'Leadership', 'Project Management', 'Data Analysis', 'Business Development'], profileUrl: linkedInUrl };
 };
 
 // --- The rest of the server remains unchanged ---
-const generateCareerInsights = async (profile: any) => ({
-  aiAnalysis: `AI analysis shows ${profile.name} is well-positioned in their industry.`
-});
+const generateCareerInsights = async (profile: any) => ({ aiAnalysis: `AI analysis shows ${profile.name} is well-positioned.` });
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -113,6 +104,7 @@ serve(async (req) => {
         try {
           profile = await scrapeLinkedInProfile(linkedInUrl);
         } catch (error) {
+          console.error("Final error before fallback:", error.message);
           profile = generateEnhancedFallbackProfile(username, linkedInUrl);
         }
         return new Response(JSON.stringify({ profile }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
