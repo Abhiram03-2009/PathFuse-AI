@@ -10,7 +10,7 @@ const corsHeaders = {
 
 const API_HOST = 'fresh-linkedin-scraper-api.p.rapidapi.com';
 
-// --- FINAL VERSION: Using the "Fresh Linkedin Scraper API" ---
+// --- FINAL WORKING VERSION: Using the "Fresh Linkedin Scraper API" ---
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
   console.log("--- Starting 2-Step Scrape with 'Fresh Linkedin Scraper API' ---");
 
@@ -22,7 +22,11 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
     const urnResponse = await fetch(resolveUrl, {
       headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST }
     });
-    if (!urnResponse.ok) throw new Error(`Failed to resolve URN. Status: ${urnResponse.status}`);
+    if (!urnResponse.ok) {
+        const err = await urnResponse.text();
+        console.error("URN RESOLVE FAILED:", err);
+        throw new Error(`Failed to resolve URN. Status: ${urnResponse.status}`);
+    }
     const urnData = await urnResponse.json();
     if (!urnData || !urnData.urn) throw new Error("Could not find URN in the response.");
     urn = urnData.urn;
@@ -64,7 +68,7 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
         field: edu.field_of_study || 'N/A',
         year: edu.date_range || 'N/A'
       })),
-      skills: aboutData.data?.skills || [] // Skills seem to be in the 'about' endpoint
+      skills: aboutData.data?.skills || []
     };
     
     console.log(`Step 2 Success: Successfully parsed profile for: ${profile.name}`);
