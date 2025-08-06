@@ -1,20 +1,25 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// This key must be for the "Linkedin Data API" on RapidAPI.
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || 'YOUR_RAPIDAPI_KEY'; // Make sure this is set in Supabase
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
-// --- REVISED & HARDENED FUNCTION ---
+// --- FINAL, HARDENED SCRAPING FUNCTION ---
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
+  console.log("--- Starting scrapeLinkedInProfile ---");
+  if (!RAPIDAPI_KEY || RAPIDAPI_KEY === 'YOUR_RAPIDAPI_KEY') {
+    console.error("CRITICAL: RAPIDAPI_KEY is not set in environment variables.");
+    throw new Error("API key is not configured.");
+  }
+
   const encodedUrl = encodeURIComponent(linkedInUrl);
   const url = `https://linkedin-data-api.p.rapidapi.com/get-profile-data-by-url?url=${encodedUrl}`;
   const host = 'linkedin-data-api.p.rapidapi.com';
 
-  console.log(`Attempting to scrape with Linkedin Data API: ${linkedInUrl}`);
+  console.log(`Attempting to call API: ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -25,41 +30,29 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
       }
     });
 
-    // --- Start of Fix ---
-    // More robust check to see if the API call was successful.
+    // Check the raw response status first
     if (!response.ok) {
-      // Log the exact error text from the API to help debug.
       const errorBody = await response.text();
-      console.error(`API call failed with status ${response.status}:`, errorBody);
-      throw new Error(`API call failed. Check Supabase function logs for details.`);
+      console.error(`API call failed with status: ${response.status}. Response: ${errorBody}`);
+      // This error message is critical for debugging
+      if (response.status === 403) {
+          throw new Error("API call forbidden (403). Check your API key and RapidAPI subscription.");
+      }
+      throw new Error(`API returned a non-OK status: ${response.status}`);
     }
 
-    // The API might return a text response on failure, so we handle that.
-    const responseText = await response.text();
-    let data;
-    try {
-        data = JSON.parse(responseText);
-    } catch (e) {
-        console.error("Failed to parse JSON response from API. Raw response:", responseText);
-        throw new Error("API returned non-JSON response. Check logs.");
+    const result = await response.json();
+
+    // Check if the API itself reported a failure in its JSON response
+    if (result.status === 'fail' || !result.data) {
+        console.error("API call was successful (200 OK), but returned a 'fail' status or no data object.", result);
+        throw new Error("API reported a failure. Check profile URL or API status.");
     }
+    
+    const profileData = result.data;
+    console.log("Successfully received data object from API.");
 
-    // Check if the response indicates a failure or is empty.
-    // Some APIs return a 200 OK status but include an error message in the body.
-    if (data.status === 'fail' || !data.data) {
-        console.error("API indicated failure or returned no data object. Response:", data);
-        throw new Error("API returned a failure status. Check logs for the response.");
-    }
-
-    const profileData = data.data;
-
-    if (!profileData || !profileData.first_name) {
-      console.error("The 'data' object in the API response is missing or doesn't contain expected fields.", profileData);
-      throw new Error("Failed to retrieve valid profile structure from the API.");
-    }
-    // --- End of Fix ---
-
-    // Normalize the data from the API to fit your frontend's structure.
+    // Normalize the data from the API to fit your frontend's structure
     const profile = {
       name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Name Not Found',
       headline: profileData.headline || 'No headline available',
@@ -67,25 +60,24 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
       experience: (profileData.experiences || []).map((exp: any) => ({
         title: exp.position || 'N/A',
         company: exp.company_name || 'N/A',
-        duration: exp.duration_in_month ? `${Math.floor(exp.duration_in_month / 12)}y ${exp.duration_in_month % 12}m` : 'N/A',
+        duration: exp.duration_in_month ? `${Math.floor(exp.duration_in_month / 12)}y ${exp.duration_in_month % 12}m` : (exp.date_range || 'N/A'),
         description: exp.description || 'N/A'
       })),
       education: (profileData.educations || []).map((edu: any) => ({
         school: edu.school_name || 'N/A',
         degree: edu.degree_name || 'N/A',
         field: edu.field_of_study || 'N/A',
-        year: edu.grade || 'N/A'
+        year: edu.date_range || 'N/A'
       })),
       skills: profileData.skills || []
     };
     
-    console.log(`Successfully scraped profile for: ${profile.name}`);
+    console.log(`Successfully parsed profile for: ${profile.name}`);
     return profile;
 
   } catch (error) {
-    // Log the error message before re-throwing it.
-    console.error(`Scraping with Linkedin Data API failed: ${error.message}`);
-    // This throw will trigger the fallback dummy data.
+    console.error(`--- Full error in scrapeLinkedInProfile: ${error.message} ---`);
+    // Re-throw the error to ensure the fallback is triggered
     throw error;
   }
 };
@@ -95,9 +87,8 @@ const extractUsernameFromUrl = (url: string): string => {
     return match ? match[1] : '';
 };
 
-// This fallback function remains the same, as a safety net
 const generateEnhancedFallbackProfile = (username: string, linkedInUrl: string) => {
-  console.log('Fallback triggered. Generating dummy data for:', username);
+  console.log("--- Fallback triggered. Generating dummy data. This means the API call failed. Check logs above. ---");
   let cleanName = username.replace(/[-_]/g, ' ').replace(/\d+/g, '').replace(/[^a-zA-Z\s]/g, ' ').split(' ').filter(word => word.length > 1).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ').trim() || 'LinkedIn Professional';
   const industries = ['Technology', 'Finance', 'Healthcare', 'Consulting', 'Marketing', 'Sales'];
   const randomIndustry = industries[Math.floor(Math.random() * industries.length)];
@@ -105,12 +96,10 @@ const generateEnhancedFallbackProfile = (username: string, linkedInUrl: string) 
 };
 
 const generateCareerInsights = async (profile: any) => {
-    return {
-        aiAnalysis: `AI analysis shows ${profile.name} is well-positioned in their industry.`,
-    };
+    return { aiAnalysis: `AI analysis shows ${profile.name} is well-positioned in their industry.` };
 };
 
-// --- Main server logic (no changes needed here) ---
+// --- Main server logic (no changes needed) ---
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -118,7 +107,6 @@ serve(async (req) => {
 
   try {
     const { action, linkedInUrl, profileData } = await req.json();
-
     switch (action) {
       case 'analyze_profile': {
         if (!linkedInUrl || !linkedInUrl.includes('linkedin.com')) {
@@ -129,22 +117,18 @@ serve(async (req) => {
         try {
           profile = await scrapeLinkedInProfile(linkedInUrl);
         } catch (error) {
-          console.error('Real LinkedIn scraping failed, generating fallback:', error.message);
           profile = generateEnhancedFallbackProfile(username, linkedInUrl);
         }
         return new Response(JSON.stringify({ profile }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
+      // ... other cases remain the same
       case 'generate_resume': {
-        if (!profileData) {
-          return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
+        if (!profileData) return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         const resumeText = `${profileData.name}\n${profileData.headline}\n\nSUMMARY\n${profileData.summary}\n\nSKILLS\n${profileData.skills.join(' • ')}\n\nEXPERIENCE\n${profileData.experience.map((e: any) => `${e.title} at ${e.company} (${e.duration})\n${e.description}`).join('\n\n')}`;
         return new Response(JSON.stringify({ resumeText }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       case 'career_insights': {
-        if (!profileData) {
-          return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
+        if (!profileData) return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         const insights = await generateCareerInsights(profileData);
         const detailedAnalysis = `ANALYSIS FOR ${profileData.name.toUpperCase()}\n\n${insights.aiAnalysis}`;
         return new Response(JSON.stringify({ analysis: detailedAnalysis }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
