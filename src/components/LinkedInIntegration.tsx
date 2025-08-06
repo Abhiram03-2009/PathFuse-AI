@@ -38,11 +38,6 @@ const LinkedInIntegration = () => {
   const [resumeText, setResumeText] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
 
-  const extractUsernameFromUrl = (url: string): string => {
-    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
-    return match ? match[1] : '';
-  };
-
   const analyzeLinkedInProfile = async () => {
     if (!linkedInUrl.includes('linkedin.com')) {
       toast({
@@ -128,8 +123,8 @@ const LinkedInIntegration = () => {
       }
 
       setResumeText(data.resumeText);
-      setAnalysisResult(''); // Clear other results
-      
+      setAnalysisResult(''); 
+
       toast({
         title: "Resume Generated!",
         description: `Professional resume generated from ${profileData.name}'s LinkedIn profile.`
@@ -174,7 +169,7 @@ const LinkedInIntegration = () => {
       }
 
       setAnalysisResult(data.analysis);
-      setResumeText(''); // Clear other results
+      setResumeText('');
       
       toast({
         title: "Analysis Complete!",
@@ -341,7 +336,7 @@ const LinkedInIntegration = () => {
             <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Generated content and insights from LinkedIn profile analysis
             </CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             {resumeText || analysisResult ? (
               <div className="space-y-4">
