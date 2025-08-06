@@ -166,7 +166,7 @@ const LinkedInIntegration = () => {
             <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Enter a LinkedIn profile URL to analyze and extract insights.
             </CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="linkedinUrl" className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>LinkedIn Profile URL</Label>
@@ -242,7 +242,7 @@ const LinkedInIntegration = () => {
             <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Generated content and insights from the analysis.
             </CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             {resumeText || analysisResult ? (
               <div className="space-y-4">
