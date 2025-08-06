@@ -38,6 +38,11 @@ const LinkedInIntegration = () => {
   const [resumeText, setResumeText] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
 
+  const extractUsernameFromUrl = (url: string): string => {
+    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
+    return match ? match[1] : '';
+  };
+
   const analyzeLinkedInProfile = async () => {
     if (!linkedInUrl.includes('linkedin.com')) {
       toast({
@@ -123,13 +128,17 @@ const LinkedInIntegration = () => {
       }
 
       setResumeText(data.resumeText);
-      setAnalysisResult(''); 
-
+      setAnalysisResult(''); // Clear other results
+      
       toast({
         title: "Resume Generated!",
         description: `Professional resume generated from ${profileData.name}'s LinkedIn profile.`
       });
        
+       console.log('Resume generation completed:', {
+         resumeLength: data.resumeText.length,
+         profileSource: data.profileSource
+       });
     } catch (error) {
       console.error('Resume generation error:', error);
       toast({
@@ -165,13 +174,17 @@ const LinkedInIntegration = () => {
       }
 
       setAnalysisResult(data.analysis);
-      setResumeText(''); 
+      setResumeText(''); // Clear other results
       
       toast({
         title: "Analysis Complete!",
         description: `Comprehensive career analysis completed for ${profileData.name}.`
       });
        
+       console.log('Career insights completed:', {
+         analysisLength: data.analysis.length,
+         profileAnalyzed: data.profileAnalyzed
+       });
     } catch (error) {
       console.error('Career insights error:', error);
       toast({
@@ -197,6 +210,7 @@ const LinkedInIntegration = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LinkedIn Input */}
         <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
           <CardHeader>
             <CardTitle className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Profile Analysis</CardTitle>
@@ -327,7 +341,7 @@ const LinkedInIntegration = () => {
             <CardDescription className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Generated content and insights from LinkedIn profile analysis
             </CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             {resumeText || analysisResult ? (
               <div className="space-y-4">
