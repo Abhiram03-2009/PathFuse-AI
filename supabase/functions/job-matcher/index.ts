@@ -75,8 +75,109 @@ const fetchJobsWithFallbacks = async (industry: string, skills: string[], locati
 };
 
 
-const analyzeResume = (resumeText: string) => { /* ... no changes needed here, it's solid ... */ return { skills: [], experience: [], seniority: 'entry', companies: [] }; };
-const calculateJobMatch = (job: any, resumeAnalysis: any, userSkills: string[]) => { /* ... no changes needed here, it's solid ... */ return Math.floor(Math.random() * 30 + 70); };
+/**
+ * NEW: This function now performs a detailed analysis of the resume text
+ * to extract crucial data points for accurate job matching.
+ */
+const analyzeResume = (resumeText: string) => {
+  const text = resumeText.toLowerCase();
+
+  const skillKeywords = [
+    'java', 'python', 'sql', 'javascript', 'js', 'html', 'css', 'react', 'node.js', 'aws',
+    'docker', 'git', 'c++', 'c#', 'php', 'ruby', 'swift', 'kotlin', 'typescript',
+    'project management', 'agile', 'scrum', 'leadership', 'communication', 'teamwork',
+    'data analysis', 'machine learning', 'artificial intelligence', 'devops'
+  ];
+  const skillPatterns = skillKeywords.map(skill => new RegExp(`\\b${skill.replace('.', '\\.')}\\b`, 'gi'));
+  const extractedSkills = new Set<string>();
+  skillPatterns.forEach(pattern => {
+    const matches = text.match(pattern);
+    if (matches) {
+      const normalizedSkill = matches[0].toLowerCase() === 'js' ? 'javascript' : matches[0].toLowerCase();
+      extractedSkills.add(normalizedSkill);
+    }
+  });
+
+  const experienceYearsMatch = text.match(/(\d+)\+?\s*years?(\s*of)?\s*experience/);
+  const isStudent = /intern|internship|student|high school|university|college|expected graduation/i.test(text);
+  
+  let seniority = 'entry'; // Default seniority
+  if (experienceYearsMatch) {
+    const years = parseInt(experienceYearsMatch[1]);
+    if (years >= 8) seniority = 'senior';
+    else if (years >= 3) seniority = 'mid';
+  } else if (isStudent) {
+    seniority = 'student'; // Specific seniority for students/interns
+  }
+  
+  const hasDegree = /bachelor|master|phd|b\.s|b\.a/i.test(text);
+  const isHighSchool = /high school/i.test(text) && !hasDegree;
+
+  return {
+    skills: [...extractedSkills],
+    seniority: seniority,
+    isHighSchoolStudent: isHighSchool,
+    hasLeadership: /leader|president|captain|director|manager|head|chief/i.test(text)
+  };
+};
+
+/**
+ * NEW: The core of the new logic. This algorithm calculates a match score based on
+ * a weighted system of skills, experience level, and other resume factors.
+ */
+const calculateJobMatch = (job: any, resumeAnalysis: any) => {
+  const { skills: resumeSkills, seniority: resumeSeniority, isHighSchoolStudent } = resumeAnalysis;
+  const jobDescription = `${(job.title || '').toLowerCase()} ${(job.description || '').toLowerCase()}`;
+  
+  let score = 0;
+
+  // --- 1. Skill Match Score (Weight: 50%) ---
+  const matchedSkills = resumeSkills.filter(skill => jobDescription.includes(skill));
+  const skillScore = resumeSkills.length > 0 ? (matchedSkills.length / resumeSkills.length) * 50 : 0;
+  score += skillScore;
+
+  // --- 2. Experience Level Match Score (Weight: 35%) ---
+  let jobSeniority = 'entry'; // Default job seniority
+  if (/\b(senior|sr|lead|principal|manager|director|architect|staff)\b/i.test(jobDescription) || /\b(5|8|10)\+?\s*years\b/i.test(jobDescription)) {
+    jobSeniority = 'senior';
+  } else if (/\b(mid-level|mid|intermediate)\b/i.test(jobDescription) || /\b(2|3|4)\+?\s*years\b/i.test(jobDescription)) {
+    jobSeniority = 'mid';
+  } else if (/\b(intern|internship|co-op|student)\b/i.test(jobDescription)) {
+    jobSeniority = 'student';
+  }
+
+  const seniorityMap = { student: 0, entry: 1, mid: 2, senior: 3 };
+  const resumeLevel = seniorityMap[resumeSeniority];
+  const jobLevel = seniorityMap[jobSeniority];
+  const experienceGap = Math.abs(resumeLevel - jobLevel);
+
+  let experienceScore = 0;
+  if (resumeLevel >= jobLevel) { // User is qualified or overqualified
+    experienceScore = 35 - (experienceGap * 10); // Perfect match = 35, overqualified loses some points
+  } else { // User is underqualified
+    experienceScore = 15 - (experienceGap * 25); // Significantly penalize being underqualified
+  }
+  score += experienceScore;
+
+  // --- 3. Bonus & Penalty Score (Weight: 15%) ---
+  let bonusScore = 0;
+  // Penalty for requiring a degree if user is a high school student
+  if (isHighSchoolStudent && /\b(bachelor|master|phd|degree)\b/i.test(jobDescription)) {
+    bonusScore -= 15;
+  }
+  // Bonus for leadership if the job requires it
+  if (resumeAnalysis.hasLeadership && /\b(lead|manage|leadership)\b/i.test(jobDescription)) {
+    bonusScore += 10;
+  }
+  // Bonus if the job is specifically for students and the user is a student
+  if (resumeSeniority === 'student' && jobSeniority === 'student') {
+    bonusScore += 15;
+  }
+  score += bonusScore;
+
+  // Final percentage is clamped between 5% and 98% for realism
+  return Math.floor(Math.max(5, Math.min(score, 98)));
+};
 
 
 serve(async (req) => {
@@ -86,6 +187,7 @@ serve(async (req) => {
     const { skills, location, industry, resumeText } = await req.json();
     if (!location || !industry) return new Response(JSON.stringify({ error: 'Location and industry are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+    // The new analyzeResume function is called here to get detailed insights.
     const resumeAnalysis = analyzeResume(resumeText);
     const combinedSkills = [...new Set([...(skills || []), ...resumeAnalysis.skills])];
     
@@ -106,7 +208,8 @@ serve(async (req) => {
         description: job.job_description ? job.job_description.substring(0, 200) + '...' : 'No description provided.',
         jobUrl: job.job_apply_link, // **IMPORTANT**: Use the direct apply link!
         isRemote: job.job_is_remote || false,
-        matchPercentage: calculateJobMatch(job, resumeAnalysis, skills || [])
+        // The new, intelligent matching algorithm is used here.
+        matchPercentage: calculateJobMatch(job, resumeAnalysis)
       };
     }).sort((a, b) => b.matchPercentage - a.matchPercentage).slice(0, 25);
 
