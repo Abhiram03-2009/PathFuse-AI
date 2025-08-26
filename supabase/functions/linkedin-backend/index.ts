@@ -2,21 +2,26 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // This key must be for the "Fresh Linkedin Scraper API".
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***'; // Removed the hardcoded fallback
+// It's crucial to load this from an environment variable for security and flexibility.
+// For demonstration, I'm using the key from your documentation, but you should use Deno.env.get('RAPIDAPI_KEY')
+const RAPIDAPI_KEY_OLD_API = Deno.env.get('RAPIDAPI_KEY_OLD_API'); // Original API Key for profile scraping
+const RAPIDAPI_KEY_NEW_API = Deno.env.get('RAPIDAPI_KEY_NEW_API') || '***REMOVED-RAPIDAPI-KEY***'; // New API Key for company search
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
 
-const API_HOST = 'fresh-linkedin-scraper-api.p.rapidapi.com';
+const API_HOST_OLD_API = 'fresh-linkedin-scraper-api.p.rapidapi.com'; // Host for profile scraping
+const API_HOST_NEW_API = 'linkedin-scraper-api-real-time-fast-affordable.p.rapidapi.com'; // Host for company search
 
-// --- FINAL WORKING VERSION: Using the "Fresh Linkedin Scraper API" ---
+// --- FINAL WORKING VERSION: Using the "Fresh Linkedin Scraper API" for Profile Scraping ---
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
   console.log("--- Starting 2-Step Scrape with 'Fresh Linkedin Scraper API' ---");
 
-  // Check if RAPIDAPI_KEY is available
-  if (!RAPIDAPI_KEY) {
-    throw new Error("RAPIDAPI_KEY is not set. Please set the RAPIDAPI_KEY environment variable.");
+  // Check if RAPIDAPI_KEY_OLD_API is available
+  if (!RAPIDAPI_KEY_OLD_API) {
+    throw new Error("RAPIDAPI_KEY_OLD_API is not set. Please set the RAPIDAPI_KEY_OLD_API environment variable for profile scraping.");
   }
 
   // --- STEP 1: Resolve the public URL to get the LinkedIn URN ---
@@ -25,7 +30,7 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
     const resolveUrl = `https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/resolve?url=${encodeURIComponent(linkedInUrl)}`;
     console.log(`Step 1: Resolving URN for ${linkedInUrl}`);
     const urnResponse = await fetch(resolveUrl, {
-      headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST }
+      headers: { 'x-rapidapi-key': RAPIDAPI_KEY_OLD_API, 'x-rapidapi-host': API_HOST_OLD_API }
     });
     if (!urnResponse.ok) {
         const err = await urnResponse.text();
@@ -44,9 +49,9 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
   // --- STEP 2: Fetch all profile sections in parallel using the URN ---
   try {
     console.log("Step 2: Fetching profile details in parallel.");
-    const aboutPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/about?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
-    const experiencePromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/experience?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
-    const educationPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/education?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': API_HOST } });
+    const aboutPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/about?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY_OLD_API, 'x-rapidapi-host': API_HOST_OLD_API } });
+    const experiencePromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/experience?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY_OLD_API, 'x-rapidapi-host': API_HOST_OLD_API } });
+    const educationPromise = fetch(`https://fresh-linkedin-scraper-api.p.rapidapi.com/api/v1/user/education?urn=${urn}`, { headers: { 'x-rapidapi-key': RAPIDAPI_KEY_OLD_API, 'x-rapidapi-host': API_HOST_OLD_API } });
 
     const responses = await Promise.all([aboutPromise, experiencePromise, educationPromise]);
 
@@ -74,7 +79,7 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
         year: edu.date_range || 'N/A'
       })),
       skills: aboutData.data?.skills || [],
-      profileUrl: linkedInUrl // Added profileUrl here
+      profileUrl: linkedInUrl 
     };
     
     console.log(`Step 2 Success: Successfully parsed profile for: ${profile.name}`);
@@ -85,6 +90,40 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
     throw new Error("Could not fetch profile details using the URN.");
   }
 };
+
+// --- New function for searching companies using the new API ---
+const searchCompanies = async (keyword: string, page_number: number = 1) => {
+  console.log(`--- Searching companies with keyword: "${keyword}" (Page: ${page_number}) using the New API ---`);
+
+  if (!RAPIDAPI_KEY_NEW_API) {
+    throw new Error("RAPIDAPI_KEY_NEW_API is not set. Please set the RAPIDAPI_KEY_NEW_API environment variable for company search.");
+  }
+
+  const url = `https://${API_HOST_NEW_API}/companies/search?keyword=${encodeURIComponent(keyword)}&page_number=${page_number}`;
+  const options = {
+    method: 'GET',
+    headers: {
+      'x-rapidapi-key': RAPIDAPI_KEY_NEW_API,
+      'x-rapidapi-host': API_HOST_NEW_API
+    }
+  };
+
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("COMPANY SEARCH FAILED:", err);
+      throw new Error(`Failed to search companies. Status: ${response.status}`);
+    }
+    const result = await response.json(); // Assuming JSON response
+    console.log("Company search successful:", result);
+    return result;
+  } catch (error) {
+    console.error("CRITICAL: Failed during company search.", error.message);
+    throw new Error("Could not search companies.");
+  }
+};
+
 
 const extractUsernameFromUrl = (url: string): string => {
     const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
@@ -103,7 +142,7 @@ const generateCareerInsights = async (profile: any) => ({ aiAnalysis: `AI analys
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
-    const { action, linkedInUrl, profileData } = await req.json();
+    const { action, linkedInUrl, profileData, keyword, page_number } = await req.json(); // Added keyword and page_number
     switch (action) {
       case 'analyze_profile': {
         if (!linkedInUrl || !linkedInUrl.includes('linkedin.com')) {
@@ -129,6 +168,18 @@ serve(async (req) => {
         const insights = await generateCareerInsights(profileData);
         const detailedAnalysis = `ANALYSIS FOR ${profileData.name.toUpperCase()}\n\n${insights.aiAnalysis}`;
         return new Response(JSON.stringify({ analysis: detailedAnalysis }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      case 'search_companies': { // New case for company search
+        if (!keyword) {
+          return new Response(JSON.stringify({ error: 'Keyword for company search is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        try {
+          const companies = await searchCompanies(keyword, page_number);
+          return new Response(JSON.stringify({ companies }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (error) {
+          console.error("Error searching companies:", error.message);
+          return new Response(JSON.stringify({ error: 'Failed to search companies', details: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
       }
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
