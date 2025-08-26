@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // This key must be for the "Fresh Linkedin Scraper API".
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***'; // Removed the hardcoded fallback
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
@@ -13,6 +13,11 @@ const API_HOST = 'fresh-linkedin-scraper-api.p.rapidapi.com';
 // --- FINAL WORKING VERSION: Using the "Fresh Linkedin Scraper API" ---
 const scrapeLinkedInProfile = async (linkedInUrl: string) => {
   console.log("--- Starting 2-Step Scrape with 'Fresh Linkedin Scraper API' ---");
+
+  // Check if RAPIDAPI_KEY is available
+  if (!RAPIDAPI_KEY) {
+    throw new Error("RAPIDAPI_KEY is not set. Please set the RAPIDAPI_KEY environment variable.");
+  }
 
   // --- STEP 1: Resolve the public URL to get the LinkedIn URN ---
   let urn: string;
@@ -68,7 +73,8 @@ const scrapeLinkedInProfile = async (linkedInUrl: string) => {
         field: edu.field_of_study || 'N/A',
         year: edu.date_range || 'N/A'
       })),
-      skills: aboutData.data?.skills || []
+      skills: aboutData.data?.skills || [],
+      profileUrl: linkedInUrl // Added profileUrl here
     };
     
     console.log(`Step 2 Success: Successfully parsed profile for: ${profile.name}`);
