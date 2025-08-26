@@ -48,28 +48,48 @@ const LinkedInIntegration = () => {
     }
 
     setIsAnalyzing(true);
-    setProfileData(null);
-    setResumeText('');
-    setAnalysisResult('');
+    setProfileData(null); // Clear previous profile data
+    setResumeText('');    // Clear previous results
+    setAnalysisResult(''); // Clear previous results
 
     try {
       console.log('Sending LinkedIn analysis request');
-      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+      const { data, error: invokeError } = await supabase.functions.invoke('linkedin-backend', {
         body: { 
           action: 'analyze_profile',
           linkedInUrl
         }
       });
 
-      console.log('LinkedIn analysis response received:', { data, error });
+      console.log('LinkedIn analysis response received:', { data, invokeError });
 
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to analyze LinkedIn profile');
+      // Check for a Supabase function invocation error first
+      if (invokeError) {
+        console.error('Supabase function invocation error:', invokeError);
+        toast({
+          title: "Analysis Error",
+          description: invokeError.message || "Failed to communicate with the backend function. Check logs.",
+          variant: "destructive"
+        });
+        return; // Exit if there's a problem with function invocation itself
       }
 
+      // If the function invoked successfully but the backend *returned* an error (e.g., 500 status from the Deno server)
+      // Supabase's invoke will put this into data.error if the HTTP status was non-2xx
+      if (data && data.error) {
+          console.error('Backend reported error:', data.error);
+          toast({
+              title: "Analysis Error",
+              description: data.error || "Failed to analyze LinkedIn profile. Please try a different URL.",
+              variant: "destructive"
+          });
+          return; // Exit if backend explicitly returned an error
+      }
+
+
       if (!data || !data.profile) {
-        throw new Error('No profile data received');
+        console.error('No profile data or malformed response received:', data);
+        throw new Error('No profile data received from the backend. The profile might be private or the URL incorrect.');
       }
 
       setProfileData(data.profile);
@@ -78,11 +98,11 @@ const LinkedInIntegration = () => {
         title: "Profile Analyzed!",
         description: "LinkedIn profile data has been extracted."
       });
-    } catch (error) {
+    } catch (error: any) { // Catch any other unexpected errors during the process
       console.error('LinkedIn analysis error:', error);
       toast({
         title: "Analysis Error",
-        description: "Failed to analyze LinkedIn profile. Please try again.",
+        description: error.message || "Failed to analyze LinkedIn profile. Please try again.",
         variant: "destructive"
       });
     } finally {
