@@ -1,95 +1,78 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// AI Career Coach powered by Lovable AI Gateway (Gemini) - no third-party key required
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Using Groq API (free alternative to OpenAI)
-const groqApiKey = Deno.env.get('GROQ_API_KEY') || '***REMOVED-GROQ-KEY***';
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Allows all origins, you might want to restrict this for production
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  console.log('Chat GPT function called');
-  
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message } = await req.json();
-    console.log('Received message:', message);
-
-    if (!message) {
-      return new Response(
-        JSON.stringify({ error: 'Message is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY is not configured' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Use Groq API (free alternative with Llama models)
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const { message, history } = await req.json();
+    if (!message || typeof message !== 'string') {
+      return new Response(JSON.stringify({ error: 'Message is required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const messages = [
+      {
+        role: 'system',
+        content: "You are a professional AI Career Coach. Provide expert, specific, actionable advice on resumes, cover letters, interviews, salary negotiation, job searching, career transitions, and professional development. Keep responses concise yet comprehensive, and use markdown when helpful."
+      },
+      ...(Array.isArray(history) ? history.slice(-10) : []),
+      { role: 'user', content: message }
+    ];
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional AI Career Coach. Provide expert guidance on resumes, cover letters, interviews, salary negotiation, job searching, career transitions, and professional development. Give specific, actionable advice tailored to each user\'s situation. Keep responses concise yet comprehensive.'
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
+        model: 'google/gemini-2.5-flash',
+        messages,
       }),
     });
 
-    // Check for errors from Groq API
     if (!response.ok) {
-      console.error('Groq API error:', response.status, response.statusText);
-      const errorData = await response.text();
-      console.error('Error details:', errorData);
-      throw new Error(`Groq API error: ${response.status}`);
+      const text = await response.text();
+      console.error('Lovable AI error:', response.status, text);
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit reached. Please try again in a moment.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: 'AI credits exhausted. Please top up the workspace.' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Groq response received');
-    
-    // Ensure the response from Groq contains the expected data structure
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response from Groq');
-    }
+    const reply = data?.choices?.[0]?.message?.content;
+    if (!reply) throw new Error('Empty response from AI');
 
-    const reply = data.choices[0].message.content;
-
-    return new Response(
-      JSON.stringify({ reply }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ reply }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error in chat-gpt function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to get AI response',
-        details: error.message 
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error('chat-gpt error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to get AI response', details: (error as Error).message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

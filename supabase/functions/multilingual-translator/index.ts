@@ -1,104 +1,103 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// Multilingual translator powered by Lovable AI Gateway (Gemini)
+// Replaces flaky LibreTranslate/MyMemory/RapidAPI dependencies with a single
+// high-quality model call that handles ALL languages and full sentences.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') || '***REMOVED-RAPIDAPI-KEY***';
-const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
-const offlineTranslations = { 'en': { 'es': { 'hello': 'hola' } } };
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-// --- API Functions ---
-const translateWithLibre = async (text: string, source: string, target: string): Promise<string | null> => {
-  const url = 'https://libretranslate.de/translate';
-  console.log(`Tier 1: Attempting with LibreTranslate`);
-  try {
-    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: text, source, target, format: 'text' }) });
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d?.translatedText || null;
-  } catch (e) { return null; }
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const translateWithMyMemory = async (text: string, source: string, target: string): Promise<string | null> => {
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`;
-  console.log(`Tier 2: Attempting with MyMemory`);
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d?.responseData?.translatedText || null;
-  } catch (e) { return null; }
+const LANG_NAMES: Record<string, string> = {
+  en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian',
+  pt: 'Portuguese', ru: 'Russian', ja: 'Japanese', ko: 'Korean',
+  zh: 'Simplified Chinese', 'zh-TW': 'Traditional Chinese', ar: 'Arabic',
+  hi: 'Hindi', tr: 'Turkish', pl: 'Polish', nl: 'Dutch', sv: 'Swedish',
+  da: 'Danish', no: 'Norwegian', fi: 'Finnish', el: 'Greek', he: 'Hebrew',
+  th: 'Thai', vi: 'Vietnamese', ta: 'Tamil', te: 'Telugu', bn: 'Bengali',
 };
 
-const translateOffline = (text: string, source: string, target: string): string | null => {
-  console.log('Tier 3: Attempting offline fallback.');
-  return offlineTranslations[source]?.[target]?.[text.toLowerCase().trim()] || null;
-};
-
-// --- Dedicated Transliteration Function for non-Latin scripts ---
-const transliterateText = async (text: string, lang: string): Promise<string | null> => {
-  const nonLatinScripts = ['ar', 'hi', 'ja', 'ko', 'ru', 'zh', 'zh-TW', 'el', 'he', 'th', 'ta', 'te'];
-  if (!nonLatinScripts.includes(lang)) return null;
-  
-  console.log(`Transliteration required for ${lang}. Calling API.`);
-  try {
-    const url = 'https://google-input-tools.p.rapidapi.com/transliteration';
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'x-rapidapi-key': RAPIDAPI_KEY, 'x-rapidapi-host': 'google-input-tools.p.rapidapi.com', 'content-type': 'application/json' },
-      body: JSON.stringify({ lang, text })
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (data && data[0]) {
-      console.log('Transliteration successful.');
-      return data[0];
-    }
-    return null;
-  } catch (error) {
-    console.error('Transliteration API failed:', error.message);
-    return null;
-  }
-};
+const NON_LATIN = new Set(['ar','hi','ja','ko','ru','zh','zh-TW','el','he','th','ta','te','bn']);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
   try {
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY is not configured' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { text, sourceLanguage, targetLanguage } = await req.json();
-    if (!text || !sourceLanguage || !targetLanguage) return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
+    if (!text || !sourceLanguage || !targetLanguage) {
+      return new Response(JSON.stringify({ error: 'Missing parameters' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    let translatedText: string | null = null;
-    let transliteration: string | null = null;
-    let method = 'unavailable';
-    const sourceWords = text.trim().split(/\s+/).length;
+    const sourceName = LANG_NAMES[sourceLanguage] || sourceLanguage;
+    const targetName = LANG_NAMES[targetLanguage] || targetLanguage;
+    const needsTranslit = NON_LATIN.has(targetLanguage);
 
-    translatedText = await translateWithLibre(text, sourceLanguage, targetLanguage);
-    if (translatedText) {
-      const translatedWords = translatedText.trim().split(/\s+/).length;
-      if (sourceWords > translatedWords + 1 && sourceWords > 2) {
-        translatedText = null; 
-      } else {
-        method = 'live_api_primary';
+    const system = `You are a professional translator. Translate the user's text from ${sourceName} to ${targetName}. Preserve meaning, tone, and formatting. Return ONLY a strict JSON object with these keys: {"translatedText": string${needsTranslit ? ', "transliteration": string (romanized phonetic transliteration of the translation)' : ''}}. No markdown, no commentary.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: text },
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Translation gateway error:', response.status, errText);
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit reached, please try again.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: 'AI credits exhausted.' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`Gateway ${response.status}`);
     }
 
-    if (!translatedText) {
-      translatedText = await translateWithMyMemory(text, sourceLanguage, targetLanguage);
-      if (translatedText) method = 'live_api_secondary';
+    const data = await response.json();
+    const raw = data?.choices?.[0]?.message?.content ?? '{}';
+    let parsed: { translatedText?: string; transliteration?: string } = {};
+    try { parsed = JSON.parse(raw); } catch {
+      // Try to extract JSON if model wrapped it
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
     }
 
-    if (!translatedText) {
-      translatedText = translateOffline(text, sourceLanguage, targetLanguage);
-      if (translatedText) method = 'offline_dictionary';
-    }
-    
-    if (translatedText) {
-      transliteration = await transliterateText(translatedText, targetLanguage);
-    } else {
-      translatedText = `[Translation currently unavailable]`;
-    }
+    const translatedText = parsed.translatedText?.trim() || '[Translation failed]';
+    const transliteration = parsed.transliteration?.trim() || null;
 
-    return new Response(JSON.stringify({ translatedText, transliteration, method }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({
+      translatedText,
+      transliteration,
+      method: 'lovable_ai',
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    console.error('translator error:', error);
+    return new Response(JSON.stringify({ error: 'Translation failed', details: (error as Error).message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

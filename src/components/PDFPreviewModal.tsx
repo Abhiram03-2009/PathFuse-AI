@@ -164,7 +164,7 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
           </Button>
           <Button onClick={generatePDF} className="bg-blue-600 hover:bg-blue-700">
             <Download className="w-4 h-4 mr-2" />
-            Print as PDF
+            Download PDF
           </Button>
         </div>
       </DialogContent>
