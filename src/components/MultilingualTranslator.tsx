@@ -65,11 +65,43 @@ const MultilingualTranslator = () => {
     navigator.clipboard.writeText(text).then(() => { toast({ title: "Copied!", description: "Text copied to clipboard." }); }).catch(() => { toast({ title: "Copy Failed", variant: "destructive" }); });
   };
 
+  // Map our short codes to BCP-47 voice locales so Web Speech can pick the
+  // right voice for non-English languages (browsers ignore bare "es", "ja", etc.
+  // unless they match an installed locale).
+  const SPEECH_LOCALE: Record<string, string> = {
+    en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT',
+    pt: 'pt-PT', ru: 'ru-RU', ja: 'ja-JP', ko: 'ko-KR',
+    zh: 'zh-CN', 'zh-TW': 'zh-TW', ar: 'ar-SA', hi: 'hi-IN',
+    tr: 'tr-TR', pl: 'pl-PL', nl: 'nl-NL', sv: 'sv-SE', da: 'da-DK',
+    no: 'nb-NO', fi: 'fi-FI', el: 'el-GR', he: 'he-IL', th: 'th-TH',
+  };
+
   const speakText = (text: string | null, languageCode: string) => {
     if (!text || !('speechSynthesis' in window) || text.startsWith('[')) return;
+    // Cancel any in-flight utterance so rapid clicks don't queue/delay.
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = languageCode;
-    speechSynthesis.speak(utterance);
+    const locale = SPEECH_LOCALE[languageCode] || languageCode;
+    utterance.lang = locale;
+
+    // Try to pick a voice that matches the locale; fall back to language-only match.
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const exact = voices.find((v) => v.lang === locale);
+      const langOnly = voices.find((v) => v.lang.toLowerCase().startsWith(locale.split('-')[0].toLowerCase()));
+      const chosen = exact || langOnly;
+      if (chosen) utterance.voice = chosen;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        pickVoice();
+      };
+    } else {
+      pickVoice();
+    }
   };
 
   const swapLanguages = () => {
