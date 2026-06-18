@@ -47,36 +47,49 @@ const PROFILE_SCHEMA = {
 };
 
 async function scrapeLinkedIn(url: string) {
-  if (!FIRECRAWL_API_KEY) throw new Error('Firecrawl is not configured. Please connect the Firecrawl connector.');
-
-  const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      onlyMainContent: true,
-      formats: [
-        'markdown',
-        {
-          type: 'json',
-          schema: PROFILE_SCHEMA,
-          prompt: 'Extract the LinkedIn profile information including the person\'s real name, current headline, about/summary, location, all work experience entries (title, company, duration, description), all education entries (school, degree, field, dates), and a list of skills. Use only data actually present on the page.',
-        },
-      ],
-      waitFor: 2000,
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('Firecrawl scrape failed:', res.status, data);
-    throw new Error(data?.error || `Firecrawl error ${res.status}. The profile may be private or LinkedIn blocked the request.`);
+  if (!FIRECRAWL_API_KEY) {
+    throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn scraping.');
   }
 
-  // v2 returns { success, data: { json, markdown, metadata } }
+  let res: Response;
+  try {
+    res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        onlyMainContent: true,
+        formats: [
+          'markdown',
+          {
+            type: 'json',
+            schema: PROFILE_SCHEMA,
+            prompt: "Extract the LinkedIn profile information including the person's real name, current headline, about/summary, location, all work experience entries (title, company, duration, description), all education entries (school, degree, field, dates), and a list of skills. Use only data actually present on the page.",
+          },
+        ],
+        waitFor: 2500,
+      }),
+    });
+  } catch (e) {
+    console.error('Firecrawl network error:', e);
+    throw new Error('Network error contacting Firecrawl. Please try again.');
+  }
+
+  const raw = await res.text();
+  let data: any = null;
+  try { data = JSON.parse(raw); } catch {}
+
+  if (!res.ok) {
+    console.error('Firecrawl scrape failed:', res.status, raw.slice(0, 500));
+    if (res.status === 402) throw new Error('Firecrawl credits are exhausted. Please top up the Firecrawl plan.');
+    if (res.status === 401 || res.status === 403) throw new Error('Firecrawl rejected the request (auth/scope). Reconnect the Firecrawl integration.');
+    if (res.status === 429) throw new Error('Firecrawl rate limit reached. Please wait a moment and try again.');
+    throw new Error(data?.error || `LinkedIn appears to block scraping for this profile (status ${res.status}). Try a different public profile URL.`);
+  }
+
   const payload = data?.data ?? data;
   const json = payload?.json || payload?.data?.json;
   const markdown = payload?.markdown || payload?.data?.markdown;
@@ -86,6 +99,7 @@ async function scrapeLinkedIn(url: string) {
       name: json.name || 'Profile',
       headline: json.headline || '',
       summary: json.summary || '',
+      location: json.location || '',
       experience: Array.isArray(json.experience) ? json.experience : [],
       education: Array.isArray(json.education) ? json.education : [],
       skills: Array.isArray(json.skills) ? json.skills : [],
@@ -101,7 +115,7 @@ async function scrapeLinkedIn(url: string) {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Extract a structured LinkedIn profile from the markdown. Return strict JSON matching: {name, headline, summary, experience:[{title,company,duration,description}], education:[{school,degree,field,year}], skills:[string]}. Use only what is in the source.' },
+          { role: 'system', content: 'Extract a structured LinkedIn profile from the markdown. Return strict JSON matching: {name, headline, summary, location, experience:[{title,company,duration,description}], education:[{school,degree,field,year}], skills:[string]}. Use only what is in the source.' },
           { role: 'user', content: markdown.slice(0, 20000) },
         ],
         response_format: { type: 'json_object' },
@@ -111,12 +125,16 @@ async function scrapeLinkedIn(url: string) {
       const aiData = await ai.json();
       try {
         const parsed = JSON.parse(aiData.choices[0].message.content);
-        return { ...parsed, profileUrl: url };
-      } catch {}
+        if (parsed?.name) return { ...parsed, profileUrl: url };
+      } catch (e) {
+        console.error('AI fallback parse failed:', e);
+      }
+    } else {
+      console.error('AI fallback gateway error:', ai.status, await ai.text());
     }
   }
 
-  throw new Error('Could not extract profile data. The profile may be private or LinkedIn blocked the scrape.');
+  throw new Error('Could not extract profile data. The profile may be private, deleted, or LinkedIn is blocking automated reads of it.');
 }
 
 async function generateCareerInsights(profile: any) {

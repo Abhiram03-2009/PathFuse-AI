@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, TrendingUp, Users, GraduationCap } from 'lucide-react';
 import { UniversityMatch } from './types';
 import SaveCollegeButton from './SaveCollegeButton';
+import { getUniversityLogo, getMonogramFallback } from './logos';
 
 interface UniversityResultsProps {
   results: UniversityMatch[];
@@ -56,12 +57,21 @@ const UniversityResults: React.FC<UniversityResultsProps> = ({
             <Card key={index} className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600">
               <CardContent className="p-6">
                 <div className="flex items-start space-x-4 mb-4">
-                  <img 
-                    src={university.logo} 
-                    alt={university.name} 
+                  <img
+                    src={getUniversityLogo(university.name)}
+                    alt={`${university.name} logo`}
+                    loading="lazy"
                     className="w-16 h-16 object-contain rounded-lg bg-white p-2 border"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(university.name)}&size=64&background=random&color=fff`;
+                      const img = e.target as HTMLImageElement;
+                      // First fallback: previously bundled wiki URL (if any)
+                      if (university.logo && img.src !== university.logo) {
+                        img.src = university.logo;
+                        return;
+                      }
+                      // Final fallback: monogram so it always renders
+                      img.onerror = null;
+                      img.src = getMonogramFallback(university.name);
                     }}
                   />
                   <div className="flex-1">

@@ -62,18 +62,46 @@ const KeywordMatcher = () => {
     return matrix[str2.length][str1.length];
   };
 
-  const extractKeywords = (text: string): string[] => {
-    const commonWords = new Set([
-      'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'an', 'a',
-      'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
-      'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'
-    ]);
+  // Words that should NEVER be flagged as a missing keyword: PII, generic resume
+  // boilerplate, months, pronouns, and common filler. Keeps recommendations
+  // focused on actual job-relevant skills/terms.
+  const NOISE_WORDS = new Set([
+    'the','and','or','but','in','on','at','to','for','of','with','by','an','a','as','from','that','this',
+    'is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could',
+    'should','may','might','must','can','these','those','it','its','their','them','they','our','your','you',
+    'we','i','he','she','his','her','him','my','me','mine','us',
+    // resume boilerplate
+    'resume','cv','curriculum','vitae','references','available','request','phone','email','address','street',
+    'avenue','road','drive','suite','apt','apartment','city','state','zip','country','contact','linkedin',
+    'github','portfolio','website','url','http','https','www','com','net','org','io','edu','gov',
+    // months / dates
+    'january','february','march','april','may','june','july','august','september','october','november','december',
+    'jan','feb','mar','apr','jun','jul','aug','sep','sept','oct','nov','dec','present','current',
+    // generic verbs / nouns
+    'work','works','worked','working','job','jobs','role','roles','position','positions','company','companies',
+    'team','teams','project','projects','task','tasks','responsibility','responsibilities','duties','duty',
+    'experience','experiences','year','years','month','months','day','days','time','times',
+  ]);
 
+  // Strip PII patterns so they never end up as "missing keywords".
+  const stripPII = (text: string): string => {
     return text
+      .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, ' ')                 // emails
+      .replace(/\+?\d{1,3}[\s.-]?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/g, ' ') // phones (intl/US)
+      .replace(/\b\d{3}[\s.-]?\d{3}[\s.-]?\d{4}\b/g, ' ')        // US 10-digit
+      .replace(/https?:\/\/\S+/g, ' ')                            // URLs
+      .replace(/\b\d+\s+[A-Za-z]+\s+(street|st|avenue|ave|road|rd|blvd|drive|dr|lane|ln|court|ct|way)\b\.?/gi, ' ') // street addresses
+      .replace(/\b[A-Z]{2}\s+\d{5}(-\d{4})?\b/g, ' ')             // state + zip
+      .replace(/\b\d{5}(-\d{4})?\b/g, ' ');                       // bare zips
+  };
+
+  const extractKeywords = (text: string): string[] => {
+    return stripPII(text)
       .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
+      .replace(/[^\w\s+#.]/g, ' ')           // keep + # . for things like C++, C#, Node.js
       .split(/\s+/)
-      .filter(word => word.length > 2 && !commonWords.has(word))
+      .map((w) => w.replace(/^\.+|\.+$/g, '')) // trim stray dots
+      .filter((word) => word.length > 2 && !NOISE_WORDS.has(word) && !/^\d+$/.test(word))
       .filter((word, index, array) => array.indexOf(word) === index);
   };
 
@@ -178,26 +206,40 @@ const KeywordMatcher = () => {
       
       const overallMatch = totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
       
-      // Generate contextual suggestions based on missing keywords
-      const suggestions = [];
-      if (allMissing.length > 0) {
-        suggestions.push(`Add these missing keywords: ${allMissing.slice(0, 5).join(', ')}`);
+      // Generate contextual, specific suggestions
+      const top = allMissing.slice(0, 6);
+      const suggestions: string[] = [];
+
+      if (top.length) {
+        suggestions.push(
+          `Weave these job-specific terms into your bullet points naturally: ${top.join(', ')}. Avoid keyword-stuffing — show each in context of a real accomplishment.`
+        );
       }
-      if (overallMatch < 70) {
-        suggestions.push("Consider restructuring your resume to better align with job requirements");
-        suggestions.push("Include more specific technical skills and tools mentioned in the posting");
+      // Detect categories among missing terms for targeted advice
+      const techIndicators = top.filter((w) => /\+|#|js|py|sql|aws|gcp|azure|node|react|kubernetes|docker/i.test(w));
+      if (techIndicators.length) {
+        suggestions.push(
+          `Add a "Technical Skills" line that explicitly lists ${techIndicators.join(', ')} — recruiter ATS scans look for exact tool names.`
+        );
       }
-      if (allMatched.length > 0) {
-        suggestions.push("Emphasize and expand on your existing relevant skills");
+      if (overallMatch < 50) {
+        suggestions.push(
+          'Your match is low — rewrite your most recent role using the verbs and nouns from the job description (e.g., "led", "owned", "shipped") to mirror language.'
+        );
+      } else if (overallMatch < 75) {
+        suggestions.push(
+          'You\'re close. Move the 2–3 most relevant matched skills into the top third of your resume so they appear above the fold.'
+        );
+      } else {
+        suggestions.push('Strong alignment. Add one quantified achievement (%, $, count) per bullet to stand out from other matches.');
       }
-      suggestions.push("Use quantifiable achievements to demonstrate your impact");
-      suggestions.push("Include relevant certifications or continuing education");
+      suggestions.push('Replace generic phrases like "responsible for" with metrics-driven verbs ("reduced", "increased", "shipped").');
 
       setAnalysis({
         overallMatch,
         matchedKeywords: allMatched,
-        missingKeywords: allMissing.slice(0, 20), // Limit to top 20 missing keywords
-        suggestions: suggestions.slice(0, 5)
+        missingKeywords: allMissing.slice(0, 20),
+        suggestions: suggestions.slice(0, 5),
       });
 
       setIsAnalyzing(false);
