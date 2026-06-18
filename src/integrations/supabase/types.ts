@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_colleges: {
+        Row: {
+          college_name: string
+          college_url: string | null
+          created_at: string
+          id: string
+          match_percentage: number | null
+          user_id: string
+        }
+        Insert: {
+          college_name: string
+          college_url?: string | null
+          created_at?: string
+          id?: string
+          match_percentage?: number | null
+          user_id: string
+        }
+        Update: {
+          college_name?: string
+          college_url?: string | null
+          created_at?: string
+          id?: string
+          match_percentage?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          company_name: string
+          created_at: string
+          id: string
+          job_title: string
+          job_url: string | null
+          match_percentage: number | null
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          id?: string
+          job_title: string
+          job_url?: string | null
+          match_percentage?: number | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          job_title?: string
+          job_url?: string | null
+          match_percentage?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
