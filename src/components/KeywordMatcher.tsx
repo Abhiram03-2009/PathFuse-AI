@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Search, Target, TrendingUp } from 'lucide-react';
+import { Search, Target, TrendingUp, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCachedState } from '@/hooks/useCachedState';
+import { supabase } from '@/integrations/supabase/client';
 
 interface KeywordAnalysis {
   overallMatch: number;
@@ -19,10 +21,38 @@ interface KeywordAnalysis {
 const KeywordMatcher = () => {
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
-  const [resumeText, setResumeText] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [analysis, setAnalysis] = useState<KeywordAnalysis | null>(null);
+  const [resumeText, setResumeText] = useCachedState<string>('km:resume', '');
+  const [jobDescription, setJobDescription] = useCachedState<string>('km:jd', '');
+  const [analysis, setAnalysis] = useCachedState<KeywordAnalysis | null>('km:analysis', null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const saveAnalysis = async () => {
+    if (!analysis) return;
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Sign in required', variant: 'destructive' });
+        return;
+      }
+      const titleMatch = jobDescription.match(/^(.{3,80})/);
+      const { error } = await supabase.from('saved_keyword_analyses').insert({
+        user_id: user.id,
+        job_title: titleMatch ? titleMatch[1].trim() : 'Job description',
+        overall_match: analysis.overallMatch,
+        matched_keywords: analysis.matchedKeywords as any,
+        missing_keywords: analysis.missingKeywords as any,
+        suggestions: analysis.suggestions as any,
+      });
+      if (error) throw error;
+      toast({ title: 'Saved', description: 'Keyword analysis stored in your library.' });
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const calculateSimilarity = (str1: string, str2: string): number => {
     const longer = str1.length > str2.length ? str1 : str2;
@@ -374,6 +404,10 @@ const KeywordMatcher = () => {
                 ))}
               </ul>
             </div>
+
+            <Button onClick={saveAnalysis} disabled={saving} variant="outline" className="w-full">
+              <Save className="w-4 h-4 mr-2" />{saving ? 'Saving…' : 'Save Analysis to Library'}
+            </Button>
           </CardContent>
         </Card>
       )}
