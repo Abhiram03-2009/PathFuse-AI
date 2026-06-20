@@ -6,15 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Sparkles, Download, Copy, Eye } from 'lucide-react';
+import { FileText, Sparkles, Download, Copy, Eye, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCachedState } from '@/hooks/useCachedState';
+import { supabase } from '@/integrations/supabase/client';
 import PDFPreviewModal from './PDFPreviewModal';
 
 const CoverLetterGenerator = () => {
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useCachedState('cl:form', {
     jobTitle: '',
     company: '',
     hiringManager: '',
@@ -23,7 +25,7 @@ const CoverLetterGenerator = () => {
     tone: 'professional'
   });
   
-  const [personalInfo, setPersonalInfo] = useState({
+  const [personalInfo, setPersonalInfo] = useCachedState('cl:personal', {
     name: '',
     email: '',
     phone: '',
@@ -32,9 +34,34 @@ const CoverLetterGenerator = () => {
     portfolio: ''
   });
   
-  const [generatedLetter, setGeneratedLetter] = useState('');
+  const [generatedLetter, setGeneratedLetter] = useCachedState<string>('cl:letter', '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const saveLetter = async () => {
+    if (!generatedLetter) return;
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Sign in required', variant: 'destructive' });
+        return;
+      }
+      const { error } = await supabase.from('saved_cover_letters').insert({
+        user_id: user.id,
+        job_title: formData.jobTitle,
+        company: formData.company,
+        content: generatedLetter,
+      });
+      if (error) throw error;
+      toast({ title: 'Saved', description: 'Cover letter saved to your library.' });
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const generateCoverLetter = async () => {
     setIsGenerating(true);
