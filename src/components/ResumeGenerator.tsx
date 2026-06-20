@@ -462,6 +462,9 @@ const ResumeGenerator = () => {
               <Eye className="w-4 h-4 mr-2" />
               Preview & Download
             </Button>
+            <Button onClick={saveResume} disabled={saving} variant="outline" className="w-full">
+              <Save className="w-4 h-4 mr-2" />{saving ? 'Saving…' : 'Save to Library'}
+            </Button>
           </div>
         </div>
       </div>
