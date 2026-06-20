@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCachedState } from '@/hooks/useCachedState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,12 +27,12 @@ interface JobMatch {
 const JobAnalyzer = () => {
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
-  const [skills, setSkills] = useState('');
-  const [industry, setIndustry] = useState('');
-  const [location, setLocation] = useState('');
+  const [skills, setSkills] = useCachedState<string>('job:skills', '');
+  const [industry, setIndustry] = useCachedState<string>('job:industry', '');
+  const [location, setLocation] = useCachedState<string>('job:location', '');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
+  const [jobMatches, setJobMatches] = useCachedState<JobMatch[]>('job:matches', []);
 
   const [savedJobsList, setSavedJobsList] = useState<string[]>([]);
 
@@ -87,7 +88,7 @@ const JobAnalyzer = () => {
         job_title: job.title,
         company_name: job.company,
         match_percentage: job.matchPercentage,
-        job_url: null, 
+        job_url: (job as any).jobUrl || null,
         user_id: user.id
       });
 
