@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap, ExternalLink } from 'lucide-react';
+import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap, ExternalLink, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCachedState } from '@/hooks/useCachedState';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LinkedInProfile {
@@ -31,11 +32,34 @@ interface LinkedInProfile {
 const LinkedInIntegration = () => {
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
-  const [linkedInUrl, setLinkedInUrl] = useState('');
-  const [profileData, setProfileData] = useState<LinkedInProfile | null>(null);
+  const [linkedInUrl, setLinkedInUrl] = useCachedState<string>('li:url', '');
+  const [profileData, setProfileData] = useCachedState<LinkedInProfile | null>('li:profile', null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [resumeText, setResumeText] = useState('');
-  const [analysisResult, setAnalysisResult] = useState('');
+  const [resumeText, setResumeText] = useCachedState<string>('li:resume', '');
+  const [analysisResult, setAnalysisResult] = useCachedState<string>('li:analysis', '');
+
+  const saveReport = async () => {
+    const content = resumeText || analysisResult;
+    if (!content) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Sign in required', variant: 'destructive' });
+        return;
+      }
+      const { error } = await supabase.from('saved_linkedin_reports').insert({
+        user_id: user.id,
+        linkedin_url: linkedInUrl,
+        profile_name: profileData?.name || 'Profile',
+        report_type: resumeText ? 'resume' : 'insights',
+        content,
+      });
+      if (error) throw error;
+      toast({ title: 'Saved to Library' });
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message, variant: 'destructive' });
+    }
+  };
 
   const analyzeLinkedInProfile = async () => {
     if (!linkedInUrl.includes('linkedin.com')) {
