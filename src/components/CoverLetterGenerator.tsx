@@ -372,6 +372,9 @@ ${personalInfo.name || '[Your Name]'}`;
                     Preview & Download PDF
                   </Button>
                 </div>
+                <Button onClick={saveLetter} disabled={saving} variant="outline" className="w-full">
+                  <Save className="w-4 h-4 mr-2" />{saving ? 'Saving…' : 'Save to Library'}
+                </Button>
               </div>
             ) : (
               <div className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center min-h-96 flex items-center justify-center">
