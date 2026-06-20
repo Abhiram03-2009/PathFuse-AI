@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Download, FileText, Sparkles, Plus, X, Eye } from 'lucide-react';
+import { Download, FileText, Sparkles, Plus, X, Eye, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCachedState } from '@/hooks/useCachedState';
+import { supabase } from '@/integrations/supabase/client';
 import PDFPreviewModal from './PDFPreviewModal';
 
 interface Experience {
@@ -29,7 +31,7 @@ const ResumeGenerator = () => {
   const { toast } = useToast();
   const { isDarkMode } = useTheme();
   
-  const [personalInfo, setPersonalInfo] = useState({
+  const [personalInfo, setPersonalInfo] = useCachedState('rg:personal', {
     name: '',
     email: '',
     phone: '',
@@ -38,13 +40,37 @@ const ResumeGenerator = () => {
     portfolio: '',
     summary: ''
   });
-  const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [education, setEducation] = useState<Education[]>([]);
-  const [skills, setSkills] = useState<string[]>([]);
+  const [experiences, setExperiences] = useCachedState<Experience[]>('rg:exp', []);
+  const [education, setEducation] = useCachedState<Education[]>('rg:edu', []);
+  const [skills, setSkills] = useCachedState<string[]>('rg:skills', []);
   const [newSkill, setNewSkill] = useState('');
-  const [template, setTemplate] = useState('professional');
+  const [template, setTemplate] = useCachedState<string>('rg:template', 'professional');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const saveResume = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: 'Sign in required', variant: 'destructive' });
+        return;
+      }
+      const { error } = await supabase.from('saved_resumes').insert({
+        user_id: user.id,
+        title: personalInfo.name ? `${personalInfo.name}'s Resume` : 'Untitled Resume',
+        template,
+        content: generateResumeContent(),
+      });
+      if (error) throw error;
+      toast({ title: 'Saved', description: 'Resume saved to your library.' });
+    } catch (e: any) {
+      toast({ title: 'Save failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addExperience = () => {
     setExperiences([...experiences, { title: '', company: '', duration: '', description: '' }]);
