@@ -299,8 +299,8 @@ const LinkedInIntegration = () => {
                   <Button onClick={() => navigator.clipboard.writeText(resumeText || analysisResult)} variant="outline" className={`${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}>
                     <Upload className="w-4 h-4 mr-2" />Copy to Clipboard
                   </Button>
-                  <Button variant="outline" className={`${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}>
-                    <Download className="w-4 h-4 mr-2" />Export PDF
+                  <Button onClick={saveReport} variant="outline" className={`${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}>
+                    <Save className="w-4 h-4 mr-2" />Save to Library
                   </Button>
                 </div>
               </div>
