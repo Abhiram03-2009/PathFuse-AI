@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cover_letters: {
+        Row: {
+          company: string | null
+          content: string
+          created_at: string
+          id: string
+          job_title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          job_title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          job_title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_jobs: {
         Row: {
           company_name: string
@@ -94,6 +124,105 @@ export type Database = {
           job_title?: string
           job_url?: string | null
           match_percentage?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_keyword_analyses: {
+        Row: {
+          created_at: string
+          id: string
+          job_title: string | null
+          matched_keywords: Json | null
+          missing_keywords: Json | null
+          overall_match: number | null
+          suggestions: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_title?: string | null
+          matched_keywords?: Json | null
+          missing_keywords?: Json | null
+          overall_match?: number | null
+          suggestions?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_title?: string | null
+          matched_keywords?: Json | null
+          missing_keywords?: Json | null
+          overall_match?: number | null
+          suggestions?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_linkedin_reports: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          linkedin_url: string | null
+          profile_name: string | null
+          report_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          linkedin_url?: string | null
+          profile_name?: string | null
+          report_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          linkedin_url?: string | null
+          profile_name?: string | null
+          report_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_resumes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          template: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          template?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          template?: string | null
+          title?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
