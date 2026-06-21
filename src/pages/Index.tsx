@@ -227,17 +227,29 @@ const Index = () => {
                 <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border`}>
                   <CardHeader>
                     <CardTitle className={`flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      <TrendingUp className="w-4 h-4" />Quick Launch
+                      <Newspaper className="w-4 h-4" />Career News & Trends
                     </CardTitle>
+                    <CardDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                      Fresh sources to keep your job hunt sharp.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      {FEATURES.slice(0, 6).map((f) => (
-                        <Button key={f.id} variant="outline" onClick={() => setActiveTab(f.id)} className="justify-start text-xs h-auto py-2">
-                          <f.icon className="w-3.5 h-3.5 mr-2" />{f.short}
-                        </Button>
+                    <ul className="space-y-2">
+                      {NEWS_FEED.slice(0, 5).map((n, i) => (
+                        <li key={i}>
+                          <a
+                            href={n.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-start gap-2 p-2 rounded-md border text-xs transition-colors ${isDarkMode ? 'border-cyan-400/20 hover:bg-gray-900/40 text-gray-200' : 'border-blue-200/60 hover:bg-blue-50/60 text-gray-700'}`}
+                          >
+                            <Badge variant="secondary" className="text-[10px] shrink-0">{n.tag}</Badge>
+                            <span className="flex-1 leading-snug">{n.title}</span>
+                            <ExternalLink className="w-3 h-3 mt-0.5 shrink-0 opacity-60" />
+                          </a>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </CardContent>
                 </Card>
               </div>
