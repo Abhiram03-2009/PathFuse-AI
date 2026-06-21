@@ -221,8 +221,9 @@ const JobAnalyzer = () => {
         matchPercentage: Math.min(Math.max(job.matchPercentage, 10), 100),
         description: job.description,
         requirements: job.requirements || [],
-        benefits: job.benefits || []
-      }));
+        benefits: job.benefits || [],
+        jobUrl: job.jobUrl || job.url,
+      }) as JobMatch);
 
       setJobMatches(formattedJobs);
       
