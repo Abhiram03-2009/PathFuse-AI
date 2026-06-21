@@ -51,6 +51,12 @@ async function scrapeLinkedIn(url: string) {
     throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn scraping.');
   }
 
+  // Use markdown-only scrape — LinkedIn frequently blocks Firecrawl's
+  // structured JSON extraction, while markdown succeeds far more often.
+  // We then ask Gemini to convert the markdown into the structured profile.
+  const ac = new AbortController();
+  const to = setTimeout(() => ac.abort(), 45_000);
+
   let res: Response;
   try {
     res = await fetch('https://api.firecrawl.dev/v2/scrape', {
@@ -62,20 +68,17 @@ async function scrapeLinkedIn(url: string) {
       body: JSON.stringify({
         url,
         onlyMainContent: true,
-        formats: [
-          'markdown',
-          {
-            type: 'json',
-            schema: PROFILE_SCHEMA,
-            prompt: "Extract the LinkedIn profile information including the person's real name, current headline, about/summary, location, all work experience entries (title, company, duration, description), all education entries (school, degree, field, dates), and a list of skills. Use only data actually present on the page.",
-          },
-        ],
-        waitFor: 2500,
+        formats: ['markdown'],
+        waitFor: 3000,
       }),
+      signal: ac.signal,
     });
   } catch (e) {
-    console.error('Firecrawl network error:', e);
-    throw new Error('Network error contacting Firecrawl. Please try again.');
+    clearTimeout(to);
+    console.error('Firecrawl network/timeout error:', e);
+    throw new Error('Firecrawl timed out reading this LinkedIn profile. Try again or use a different public URL.');
+  } finally {
+    clearTimeout(to);
   }
 
   const raw = await res.text();
@@ -85,56 +88,61 @@ async function scrapeLinkedIn(url: string) {
   if (!res.ok) {
     console.error('Firecrawl scrape failed:', res.status, raw.slice(0, 500));
     if (res.status === 402) throw new Error('Firecrawl credits are exhausted. Please top up the Firecrawl plan.');
-    if (res.status === 401 || res.status === 403) throw new Error('Firecrawl rejected the request (auth/scope). Reconnect the Firecrawl integration.');
+    if (res.status === 401 || res.status === 403) throw new Error('Firecrawl rejected the request. Reconnect the Firecrawl integration.');
     if (res.status === 429) throw new Error('Firecrawl rate limit reached. Please wait a moment and try again.');
     throw new Error(data?.error || `LinkedIn appears to block scraping for this profile (status ${res.status}). Try a different public profile URL.`);
   }
 
   const payload = data?.data ?? data;
-  const json = payload?.json || payload?.data?.json;
-  const markdown = payload?.markdown || payload?.data?.markdown;
+  const markdown: string = payload?.markdown || payload?.data?.markdown || '';
 
-  if (json && json.name) {
+  if (!markdown || markdown.length < 200) {
+    throw new Error('LinkedIn returned an empty/blocked page for this URL. Make sure the profile is public.');
+  }
+
+  if (!LOVABLE_API_KEY) {
+    throw new Error('AI gateway not configured. Cannot structure the LinkedIn profile.');
+  }
+
+  const ai = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: 'Extract a structured LinkedIn profile from the markdown. Return STRICT JSON: {"name":string,"headline":string,"summary":string,"location":string,"experience":[{"title","company","duration","description"}],"education":[{"school","degree","field","year"}],"skills":[string]}. Use ONLY information present in the source. If a field is unknown use an empty string or [].' },
+        { role: 'user', content: markdown.slice(0, 24000) },
+      ],
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!ai.ok) {
+    const errTxt = await ai.text().catch(() => '');
+    console.error('AI gateway error:', ai.status, errTxt.slice(0, 300));
+    if (ai.status === 429) throw new Error('AI rate limit reached. Please try again in a moment.');
+    if (ai.status === 402) throw new Error('AI credits exhausted. Please add credits in workspace settings.');
+    throw new Error(`AI could not structure the profile (status ${ai.status}).`);
+  }
+
+  const aiData = await ai.json();
+  try {
+    const parsed = JSON.parse(aiData.choices[0].message.content);
+    if (!parsed?.name) throw new Error('no name');
     return {
-      name: json.name || 'Profile',
-      headline: json.headline || '',
-      summary: json.summary || '',
-      location: json.location || '',
-      experience: Array.isArray(json.experience) ? json.experience : [],
-      education: Array.isArray(json.education) ? json.education : [],
-      skills: Array.isArray(json.skills) ? json.skills : [],
+      name: parsed.name,
+      headline: parsed.headline || '',
+      summary: parsed.summary || '',
+      location: parsed.location || '',
+      experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+      education: Array.isArray(parsed.education) ? parsed.education : [],
+      skills: Array.isArray(parsed.skills) ? parsed.skills : [],
       profileUrl: url,
     };
+  } catch (e) {
+    console.error('AI parse failed:', e);
+    throw new Error('Could not extract structured data from this profile. The page may be private or partially blocked.');
   }
-
-  // Fallback: ask Gemini to structure the markdown
-  if (markdown && LOVABLE_API_KEY) {
-    const ai = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'Extract a structured LinkedIn profile from the markdown. Return strict JSON matching: {name, headline, summary, location, experience:[{title,company,duration,description}], education:[{school,degree,field,year}], skills:[string]}. Use only what is in the source.' },
-          { role: 'user', content: markdown.slice(0, 20000) },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    });
-    if (ai.ok) {
-      const aiData = await ai.json();
-      try {
-        const parsed = JSON.parse(aiData.choices[0].message.content);
-        if (parsed?.name) return { ...parsed, profileUrl: url };
-      } catch (e) {
-        console.error('AI fallback parse failed:', e);
-      }
-    } else {
-      console.error('AI fallback gateway error:', ai.status, await ai.text());
-    }
-  }
-
-  throw new Error('Could not extract profile data. The profile may be private, deleted, or LinkedIn is blocking automated reads of it.');
 }
 
 async function generateCareerInsights(profile: any) {
@@ -189,8 +197,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('linkedin-backend error:', error);
-    return new Response(JSON.stringify({ error: (error as Error).message || 'Failed' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Return 200 with an error field so the client can surface the real message
+    // instead of the generic "non-2xx" from supabase.functions.invoke.
+    return new Response(JSON.stringify({ error: (error as Error).message || 'Failed to analyze profile' }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
