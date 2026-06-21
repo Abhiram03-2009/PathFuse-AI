@@ -76,31 +76,54 @@ const MultilingualTranslator = () => {
     no: 'nb-NO', fi: 'fi-FI', el: 'el-GR', he: 'he-IL', th: 'th-TH',
   };
 
-  const speakText = (text: string | null, languageCode: string) => {
-    if (!text || !('speechSynthesis' in window) || text.startsWith('[')) return;
-    // Cancel any in-flight utterance so rapid clicks don't queue/delay.
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+  const speakText = async (text: string | null, languageCode: string) => {
+    if (!text || text.startsWith('[')) return;
     const locale = SPEECH_LOCALE[languageCode] || languageCode;
-    utterance.lang = locale;
+    const langPrefix = locale.split('-')[0].toLowerCase();
 
-    // Try to pick a voice that matches the locale; fall back to language-only match.
-    const pickVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const exact = voices.find((v) => v.lang === locale);
-      const langOnly = voices.find((v) => v.lang.toLowerCase().startsWith(locale.split('-')[0].toLowerCase()));
-      const chosen = exact || langOnly;
-      if (chosen) utterance.voice = chosen;
-      window.speechSynthesis.speak(utterance);
-    };
+    // Try the browser first.
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const ensureVoices = () =>
+        new Promise<SpeechSynthesisVoice[]>((resolve) => {
+          const v = window.speechSynthesis.getVoices();
+          if (v.length) return resolve(v);
+          const handler = () => {
+            window.speechSynthesis.onvoiceschanged = null;
+            resolve(window.speechSynthesis.getVoices());
+          };
+          window.speechSynthesis.onvoiceschanged = handler;
+          // Safety timeout: some browsers never fire the event.
+          setTimeout(() => resolve(window.speechSynthesis.getVoices()), 400);
+        });
+      const voices = await ensureVoices();
+      const match =
+        voices.find((v) => v.lang === locale) ||
+        voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
+      if (match) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = locale;
+        u.voice = match;
+        window.speechSynthesis.speak(u);
+        return;
+      }
+    }
 
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        pickVoice();
-      };
-    } else {
-      pickVoice();
+    // Fallback: server-side TTS via Lovable AI (handles Hindi etc. when no
+    // browser voice is installed for the language).
+    try {
+      toast({ title: 'Loading audio…', description: `Generating ${getLanguageName(languageCode)} audio.` });
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voice: 'alloy' },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.audio) throw new Error('No audio returned');
+      const audio = new Audio(`data:${data.mime || 'audio/mpeg'};base64,${data.audio}`);
+      await audio.play();
+    } catch (e: any) {
+      console.error('TTS fallback failed:', e);
+      toast({ title: 'Audio Unavailable', description: e.message || 'Could not play audio.', variant: 'destructive' });
     }
   };
 
