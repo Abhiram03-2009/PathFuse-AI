@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText, MessageSquare, Search, GraduationCap, Globe, PlusCircle, Target,
-  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight,
+  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight, Newspaper, ExternalLink,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
