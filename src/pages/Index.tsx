@@ -52,6 +52,18 @@ const TIPS = [
   'Reach out to a current employee before you apply; referrals 4–10× your interview odds.',
 ];
 
+// Curated career news & trend sources — rotated daily so the dashboard
+// always shows something fresh and useful instead of duplicate launchers.
+const NEWS_FEED = [
+  { title: 'LinkedIn Workforce Report — hiring trends by industry', source: 'LinkedIn', tag: 'Hiring', url: 'https://economicgraph.linkedin.com/' },
+  { title: 'Top in-demand skills for 2026 (World Economic Forum)', source: 'WEF', tag: 'Skills', url: 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/' },
+  { title: 'Indeed Hiring Lab — wage growth & job postings tracker', source: 'Indeed', tag: 'Salaries', url: 'https://www.hiringlab.org/' },
+  { title: 'AI jobs surging across every sector (Harvard Business Review)', source: 'HBR', tag: 'AI', url: 'https://hbr.org/topic/subject/artificial-intelligence' },
+  { title: 'Remote vs hybrid: latest data from Stanford WFH Research', source: 'Stanford', tag: 'Remote', url: 'https://wfhresearch.com/' },
+  { title: 'Glassdoor Workplace Trends — what employees actually want', source: 'Glassdoor', tag: 'Culture', url: 'https://www.glassdoor.com/research/' },
+  { title: 'BLS Occupational Outlook — fastest-growing US jobs', source: 'BLS', tag: 'Outlook', url: 'https://www.bls.gov/ooh/fastest-growing.htm' },
+];
+
 const Index = () => {
   const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
