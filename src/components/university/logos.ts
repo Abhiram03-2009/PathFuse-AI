@@ -80,15 +80,22 @@ const NAME_TO_DOMAIN: Record<string, string> = {
 export function getUniversityLogo(name: string): string {
   const domain = NAME_TO_DOMAIN[name];
   if (domain) {
-    return `https://logo.clearbit.com/${domain}`;
+    // Google's favicon service is reliable, free, and works for every .edu site.
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
   }
-  // Last-resort: try inferring an .edu domain from the name
+  // Last-resort: infer an .edu domain
   const slug = name
     .toLowerCase()
     .replace(/university of |the |college|university|institute|of/g, '')
     .replace(/[^a-z]/g, '')
     .slice(0, 16);
-  return `https://logo.clearbit.com/${slug}.edu`;
+  return `https://www.google.com/s2/favicons?domain=${slug}.edu&sz=128`;
+}
+
+export function getClearbitLogo(name: string): string {
+  const domain = NAME_TO_DOMAIN[name];
+  if (domain) return `https://logo.clearbit.com/${domain}`;
+  return '';
 }
 
 export function getMonogramFallback(name: string): string {
@@ -100,3 +107,4 @@ export function getMonogramFallback(name: string): string {
     .join('');
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials || name)}&size=128&background=1e40af&color=fff&bold=true&format=svg`;
 }
+
