@@ -365,11 +365,13 @@ const JobAnalyzer = () => {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-start space-x-3">
                         <img 
-                          src={`https://logo.clearbit.com/${job.company.toLowerCase().replace(/\s+/g, '')}.com`}
+                          src={`https://www.google.com/s2/favicons?domain=${job.company.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=64`}
                           alt={job.company}
                           className="w-8 h-8 rounded-lg object-contain bg-white border"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${job.company}&size=32&background=random`;
+                            const img = e.target as HTMLImageElement;
+                            img.onerror = null;
+                            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&size=32&background=2563eb&color=fff&bold=true&format=svg`;
                           }}
                         />
                         <div>
@@ -392,8 +394,17 @@ const JobAnalyzer = () => {
                           <Button size="sm" variant="outline" onClick={() => saveJob(job)} disabled={isJobSaved(job)} className={`text-xs ${isJobSaved(job) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                             {isJobSaved(job) ? 'Saved' : 'Save Job'}
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => window.open(`https://${job.company.toLowerCase().replace(/\s+/g, '')}.com/careers`, '_blank')} className="text-xs">
-                            Careers Page
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const url = (job as any).jobUrl
+                                || `https://www.google.com/search?q=${encodeURIComponent(`${job.title} ${job.company} careers`)}`;
+                              window.open(url, '_blank', 'noopener,noreferrer');
+                            }}
+                            className="text-xs"
+                          >
+                            {(job as any).jobUrl ? 'View Listing' : 'Find Careers'}
                           </Button>
                         </div>
                       </div>
