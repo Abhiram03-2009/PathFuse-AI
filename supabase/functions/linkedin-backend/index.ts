@@ -197,8 +197,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('linkedin-backend error:', error);
-    return new Response(JSON.stringify({ error: (error as Error).message || 'Failed' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Return 200 with an error field so the client can surface the real message
+    // instead of the generic "non-2xx" from supabase.functions.invoke.
+    return new Response(JSON.stringify({ error: (error as Error).message || 'Failed to analyze profile' }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
