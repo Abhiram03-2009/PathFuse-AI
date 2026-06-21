@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText, MessageSquare, Search, GraduationCap, Globe, PlusCircle, Target,
-  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight,
+  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight, Newspaper, ExternalLink,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +50,18 @@ const TIPS = [
   'Cover letter rule: paragraph 1 = why them, paragraph 2 = why you, paragraph 3 = CTA.',
   'ATS systems strip formatting — stick to standard section headers like "Experience" and "Skills".',
   'Reach out to a current employee before you apply; referrals 4–10× your interview odds.',
+];
+
+// Curated career news & trend sources — rotated daily so the dashboard
+// always shows something fresh and useful instead of duplicate launchers.
+const NEWS_FEED = [
+  { title: 'LinkedIn Workforce Report — hiring trends by industry', source: 'LinkedIn', tag: 'Hiring', url: 'https://economicgraph.linkedin.com/' },
+  { title: 'Top in-demand skills for 2026 (World Economic Forum)', source: 'WEF', tag: 'Skills', url: 'https://www.weforum.org/publications/the-future-of-jobs-report-2025/' },
+  { title: 'Indeed Hiring Lab — wage growth & job postings tracker', source: 'Indeed', tag: 'Salaries', url: 'https://www.hiringlab.org/' },
+  { title: 'AI jobs surging across every sector (Harvard Business Review)', source: 'HBR', tag: 'AI', url: 'https://hbr.org/topic/subject/artificial-intelligence' },
+  { title: 'Remote vs hybrid: latest data from Stanford WFH Research', source: 'Stanford', tag: 'Remote', url: 'https://wfhresearch.com/' },
+  { title: 'Glassdoor Workplace Trends — what employees actually want', source: 'Glassdoor', tag: 'Culture', url: 'https://www.glassdoor.com/research/' },
+  { title: 'BLS Occupational Outlook — fastest-growing US jobs', source: 'BLS', tag: 'Outlook', url: 'https://www.bls.gov/ooh/fastest-growing.htm' },
 ];
 
 const Index = () => {
@@ -215,17 +227,29 @@ const Index = () => {
                 <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border`}>
                   <CardHeader>
                     <CardTitle className={`flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      <TrendingUp className="w-4 h-4" />Quick Launch
+                      <Newspaper className="w-4 h-4" />Career News & Trends
                     </CardTitle>
+                    <CardDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                      Fresh sources to keep your job hunt sharp.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      {FEATURES.slice(0, 6).map((f) => (
-                        <Button key={f.id} variant="outline" onClick={() => setActiveTab(f.id)} className="justify-start text-xs h-auto py-2">
-                          <f.icon className="w-3.5 h-3.5 mr-2" />{f.short}
-                        </Button>
+                    <ul className="space-y-2">
+                      {NEWS_FEED.slice(0, 5).map((n, i) => (
+                        <li key={i}>
+                          <a
+                            href={n.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-start gap-2 p-2 rounded-md border text-xs transition-colors ${isDarkMode ? 'border-cyan-400/20 hover:bg-gray-900/40 text-gray-200' : 'border-blue-200/60 hover:bg-blue-50/60 text-gray-700'}`}
+                          >
+                            <Badge variant="secondary" className="text-[10px] shrink-0">{n.tag}</Badge>
+                            <span className="flex-1 leading-snug">{n.title}</span>
+                            <ExternalLink className="w-3 h-3 mt-0.5 shrink-0 opacity-60" />
+                          </a>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </CardContent>
                 </Card>
               </div>

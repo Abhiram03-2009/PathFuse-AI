@@ -135,12 +135,6 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
                     <div className="whitespace-pre-wrap leading-relaxed text-justify">
                       {content}
                     </div>
-                    {type === 'cover-letter' && (
-                      <div className="mt-8 text-right">
-                        <p className="italic text-gray-600">Sincerely,</p>
-                        <p className="italic text-gray-600 mt-2">{content.split('\n')[0] || '[Your Name]'}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (
