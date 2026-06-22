@@ -1,6 +1,6 @@
 // Maps every supported university to its primary web domain so we can resolve
-// a reliable logo via Clearbit (free, no key). Falls back to a generated
-// monogram on error in the consuming component.
+// a reliable logo through Google's favicon service. The local SVG fallback
+// guarantees the UI still renders if a third-party image is blocked.
 
 const NAME_TO_DOMAIN: Record<string, string> = {
   'Harvard University': 'harvard.edu',
@@ -80,8 +80,7 @@ const NAME_TO_DOMAIN: Record<string, string> = {
 export function getUniversityLogo(name: string): string {
   const domain = NAME_TO_DOMAIN[name];
   if (domain) {
-    // Google's favicon service is reliable, free, and works for every .edu site.
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
   }
   // Last-resort: infer an .edu domain
   const slug = name
@@ -89,7 +88,7 @@ export function getUniversityLogo(name: string): string {
     .replace(/university of |the |college|university|institute|of/g, '')
     .replace(/[^a-z]/g, '')
     .slice(0, 16);
-  return `https://www.google.com/s2/favicons?domain=${slug}.edu&sz=128`;
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(`${slug}.edu`)}&sz=128`;
 }
 
 export function getClearbitLogo(name: string): string {
@@ -105,6 +104,8 @@ export function getMonogramFallback(name: string): string {
     .slice(0, 3)
     .map((w) => w[0])
     .join('');
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials || name)}&size=128&background=1e40af&color=fff&bold=true&format=svg`;
+  const label = initials || name.slice(0, 3).toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="${name}"><rect width="128" height="128" rx="20" fill="#1e40af"/><circle cx="64" cy="54" r="30" fill="#ffffff" opacity="0.12"/><path d="M20 92h88v10H20zM28 86h72L64 66 28 86z" fill="#ffffff" opacity="0.28"/><text x="64" y="60" text-anchor="middle" dominant-baseline="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#fff">${label}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
