@@ -81,6 +81,37 @@ const MultilingualTranslator = () => {
     const locale = SPEECH_LOCALE[languageCode] || languageCode;
     const langPrefix = locale.split('-')[0].toLowerCase();
 
+    const playGatewayAudio = async () => {
+      toast({ title: 'Loading audio…', description: `Generating ${getLanguageName(languageCode)} audio.` });
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text, language: languageCode, locale, voice: 'alloy' },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.audio) throw new Error('No audio returned');
+      const binary = atob(data.audio);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: data.mime || 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => URL.revokeObjectURL(url);
+      await audio.play();
+    };
+
+    // Hindi browser voices are often missing or silently fail in mobile webviews,
+    // so use the backend voice path directly for reliable sound.
+    if (languageCode === 'hi') {
+      try {
+        await playGatewayAudio();
+      } catch (e: any) {
+        console.error('Hindi TTS failed:', e);
+        toast({ title: 'Audio Unavailable', description: e.message || 'Could not play Hindi audio.', variant: 'destructive' });
+      }
+      return;
+    }
+
     // Try the browser first.
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -101,26 +132,23 @@ const MultilingualTranslator = () => {
         voices.find((v) => v.lang === locale) ||
         voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix));
       if (match) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = locale;
-        u.voice = match;
-        window.speechSynthesis.speak(u);
-        return;
+        const spoke = await new Promise<boolean>((resolve) => {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = locale;
+          u.voice = match;
+          u.onend = () => resolve(true);
+          u.onerror = () => resolve(false);
+          window.speechSynthesis.speak(u);
+          setTimeout(() => resolve(true), 800);
+        });
+        if (spoke) return;
       }
     }
 
     // Fallback: server-side TTS via Lovable AI (handles Hindi etc. when no
     // browser voice is installed for the language).
     try {
-      toast({ title: 'Loading audio…', description: `Generating ${getLanguageName(languageCode)} audio.` });
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text, voice: 'alloy' },
-      });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (!data?.audio) throw new Error('No audio returned');
-      const audio = new Audio(`data:${data.mime || 'audio/mpeg'};base64,${data.audio}`);
-      await audio.play();
+      await playGatewayAudio();
     } catch (e: any) {
       console.error('TTS fallback failed:', e);
       toast({ title: 'Audio Unavailable', description: e.message || 'Could not play audio.', variant: 'destructive' });
