@@ -1,55 +1,129 @@
-// LinkedIn profile analyzer - scrapes public LinkedIn profiles via Firecrawl
-// and structures them via Lovable AI Gateway. No mock data.
+// LinkedIn profile analyzer. Firecrawl no longer supports direct LinkedIn
+// scraping for many profiles, so this uses Firecrawl search snippets as a
+// reliable fallback and structures the real public data with Lovable AI.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
 
-const PROFILE_SCHEMA = {
-  type: 'object',
-  properties: {
-    name: { type: 'string' },
-    headline: { type: 'string' },
-    summary: { type: 'string' },
-    location: { type: 'string' },
-    experience: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          company: { type: 'string' },
-          duration: { type: 'string' },
-          description: { type: 'string' },
-        },
-      },
+function linkedInHandle(url: string) {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/\/in\/([^/?#]+)/i);
+    return decodeURIComponent(match?.[1] || '').replace(/-/g, ' ').trim();
+  } catch {
+    return '';
+  }
+}
+
+function normalizeFirecrawlResults(data: any): any[] {
+  const candidates = data?.data?.web || data?.web || data?.data || data?.results || [];
+  return Array.isArray(candidates) ? candidates.filter((r) => r?.url || r?.title || r?.description) : [];
+}
+
+async function firecrawlSearch(query: string, limit = 8) {
+  if (!FIRECRAWL_API_KEY) {
+    throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn analysis.');
+  }
+  const res = await fetch('https://api.firecrawl.dev/v2/search', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+      'Content-Type': 'application/json',
     },
-    education: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          school: { type: 'string' },
-          degree: { type: 'string' },
-          field: { type: 'string' },
-          year: { type: 'string' },
-        },
-      },
-    },
-    skills: { type: 'array', items: { type: 'string' } },
-  },
-  required: ['name', 'headline'],
-};
+    body: JSON.stringify({ query, limit }),
+  });
+
+  const raw = await res.text();
+  let data: any = null;
+  try { data = JSON.parse(raw); } catch {}
+  if (!res.ok) {
+    console.error('Firecrawl search failed:', res.status, raw.slice(0, 500));
+    if (res.status === 402) throw new Error('Firecrawl credits are exhausted. Please top up the Firecrawl plan.');
+    if (res.status === 401 || res.status === 403) throw new Error('Firecrawl credentials need to be reconnected.');
+    if (res.status === 429) throw new Error('Firecrawl rate limit reached. Please wait a moment and try again.');
+    throw new Error(data?.error || `Firecrawl search failed (${res.status}).`);
+  }
+  return normalizeFirecrawlResults(data);
+}
+
+async function structureProfile(source: string, url: string, sourceType: 'markdown' | 'search') {
+  if (!LOVABLE_API_KEY) {
+    throw new Error('AI gateway not configured. Cannot structure the LinkedIn profile.');
+  }
+
+  const ai = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        { role: 'system', content: 'Extract a structured LinkedIn profile from the provided public source text. Return STRICT JSON: {"name":string,"headline":string,"summary":string,"location":string,"experience":[{"title":string,"company":string,"duration":string,"description":string}],"education":[{"school":string,"degree":string,"field":string,"year":string}],"skills":[string]}. Use ONLY information present in the source. If a field is unknown use an empty string or []. Do not invent private details.' },
+        { role: 'user', content: `${sourceType === 'search' ? 'Public search snippets' : 'Public page markdown'} for ${url}:\n\n${source.slice(0, 24000)}` },
+      ],
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!ai.ok) {
+    const errTxt = await ai.text().catch(() => '');
+    console.error('AI gateway error:', ai.status, errTxt.slice(0, 300));
+    if (ai.status === 429) throw new Error('AI rate limit reached. Please try again in a moment.');
+    if (ai.status === 402) throw new Error('AI credits exhausted. Please add credits in workspace settings.');
+    throw new Error(`AI could not structure the profile (status ${ai.status}).`);
+  }
+
+  const aiData = await ai.json();
+  const content = aiData?.choices?.[0]?.message?.content || '{}';
+  const parsed = JSON.parse(content);
+  const fallbackName = linkedInHandle(url).replace(/\b\w/g, (m) => m.toUpperCase());
+  if (!parsed?.name && !fallbackName) throw new Error('No profile name found');
+  return {
+    name: parsed.name || fallbackName,
+    headline: parsed.headline || (sourceType === 'search' ? 'Public LinkedIn profile' : ''),
+    summary: parsed.summary || '',
+    location: parsed.location || '',
+    experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+    education: Array.isArray(parsed.education) ? parsed.education : [],
+    skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+    profileUrl: url,
+    sourceType,
+  };
+}
+
+async function profileFromSearch(url: string) {
+  const handle = linkedInHandle(url);
+  const readable = handle || url.replace(/^https?:\/\//, '');
+  const queries = [
+    `"${url}" LinkedIn profile`,
+    `site:linkedin.com/in "${readable}"`,
+    `${readable} LinkedIn profile experience education skills`,
+  ];
+  const results = (await Promise.all(queries.map((q) => firecrawlSearch(q, 6).catch(() => [])))).flat();
+  const unique = Array.from(new Map(results.map((r) => [r.url || `${r.title}-${r.description}`, r])).values()).slice(0, 12);
+  if (!unique.length) {
+    throw new Error('LinkedIn blocked direct scraping and no public search snippets were found. Try a more public profile URL.');
+  }
+  const source = unique.map((r, i) => [
+    `Result ${i + 1}`,
+    `Title: ${r.title || ''}`,
+    `URL: ${r.url || ''}`,
+    `Description: ${r.description || r.snippet || ''}`,
+    r.markdown ? `Content: ${String(r.markdown).slice(0, 1500)}` : '',
+  ].filter(Boolean).join('\n')).join('\n\n');
+  return structureProfile(source, url, 'search');
+}
 
 async function scrapeLinkedIn(url: string) {
-  if (!FIRECRAWL_API_KEY) {
-    throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn scraping.');
-  }
+  if (!FIRECRAWL_API_KEY) throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn analysis.');
 
   // Use markdown-only scrape — LinkedIn frequently blocks Firecrawl's
   // structured JSON extraction, while markdown succeeds far more often.
@@ -87,6 +161,8 @@ async function scrapeLinkedIn(url: string) {
 
   if (!res.ok) {
     console.error('Firecrawl scrape failed:', res.status, raw.slice(0, 500));
+    const unsupported = res.status === 403 && /do not support this site|unsupported|blocked/i.test(raw);
+    if (unsupported) return profileFromSearch(url);
     if (res.status === 402) throw new Error('Firecrawl credits are exhausted. Please top up the Firecrawl plan.');
     if (res.status === 401 || res.status === 403) throw new Error('Firecrawl rejected the request. Reconnect the Firecrawl integration.');
     if (res.status === 429) throw new Error('Firecrawl rate limit reached. Please wait a moment and try again.');
@@ -97,51 +173,14 @@ async function scrapeLinkedIn(url: string) {
   const markdown: string = payload?.markdown || payload?.data?.markdown || '';
 
   if (!markdown || markdown.length < 200) {
-    throw new Error('LinkedIn returned an empty/blocked page for this URL. Make sure the profile is public.');
+    return profileFromSearch(url);
   }
 
-  if (!LOVABLE_API_KEY) {
-    throw new Error('AI gateway not configured. Cannot structure the LinkedIn profile.');
-  }
-
-  const ai = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: 'Extract a structured LinkedIn profile from the markdown. Return STRICT JSON: {"name":string,"headline":string,"summary":string,"location":string,"experience":[{"title","company","duration","description"}],"education":[{"school","degree","field","year"}],"skills":[string]}. Use ONLY information present in the source. If a field is unknown use an empty string or [].' },
-        { role: 'user', content: markdown.slice(0, 24000) },
-      ],
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!ai.ok) {
-    const errTxt = await ai.text().catch(() => '');
-    console.error('AI gateway error:', ai.status, errTxt.slice(0, 300));
-    if (ai.status === 429) throw new Error('AI rate limit reached. Please try again in a moment.');
-    if (ai.status === 402) throw new Error('AI credits exhausted. Please add credits in workspace settings.');
-    throw new Error(`AI could not structure the profile (status ${ai.status}).`);
-  }
-
-  const aiData = await ai.json();
   try {
-    const parsed = JSON.parse(aiData.choices[0].message.content);
-    if (!parsed?.name) throw new Error('no name');
-    return {
-      name: parsed.name,
-      headline: parsed.headline || '',
-      summary: parsed.summary || '',
-      location: parsed.location || '',
-      experience: Array.isArray(parsed.experience) ? parsed.experience : [],
-      education: Array.isArray(parsed.education) ? parsed.education : [],
-      skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-      profileUrl: url,
-    };
+    return await structureProfile(markdown, url, 'markdown');
   } catch (e) {
     console.error('AI parse failed:', e);
-    throw new Error('Could not extract structured data from this profile. The page may be private or partially blocked.');
+    return profileFromSearch(url);
   }
 }
 
@@ -170,37 +209,31 @@ serve(async (req) => {
 
     if (action === 'analyze_profile') {
       if (!linkedInUrl || !String(linkedInUrl).includes('linkedin.com')) {
-        return new Response(JSON.stringify({ error: 'Valid LinkedIn URL required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return jsonResponse({ error: 'Valid LinkedIn URL required' }, 400);
       }
       const profile = await scrapeLinkedIn(linkedInUrl);
-      return new Response(JSON.stringify({ profile }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ profile });
     }
 
     if (action === 'generate_resume') {
-      if (!profileData) return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: corsHeaders });
+      if (!profileData) return jsonResponse({ error: 'Profile data required' }, 400);
       const exp = (profileData.experience || []).map((e: any) => `${e.title} at ${e.company} (${e.duration})\n${e.description || ''}`).join('\n\n');
       const edu = (profileData.education || []).map((e: any) => `${e.degree} in ${e.field || ''} - ${e.school} (${e.year || ''})`).join('\n');
       const resumeText = `${profileData.name}\n${profileData.headline}\n\nSUMMARY\n${profileData.summary || ''}\n\nEXPERIENCE\n${exp}\n\nEDUCATION\n${edu}\n\nSKILLS\n${(profileData.skills || []).join(' • ')}`;
-      return new Response(JSON.stringify({ resumeText }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ resumeText });
     }
 
     if (action === 'career_insights') {
-      if (!profileData) return new Response(JSON.stringify({ error: 'Profile data required' }), { status: 400, headers: corsHeaders });
+      if (!profileData) return jsonResponse({ error: 'Profile data required' }, 400);
       const analysis = await generateCareerInsights(profileData);
-      return new Response(JSON.stringify({ analysis }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return jsonResponse({ analysis });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonResponse({ error: 'Invalid action' }, 400);
   } catch (error) {
     console.error('linkedin-backend error:', error);
     // Return 200 with an error field so the client can surface the real message
     // instead of the generic "non-2xx" from supabase.functions.invoke.
-    return new Response(JSON.stringify({ error: (error as Error).message || 'Failed to analyze profile' }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: (error as Error).message || 'Failed to analyze profile' });
   }
 });
