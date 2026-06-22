@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Target } from 'lucide-react';
 import { topUniversities } from './constants';
+import { getUniversityLogo, getMonogramFallback } from './logos';
 
 interface UniversitySelectorProps {
   selectedUniversities: string[];
@@ -43,7 +44,21 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
               }`}
               onClick={() => onUniversityToggle(university.name)}
             >
-              <img src={university.logo} alt={university.name} className="w-8 h-8 mr-3 object-contain" />
+              <img
+                src={getUniversityLogo(university.name)}
+                alt={`${university.name} logo`}
+                loading="lazy"
+                className="w-8 h-8 mr-3 object-contain rounded bg-white p-1 border border-gray-200"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (university.logo && img.src !== university.logo) {
+                    img.src = university.logo;
+                    return;
+                  }
+                  img.onerror = null;
+                  img.src = getMonogramFallback(university.name);
+                }}
+              />
               <div>
                 <div className="font-medium">{university.name}</div>
                 <div className="text-xs opacity-70">
