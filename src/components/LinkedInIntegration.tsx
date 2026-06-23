@@ -240,13 +240,16 @@ const LinkedInIntegration = () => {
                 </div>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{profileData.headline}</p>
                 <div className="space-y-2">
-                  <h4 className={`font-medium flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}><Briefcase className="w-4 h-4 mr-2" />Experience</h4>
-                  {profileData.experience.slice(0, 2).map((exp, index) => (
-                    <div key={index} className={`text-sm pl-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      <div className="font-medium">{exp.title}</div>
-                      <div>{exp.company} • {exp.duration}</div>
-                    </div>
-                  ))}
+                  <h4 className={`font-medium flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}><Briefcase className="w-4 h-4 mr-2" />Experience ({profileData.experience.length})</h4>
+                  <div className="max-h-64 overflow-y-auto space-y-3 pr-2">
+                    {profileData.experience.map((exp, index) => (
+                      <div key={index} className={`text-sm pl-6 border-l-2 ${isDarkMode ? 'border-cyan-400/30 text-gray-300' : 'border-blue-300/50 text-gray-600'}`}>
+                        <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{exp.title}</div>
+                        <div className="text-xs">{exp.company} • {exp.duration}</div>
+                        {exp.description && <div className="text-xs mt-1 opacity-80 line-clamp-3">{exp.description}</div>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <h4 className={`font-medium flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}><GraduationCap className="w-4 h-4 mr-2" />Education</h4>

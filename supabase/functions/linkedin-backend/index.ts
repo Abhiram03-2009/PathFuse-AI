@@ -186,14 +186,47 @@ async function scrapeLinkedIn(url: string) {
 
 async function generateCareerInsights(profile: any) {
   if (!LOVABLE_API_KEY) return `Career analysis for ${profile.name} is unavailable (AI not configured).`;
+  const system = `You are a world-class executive career coach and talent strategist. Produce a deep, specific, evidence-based career analysis grounded ONLY in the provided profile. Use clear markdown with these exact section headings and order:
+
+# Career Snapshot
+2-3 sentence positioning statement. Identify current seniority level, domain, and unique angle.
+
+## Career Trajectory & Progression
+Walk through each role chronologically. For every experience entry, comment on scope change, promotion velocity, gaps, and pattern (specialist vs generalist, IC vs management, industry switches).
+
+## Core Strengths (Evidence-Based)
+Bullet 5-7 strengths. Each bullet: **Strength** — short justification citing a specific role, company, or skill from the profile.
+
+## Growth Areas & Risks
+Bullet 4-6 honest gaps (missing skills, short tenures, narrow domain, weak headline, missing summary, etc.) with how to address each.
+
+## Suggested Next Roles (3-5)
+Concrete role titles + target company archetype + why it fits + likely salary band (USD, regional if location known) + readiness (Ready now / 6-12 months / 1-2 yrs).
+
+## Best-Fit Industries (Top 3)
+Industry — rationale tied to the user's skills/experience — example companies hiring this profile.
+
+## Skill Gap Analysis
+Table-style markdown list: skills the next-level role demands that are missing, ranked by impact. Suggest a concrete learning resource type for each.
+
+## Profile Optimization Playbook
+Bullet 6+ specific rewrites: improved headline (give 2 options), summary hook, top-3 experience bullet rewrites using metrics, keyword additions for recruiter SEO, recommended skills to add/remove.
+
+## Personal Brand & Networking Moves
+3-5 tactical actions for the next 30/60/90 days (content to post, people to follow, communities to join, conferences/certs worth pursuing).
+
+## Long-Term Vision (3-5 yrs)
+Map a 3-5 year arc with two scenarios (e.g., management track vs deep IC) and the milestones for each.
+
+Rules: Be specific, never generic. Reference actual companies/titles/skills from the profile. If a field is empty, say so and recommend filling it. Never invent facts.`;
   const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are an expert career coach. Provide a comprehensive, specific career analysis: strengths, growth areas, suggested next roles, profile improvement tips, and 3 industries that fit best. Use markdown headings.' },
-        { role: 'user', content: `Analyze this LinkedIn profile:\n${JSON.stringify(profile, null, 2)}` },
+        { role: 'system', content: system },
+        { role: 'user', content: `Analyze this LinkedIn profile in depth:\n${JSON.stringify(profile, null, 2)}` },
       ],
     }),
   });
