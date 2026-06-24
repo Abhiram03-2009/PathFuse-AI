@@ -365,14 +365,14 @@ const JobAnalyzer = () => {
                   <div key={index} className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-900/30 border-cyan-400/20' : 'bg-blue-50/30 border-blue-300/30'}`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-start space-x-3">
-                        <img 
-                          src={`https://www.google.com/s2/favicons?domain=${job.company.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=64`}
+                        <img
+                          src={`https://www.google.com/s2/favicons?domain=${job.company.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=128`}
                           alt={job.company}
-                          className="w-8 h-8 rounded-lg object-contain bg-white border"
+                          className="w-10 h-10 rounded-lg object-cover bg-white border"
                           onError={(e) => {
                             const img = e.target as HTMLImageElement;
                             img.onerror = null;
-                            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&size=32&background=2563eb&color=fff&bold=true&format=svg`;
+                            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company)}&size=40&background=2563eb&color=fff&bold=true&format=svg`;
                           }}
                         />
                         <div>
