@@ -61,7 +61,7 @@ const UniversityResults: React.FC<UniversityResultsProps> = ({
                     src={getUniversityLogo(university.name)}
                     alt={`${university.name} logo`}
                     loading="lazy"
-                    className="w-16 h-16 object-contain rounded-lg bg-white p-2 border"
+                    className="w-16 h-16 object-cover rounded-lg bg-white border"
                     onError={(e) => {
                       const img = e.currentTarget;
                       // First fallback: previously bundled wiki URL (if any)

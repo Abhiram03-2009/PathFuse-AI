@@ -80,7 +80,7 @@ const NAME_TO_DOMAIN: Record<string, string> = {
 export function getUniversityLogo(name: string): string {
   const domain = NAME_TO_DOMAIN[name];
   if (domain) {
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
   }
   // Last-resort: infer an .edu domain
   const slug = name
@@ -88,7 +88,7 @@ export function getUniversityLogo(name: string): string {
     .replace(/university of |the |college|university|institute|of/g, '')
     .replace(/[^a-z]/g, '')
     .slice(0, 16);
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(`${slug}.edu`)}&sz=128`;
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(`${slug}.edu`)}&sz=256`;
 }
 
 export function getClearbitLogo(name: string): string {
