@@ -48,7 +48,7 @@ const UniversitySelector: React.FC<UniversitySelectorProps> = ({
                 src={getUniversityLogo(university.name)}
                 alt={`${university.name} logo`}
                 loading="lazy"
-                className="w-8 h-8 mr-3 object-contain rounded bg-white p-1 border border-gray-200"
+                className="w-8 h-8 mr-3 object-cover rounded bg-white border border-gray-200"
                 onError={(e) => {
                   const img = e.currentTarget;
                   if (university.logo && img.src !== university.logo) {
