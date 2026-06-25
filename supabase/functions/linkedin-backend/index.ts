@@ -68,7 +68,7 @@ async function structureProfile(source: string, url: string, sourceType: 'markdo
     body: JSON.stringify({
       model: 'google/gemini-3-flash-preview',
       messages: [
-        { role: 'system', content: 'Extract a structured LinkedIn profile from the provided public source text. Return STRICT JSON: {"name":string,"headline":string,"summary":string,"location":string,"experience":[{"title":string,"company":string,"duration":string,"description":string}],"education":[{"school":string,"degree":string,"field":string,"year":string}],"skills":[string]}. Use ONLY information present in the source. If a field is unknown use an empty string or []. Do not invent private details.' },
+        { role: 'system', content: 'Extract a COMPLETE structured LinkedIn profile from the provided public source text. Return STRICT JSON: {"name":string,"headline":string,"summary":string,"location":string,"experience":[{"title":string,"company":string,"duration":string,"description":string}],"education":[{"school":string,"degree":string,"field":string,"year":string}],"skills":[string]}. CRITICAL: Extract EVERY distinct job/role mentioned across ALL sources — do not deduplicate aggressively, do not stop at 2-3. If multiple sources mention the same person at different companies or roles, include each as a separate experience entry. Aim to capture the full career history visible in the snippets (often 5-15+ roles). Use ONLY information present in the source. If a field is unknown use an empty string or []. Do not invent private details.' },
         { role: 'user', content: `${sourceType === 'search' ? 'Public search snippets' : 'Public page markdown'} for ${url}:\n\n${source.slice(0, 24000)}` },
       ],
       response_format: { type: 'json_object' },
