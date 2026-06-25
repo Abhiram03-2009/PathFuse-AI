@@ -53,8 +53,8 @@ const Navbar = () => {
         <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
-            <div className={`relative ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl p-3 border neon-border`}>
-              <img src={pathFuseLogo} alt="Path Fuse AI Logo" className="w-12 h-12 object-fill" />
+            <div className={`relative w-14 h-14 ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl border neon-border overflow-hidden`}>
+              <img src={pathFuseLogo} alt="Path Fuse AI Logo" className="w-full h-full object-cover" />
             </div>
           </div>
           <div>
