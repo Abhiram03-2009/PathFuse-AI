@@ -29,17 +29,19 @@ function normalizeFirecrawlResults(data: any): any[] {
   return Array.isArray(candidates) ? candidates.filter((r) => r?.url || r?.title || r?.description) : [];
 }
 
-async function firecrawlSearch(query: string, limit = 8) {
+async function firecrawlSearch(query: string, limit = 8, scrape = false) {
   if (!FIRECRAWL_API_KEY) {
     throw new Error('Firecrawl is not connected. Connect the Firecrawl integration to enable LinkedIn analysis.');
   }
+  const body: any = { query, limit };
+  if (scrape) body.scrapeOptions = { formats: ['markdown'], onlyMainContent: true };
   const res = await fetch('https://api.firecrawl.dev/v2/search', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ query, limit }),
+    body: JSON.stringify(body),
   });
 
   const raw = await res.text();
@@ -102,13 +104,25 @@ async function structureProfile(source: string, url: string, sourceType: 'markdo
 async function profileFromSearch(url: string) {
   const handle = linkedInHandle(url);
   const readable = handle || url.replace(/^https?:\/\//, '');
-  const queries = [
-    `"${url}" LinkedIn profile`,
-    `site:linkedin.com/in "${readable}"`,
-    `${readable} LinkedIn profile experience education skills`,
+  // Deep search: scrape full markdown from top results so aggregator/mirror
+  // pages that list the full work history get captured (Firecrawl can't hit
+  // linkedin.com directly but Google often surfaces cached/mirror pages).
+  const deepQueries = [
+    `"${url}"`,
+    `site:linkedin.com/in "${readable}" experience`,
+    `"${readable}" linkedin experience positions career history`,
   ];
-  const results = (await Promise.all(queries.map((q) => firecrawlSearch(q, 6).catch(() => [])))).flat();
-  const unique = Array.from(new Map(results.map((r) => [r.url || `${r.title}-${r.description}`, r])).values()).slice(0, 12);
+  const snippetQueries = [
+    `"${readable}" linkedin education`,
+    `"${readable}" linkedin skills`,
+    `"${readable}" resume OR CV`,
+  ];
+  const [deep, snippets] = await Promise.all([
+    Promise.all(deepQueries.map((q) => firecrawlSearch(q, 5, true).catch(() => []))),
+    Promise.all(snippetQueries.map((q) => firecrawlSearch(q, 5, false).catch(() => []))),
+  ]);
+  const results = [...deep.flat(), ...snippets.flat()];
+  const unique = Array.from(new Map(results.map((r) => [r.url || `${r.title}-${r.description}`, r])).values()).slice(0, 20);
   if (!unique.length) {
     throw new Error('LinkedIn blocked direct scraping and no public search snippets were found. Try a more public profile URL.');
   }
@@ -117,7 +131,7 @@ async function profileFromSearch(url: string) {
     `Title: ${r.title || ''}`,
     `URL: ${r.url || ''}`,
     `Description: ${r.description || r.snippet || ''}`,
-    r.markdown ? `Content: ${String(r.markdown).slice(0, 1500)}` : '',
+    r.markdown ? `Content: ${String(r.markdown).slice(0, 4000)}` : '',
   ].filter(Boolean).join('\n')).join('\n\n');
   return structureProfile(source, url, 'search');
 }
