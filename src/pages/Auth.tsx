@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, UserPlus, LogIn, Apple } from 'lucide-react';
-import { lovable } from '@/integrations/lovable';
-import pathFuseLogo from '/public/lovable-uploads/2817281e-9731-4737-81c6-d08df8c7ed17.png';
+import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import pathFuseLogo from '@/assets/pathfuse-logo.png';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -33,18 +33,20 @@ const Auth = () => {
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setOauthLoading(provider);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: `${window.location.origin}/dashboard`,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
       });
-      if (result.error) {
+      if (error) {
         toast({
           title: 'Sign-in failed',
-          description: result.error.message || `Could not sign in with ${provider}.`,
+          description: error.message || `Could not sign in with ${provider}.`,
           variant: 'destructive',
         });
-      } else if (!result.redirected) {
-        navigate('/dashboard');
       }
+      // On success, Supabase redirects the browser — no further action needed here.
     } catch (err: any) {
       toast({ title: 'Error', description: err?.message || 'Unexpected error', variant: 'destructive' });
     } finally {
@@ -179,7 +181,10 @@ const Auth = () => {
                 disabled={!!oauthLoading}
                 className="w-full bg-black text-white hover:bg-gray-900 border border-gray-700 flex items-center justify-center gap-2"
               >
-                <Apple className="w-4 h-4" />
+                {/* Apple logo SVG — square viewBox, full logo visible */}
+                <svg className="w-4 h-4" viewBox="0 0 256 256" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M220.4 168.6c-4.6 10.1-6.8 14.6-12.7 23.5-8.2 12.5-19.8 28.1-34.2 28.2-12.8.1-16.1-8.3-33.5-8.2-17.4.1-21 8.4-33.8 8.3-14.4-.1-25.4-14.3-33.6-26.8-23-35-25.4-76.1-11.2-97.9 10-15.4 25.8-24.4 40.6-24.4 15.1 0 24.6 8.3 37.1 8.3 12.1 0 19.5-8.3 37-8.3 13.2 0 27.2 7.2 37.2 19.6-32.7 17.9-27.4 64.7 6.1 77.7zM165.4 45.2c6.4-8.2 11.3-19.8 9.5-31.6-10.3.7-22.4 7.3-29.5 15.8-6.4 7.7-11.8 19.4-9.7 30.8 11.3.4 23-6.2 29.7-15z"/>
+                </svg>
                 {oauthLoading === 'apple' ? 'Redirecting…' : 'Continue with Apple'}
               </Button>
             </div>

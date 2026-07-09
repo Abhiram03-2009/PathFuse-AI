@@ -81,14 +81,13 @@ const MultilingualTranslator = () => {
     const locale = SPEECH_LOCALE[languageCode] || languageCode;
     const langPrefix = locale.split('-')[0].toLowerCase();
 
-    const playGatewayAudio = async () => {
-      toast({ title: 'Loading audio…', description: `Generating ${getLanguageName(languageCode)} audio.` });
+    const playGatewayAudio = async (): Promise<boolean> => {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text, language: languageCode, locale, voice: 'alloy' },
+        body: { text, language: languageCode, locale },
       });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (!data?.audio) throw new Error('No audio returned');
+      if (error) return false;
+      if (data?.useBrowserTTS) return false; // edge fn says use browser
+      if (data?.error || !data?.audio) return false;
       const binary = atob(data.audio);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
@@ -98,18 +97,19 @@ const MultilingualTranslator = () => {
       audio.onended = () => URL.revokeObjectURL(url);
       audio.onerror = () => URL.revokeObjectURL(url);
       await audio.play();
+      return true;
     };
 
-    // Hindi browser voices are often missing or silently fail in mobile webviews,
-    // so use the backend voice path directly for reliable sound.
-    if (languageCode === 'hi') {
+    // For Hindi and other non-Latin scripts, try server-side Google TTS first.
+    const NON_LATIN_TTS = new Set(['hi', 'ar', 'ja', 'ko', 'zh', 'zh-TW', 'el', 'he', 'th', 'ta', 'te', 'bn', 'vi']);
+    if (NON_LATIN_TTS.has(languageCode)) {
+      toast({ title: 'Loading audio…', description: `Generating ${getLanguageName(languageCode)} audio.` });
       try {
-        await playGatewayAudio();
-      } catch (e: any) {
-        console.error('Hindi TTS failed:', e);
-        toast({ title: 'Audio Unavailable', description: e.message || 'Could not play Hindi audio.', variant: 'destructive' });
+        const played = await playGatewayAudio();
+        if (played) return;
+      } catch (e) {
+        console.warn('Server TTS failed, trying browser:', e);
       }
-      return;
     }
 
     // Try the browser first.
@@ -145,13 +145,13 @@ const MultilingualTranslator = () => {
       }
     }
 
-    // Fallback: server-side TTS via Lovable AI (handles Hindi etc. when no
-    // browser voice is installed for the language).
+    // Final fallback: server-side TTS for browser voice misses
     try {
-      await playGatewayAudio();
+      const played = await playGatewayAudio();
+      if (!played) toast({ title: 'Audio Unavailable', description: 'No voice found for this language.', variant: 'destructive' });
     } catch (e: any) {
       console.error('TTS fallback failed:', e);
-      toast({ title: 'Audio Unavailable', description: e.message || 'Could not play audio.', variant: 'destructive' });
+      toast({ title: 'Audio Unavailable', description: 'Could not play audio.', variant: 'destructive' });
     }
   };
 
