@@ -23,3 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Supabase CLI
+supabase/.temp
+
+# Capacitor / iOS
+ios/App/Pods
+ios/App/build
+ios/App/output
+ios/App/*.xcuserstate
+**/xcuserdata/
+DerivedData
+*.ipa
