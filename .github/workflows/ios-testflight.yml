@@ -1,0 +1,101 @@
+name: iOS Build & TestFlight
+
+# Runs when you manually trigger it from the Actions tab, or when you push a
+# version tag like v1.0.0. It does NOT run on every push to main, so normal
+# web/edge-function commits won't burn Apple build numbers.
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-upload:
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    env:
+      SCHEME: App
+      WORKSPACE: ios/App/App.xcworkspace
+      BUNDLE_ID: com.pathfuseai.app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor iOS project
+        run: npx cap sync ios
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.P12_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          PROFILE_DIR=~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p "$PROFILE_DIR"
+          echo -n "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode -o profile.mobileprovision
+
+          # Extract the UUID and name so the build step can reference the
+          # profile without needing to hardcode/guess its display name.
+          PROFILE_PLIST=$(security cms -D -i profile.mobileprovision)
+          PROFILE_UUID=$(echo "$PROFILE_PLIST" | plutil -extract UUID raw -)
+          PROFILE_NAME=$(echo "$PROFILE_PLIST" | plutil -extract Name raw -)
+
+          cp profile.mobileprovision "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+
+      - name: Write ExportOptions.plist
+        run: |
+          plutil -replace teamID -string "${{ secrets.APPLE_TEAM_ID }}" ios/ExportOptions.plist
+          plutil -insert provisioningProfiles -xml \
+            "<dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>" \
+            ios/ExportOptions.plist
+
+      - name: Archive
+        run: |
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$PWD/build/App.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            clean archive
+
+      - name: Export .ipa
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$PWD/build/App.xcarchive" \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath "$PWD/build"
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/App.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
