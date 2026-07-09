@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp, type URLOpenListenerEvent } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
@@ -81,15 +84,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id);
       }
-      
+
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // On native iOS/Android, OAuth completes in an in-app browser (see
+    // signInWithOAuthNative below) and Supabase redirects back to this app
+    // via a custom URL scheme instead of a normal web redirect. Catch that
+    // redirect here and exchange the PKCE code it carries for a session.
+    let urlListenerHandle: { remove: () => void } | undefined;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appUrlOpen', async ({ url }: URLOpenListenerEvent) => {
+        if (!url.includes('auth/callback')) return;
+
+        await Browser.close().catch(() => {});
+
+        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) {
+          console.error('Error exchanging OAuth code for session:', error);
+        }
+      }).then((handle) => {
+        urlListenerHandle = handle;
+      });
+    }
+
+    return () => {
+      subscription.unsubscribe();
+      urlListenerHandle?.remove();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
