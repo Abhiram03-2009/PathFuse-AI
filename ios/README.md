@@ -86,13 +86,18 @@ npm run ios:sync   # builds the web app and copies it into ios/
 npm run ios:open   # opens the project in Xcode
 ```
 
-## Known limitation: OAuth sign-in inside the native app
+## Required: add the native redirect URL in Supabase
 
-`Auth.tsx` currently calls `supabase.auth.signInWithOAuth` with
-`redirectTo: window.location.origin`, which assumes a normal web origin. Inside
-the Capacitor WKWebView, `window.location.origin` won't be a URL Supabase can
-redirect back to, so **Google/Apple sign-in will not complete correctly in the
-TestFlight build** until this is wired up for native deep-linking (typically
-`@capacitor/browser` + `@capacitor/app` + a custom URL scheme or associated
-domain, plus adding that redirect URL in the Supabase Auth settings). Email/password
+Native Google/Apple sign-in opens an in-app browser and Supabase redirects back
+to the app via the custom URL scheme `com.pathfuseai.app://auth/callback`
+(registered in `ios/App/App/Info.plist`, handled in `src/contexts/AuthContext.tsx`
++ `src/lib/nativeAuth.ts`). For this to work, add that exact URL to:
+
+**Supabase dashboard → Authentication → URL Configuration → Redirect URLs** →
+add `com.pathfuseai.app://auth/callback`
+
+Email/password sign-in doesn't use a redirect and is unaffected either way.
+
+Without this, Supabase will reject the OAuth redirect and sign-in will fail
+silently or show an error page in the in-app browser. Email/password sign-in
 sign-in is unaffected. Flag if you want this built out next.

@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { signInWithOAuthNative } from '@/lib/nativeAuth';
 import pathFuseLogo from '@/assets/pathfuse-logo.png';
 
 const Auth = () => {
@@ -33,12 +35,14 @@ const Auth = () => {
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setOauthLoading(provider);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      const { error } = Capacitor.isNativePlatform()
+        ? await signInWithOAuthNative(provider)
+        : await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+              redirectTo: `${window.location.origin}/dashboard`,
+            },
+          });
       if (error) {
         toast({
           title: 'Sign-in failed',
