@@ -27,11 +27,5 @@ dist-ssr
 # Supabase CLI
 supabase/.temp
 
-# Capacitor / iOS
-ios/App/Pods
-ios/App/build
-ios/App/output
-ios/App/*.xcuserstate
-**/xcuserdata/
-DerivedData
+# Capacitor / iOS (ios/ has its own .gitignore for Xcode-specific artifacts)
 *.ipa
