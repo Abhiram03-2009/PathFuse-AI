@@ -28,7 +28,7 @@ const Navbar = () => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
-  return <nav className={`${isDarkMode ? 'bg-gradient-to-r from-slate-900 via-gray-900 to-slate-800 border-cyan-400/20' : 'bg-gradient-to-r from-white via-blue-50 to-indigo-50 border-blue-300/40'} border-b px-4 py-3 relative overflow-hidden transition-all duration-300`}>
+  return <nav className={`${isDarkMode ? 'bg-gradient-to-r from-slate-900 via-gray-900 to-slate-800 border-cyan-400/20' : 'bg-gradient-to-r from-white via-blue-50 to-indigo-50 border-blue-300/40'} border-b px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] relative overflow-hidden transition-all duration-300`}>
       {/* Animated background elements with enhanced neon bubbles */}
       <div className="absolute inset-0 overflow-hidden">
         <div className={`absolute -top-4 -left-4 w-72 h-72 ${isDarkMode ? 'bg-cyan-400/8' : 'bg-cyan-400/12'} rounded-full animate-float`}></div>

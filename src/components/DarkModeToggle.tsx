@@ -12,7 +12,7 @@ const DarkModeToggle = () => {
       onClick={toggleDarkMode}
       variant="outline"
       size="sm"
-      className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+      className="fixed top-[calc(1rem+env(safe-area-inset-top))] right-[calc(1rem+env(safe-area-inset-right))] z-50 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
     >
       {isDarkMode ? (
         <Sun className="w-4 h-4" />
