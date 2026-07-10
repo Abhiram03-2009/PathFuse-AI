@@ -16,9 +16,9 @@ jobs:
 
     env:
       SCHEME: App
-      # Capacitor's default template uses Swift Package Manager (no Podfile),
-      # so there's no separate App.xcworkspace - build the .xcodeproj directly.
-      XCODEPROJ: ios/App/App.xcodeproj
+      # CocoaPods (not SPM) - see ios/README.md for why. pod install generates
+      # this workspace; it's what actually needs to be built, not the .xcodeproj.
+      WORKSPACE: ios/App/App.xcworkspace
       BUNDLE_ID: com.pathfuseai.app
 
     steps:
@@ -75,7 +75,7 @@ jobs:
 
       - name: Archive
         run: |
-          xcodebuild -project "$XCODEPROJ" \
+          xcodebuild -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
             -destination "generic/platform=iOS" \
