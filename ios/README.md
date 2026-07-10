@@ -64,6 +64,15 @@ In the GitHub repo → **Settings** → **Secrets and variables** → **Actions*
 | `APP_STORE_CONNECT_ISSUER_ID` | From step 3 |
 | `APP_STORE_CONNECT_KEY_ID` | From step 3 |
 | `APP_STORE_CONNECT_API_KEY` | Paste the **raw contents** of the `.p8` file (open it in a text editor and copy everything, including the `-----BEGIN PRIVATE KEY-----` lines) |
+| `VITE_SUPABASE_URL` | Your Supabase project URL (same value as in your local `.env`) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon/publishable key (same value as in your local `.env`) |
+
+The last two are required - without them, the "Build web app" step compiles
+against a placeholder Supabase URL (see `src/integrations/supabase/client.ts`),
+and every backend feature (sign-in, chatbot, translator, resume analyzer,
+LinkedIn scraper) fails at runtime with a generic network/"Load failed" error
+even though the build itself succeeds. `.env` is gitignored on purpose (it's
+per-developer), so CI never sees it unless these two are set as secrets.
 
 PowerShell one-liner for base64-encoding a file on Windows:
 
