@@ -6,6 +6,13 @@ runner and uploads the result straight to TestFlight — you don't need a Mac.
 
 Bundle ID: `com.pathfuseai.app`
 
+This project uses **CocoaPods**, not Swift Package Manager, to manage the
+native Capacitor dependencies. Capacitor 8.x's official plugins currently fail
+to compile under SPM ([ionic-team/capacitor#8333](https://github.com/ionic-team/capacitor/issues/8333) —
+core APIs are gated behind an experimental Swift flag that's off by default).
+CocoaPods doesn't hit that bug, so `ios/App/Podfile` + `App.xcworkspace` is
+what actually gets built, not `App.xcodeproj` directly.
+
 ## 1. One-time Apple Developer Portal setup
 
 1. Go to [developer.apple.com/account/resources/identifiers](https://developer.apple.com/account/resources/identifiers/list) → **Identifiers** → **+** → **App IDs** → **App**.
@@ -14,9 +21,18 @@ Bundle ID: `com.pathfuseai.app`
    - Leave capabilities as default unless you add push notifications/etc. later.
 2. **Certificates** → **+** → **Apple Distribution** (under "Software").
    - On a Mac: open Keychain Access → Certificate Assistant → Request a Certificate from a Certificate Authority, save the `.certSigningRequest`, upload it here, download the resulting `.cer`, double-click to install it into your keychain.
-   - No Mac available? You can generate the CSR from any OpenSSL install — ask if you want that walkthrough instead.
-3. In Keychain Access, find the new "Apple Distribution: ..." certificate, right-click → **Export** → save as `Certificates.p12` with a password you'll remember (this becomes `P12_PASSWORD`).
-4. **Profiles** → **+** → **App Store Connect** (distribution) → select the `com.pathfuseai.app` App ID → select your distribution certificate → name it (e.g. "PathFuse AI App Store") → download the `.mobileprovision` file.
+   - No Mac available? Generate the CSR with OpenSSL instead:
+     ```sh
+     openssl genrsa -out ios_distribution.key 2048
+     MSYS_NO_PATHCONV=1 openssl req -new -key ios_distribution.key -out ios_distribution.csr -subj "/emailAddress=you@example.com/CN=Your Name/C=US"
+     ```
+     Upload the `.csr`, download the resulting `.cer`, then combine it with your key:
+     ```sh
+     openssl x509 -inform DER -in distribution.cer -out distribution.pem -outform PEM
+     MSYS_NO_PATHCONV=1 openssl pkcs12 -export -legacy -inkey ios_distribution.key -in distribution.pem -out Certificates.p12 -name "Distribution" -passout pass:"YOUR_P12_PASSWORD"
+     ```
+3. If you exported from Keychain Access instead, that `.p12` is what becomes `BUILD_CERTIFICATE_BASE64`.
+4. **Profiles** → **+** → **App Store Connect** (distribution) → select the `com.pathfuseai.app` App ID → select your distribution certificate (must match the one from step 2/3 — if you regenerate the certificate later, you must also regenerate the profile so it lists the new certificate) → name it (e.g. "PathFuse AI Provisioning Profile") → download the `.mobileprovision` file.
 
 ## 2. Create the app record in App Store Connect
 
@@ -24,7 +40,7 @@ Bundle ID: `com.pathfuseai.app`
    - Platform: iOS
    - Name: `PathFuse AI` (must be unique across the App Store — pick an alternate if taken)
    - Primary language, Bundle ID: pick `com.pathfuseai.app` from the dropdown (it appears after step 1.1)
-   - SKU: anything unique, e.g. `pathfuseai-ios`
+   - SKU: any unique-to-your-account string, e.g. `pathfuseai-ios` — internal only, never shown to users
 2. You don't need to fill in store listing details yet — that's only required before you submit for public App Store review. TestFlight builds can go out before that's finished.
 
 ## 3. Create an App Store Connect API key (used by CI to upload builds)
@@ -55,6 +71,11 @@ PowerShell one-liner for base64-encoding a file on Windows:
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\to\file")) | Set-Clipboard
 ```
 
+If you ever regenerate the certificate or provisioning profile, re-encode and
+overwrite the corresponding secret — a profile only recognizes whichever
+certificate(s) were selected when it was created, so a mismatch here shows up
+as an "doesn't include signing certificate" archive failure.
+
 ## 5. Run the workflow
 
 The workflow (`.github/workflows/ios-testflight.yml`) runs when you either:
@@ -62,10 +83,11 @@ The workflow (`.github/workflows/ios-testflight.yml`) runs when you either:
 - Go to the **Actions** tab → **iOS Build & TestFlight** → **Run workflow**, or
 - Push a git tag matching `v*.*.*`, e.g. `git tag v1.0.0 && git push origin v1.0.0`
 
-It builds the web app, syncs it into the Capacitor iOS project, signs it with your
-distribution certificate + provisioning profile, archives it, and uploads it to
-App Store Connect. Processing usually takes 5-15 minutes after upload before the
-build shows up in TestFlight (Apple does automated compliance scanning).
+It builds the web app, syncs it into the Capacitor iOS project (which also
+runs `pod install` on the runner), signs it with your distribution certificate
++ provisioning profile, archives it, and uploads it to App Store Connect.
+Processing usually takes 5-15 minutes after upload before the build shows up
+in TestFlight (Apple does automated compliance scanning).
 
 ## 6. Install it on your iPhone via TestFlight
 
@@ -79,12 +101,17 @@ build shows up in TestFlight (Apple does automated compliance scanning).
 5. Every time you re-run the workflow (new tag or manual dispatch), a new build
    number ships and TestFlight will prompt you to update.
 
-## Local development (optional, requires a Mac + Xcode)
+## Local development (optional, requires a Mac + Xcode + CocoaPods)
 
 ```sh
-npm run ios:sync   # builds the web app and copies it into ios/
+npm run ios:sync   # builds the web app, copies it into ios/, runs pod install
 npm run ios:open   # opens the project in Xcode
 ```
+
+If you don't have CocoaPods installed locally (`gem install cocoapods` or
+`brew install cocoapods`), `ios:sync` will skip the pod install step with a
+warning — that's fine on Windows/Linux where you're only editing source, but
+you need it on a Mac before opening `App.xcworkspace` in Xcode.
 
 ## Required: add the native redirect URL in Supabase
 
@@ -96,8 +123,6 @@ to the app via the custom URL scheme `com.pathfuseai.app://auth/callback`
 **Supabase dashboard → Authentication → URL Configuration → Redirect URLs** →
 add `com.pathfuseai.app://auth/callback`
 
-Email/password sign-in doesn't use a redirect and is unaffected either way.
-
 Without this, Supabase will reject the OAuth redirect and sign-in will fail
 silently or show an error page in the in-app browser. Email/password sign-in
-sign-in is unaffected. Flag if you want this built out next.
+doesn't use a redirect and is unaffected either way.
