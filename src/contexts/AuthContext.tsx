@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp, type URLOpenListenerEvent } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface Profile {
   id: string;
@@ -103,9 +104,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         await Browser.close().catch(() => {});
 
+        // The provider (or Supabase itself) can redirect back with an error
+        // instead of a code - e.g. misconfigured OAuth credentials on the
+        // Supabase/provider side. Surface it instead of failing silently,
+        // since there's no way to see console.error output on a TestFlight
+        // build without a Mac attached.
+        const params = new URL(url).searchParams;
+        const callbackError = params.get('error_description') || params.get('error');
+        if (callbackError) {
+          console.error('OAuth callback returned an error:', callbackError);
+          toast({
+            title: 'Sign-in failed',
+            description: callbackError,
+            variant: 'destructive',
+          });
+          return;
+        }
+
         const { error } = await supabase.auth.exchangeCodeForSession(url);
         if (error) {
           console.error('Error exchanging OAuth code for session:', error);
+          toast({
+            title: 'Sign-in failed',
+            description: error.message,
+            variant: 'destructive',
+          });
         }
       }).then((handle) => {
         urlListenerHandle = handle;

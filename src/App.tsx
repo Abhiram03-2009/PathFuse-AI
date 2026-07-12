@@ -23,13 +23,13 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <DarkModeToggle />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
+                  <DarkModeToggle />
                   <Navbar />
                   <Index />
                 </ProtectedRoute>
