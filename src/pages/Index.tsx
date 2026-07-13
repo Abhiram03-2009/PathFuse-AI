@@ -8,6 +8,7 @@ import {
   BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight, Newspaper, ExternalLink,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 import ResumeGenerator from '@/components/ResumeGenerator';
@@ -66,6 +67,7 @@ const NEWS_FEED = [
 
 const Index = () => {
   const { isDarkMode } = useTheme();
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activity, setActivity] = useState<Activity[]>([]);
   const [stats, setStats] = useState({ jobs: 0, colleges: 0, resumes: 0, letters: 0, linkedin: 0, keywords: 0 });
@@ -121,19 +123,21 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-10">
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker mb-3">PathFuse AI</h1>
+          <h1 className={`text-3xl md:text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
+          </h1>
           <p className={`text-lg ${isDarkMode ? 'text-cyan-300' : 'text-blue-600'}`}>Your AI Career Assistant</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className={`${isDarkMode ? 'bg-gray-800/30 border-cyan-400/30' : 'bg-white/50 border-blue-300/50'} backdrop-blur-lg rounded-2xl p-4 border`}>
-            <TabsList className="grid grid-cols-5 lg:grid-cols-10 gap-2 h-auto bg-transparent">
-              <TabsTrigger value="dashboard" className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} p-2 rounded-lg border border-transparent transition-all`}>
-                <div className="flex flex-col items-center space-y-1"><BarChart3 className="w-4 h-4" /><span className="text-xs">Home</span></div>
+          <div className={`${isDarkMode ? 'bg-gray-800/30 border-cyan-400/30' : 'bg-white/50 border-blue-300/50'} backdrop-blur-lg rounded-2xl p-2 border`}>
+            <TabsList className="flex items-center gap-1.5 h-auto bg-transparent overflow-x-auto scrollbar-hide -mx-1 px-1">
+              <TabsTrigger value="dashboard" className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
+                <div className="flex flex-row items-center gap-1.5 whitespace-nowrap"><BarChart3 className="w-4 h-4" /><span className="text-xs font-medium">Home</span></div>
               </TabsTrigger>
               {FEATURES.map((f) => (
-                <TabsTrigger key={f.id} value={f.id} className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} p-2 rounded-lg border border-transparent transition-all`}>
-                  <div className="flex flex-col items-center space-y-1"><f.icon className="w-4 h-4" /><span className="text-xs">{f.short}</span></div>
+                <TabsTrigger key={f.id} value={f.id} className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
+                  <div className="flex flex-row items-center gap-1.5 whitespace-nowrap"><f.icon className="w-4 h-4" /><span className="text-xs font-medium">{f.short}</span></div>
                 </TabsTrigger>
               ))}
             </TabsList>
