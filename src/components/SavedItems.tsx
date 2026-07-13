@@ -71,8 +71,8 @@ const SavedItems = () => {
   };
 
   const cardBg = isDarkMode
-    ? 'bg-gray-800/40 border-cyan-400/20 backdrop-blur-lg'
-    : 'bg-white/70 border-blue-300/40 backdrop-blur-lg';
+    ? 'bg-gray-800/40 border-cyan-400/20 backdrop-blur-lg neon-border'
+    : 'bg-white/70 border-blue-300/40 backdrop-blur-lg neon-border';
   const textPrimary = isDarkMode ? 'text-white' : 'text-gray-900';
   const textSecondary = isDarkMode ? 'text-gray-300' : 'text-gray-600';
   const textMuted = isDarkMode ? 'text-gray-400' : 'text-gray-500';
@@ -237,8 +237,24 @@ const SavedItems = () => {
                   <h3 className={`font-semibold text-sm ${textPrimary}`}>{k.job_title || 'Job description'}</h3>
                   <Badge className="mt-1 bg-purple-500/20 text-purple-300 border border-purple-400/30">{Math.round(k.overall_match || 0)}% Match</Badge>
                   <p className={`text-xs ${textMuted} mt-2`}>
-                    {(k.missing_keywords as string[] | null)?.slice(0, 5).join(', ') || 'No missing keywords'}
+                    Missing: {(k.missing_keywords as string[] | null)?.slice(0, 5).join(', ') || 'none'}
                   </p>
+                  {(k.job_description || k.resume_text) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`w-full mt-2 ${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}
+                      onClick={() => setViewing({
+                        title: k.job_title || 'Keyword analysis',
+                        content: [
+                          k.job_description ? `JOB DESCRIPTION\n\n${k.job_description}` : '',
+                          k.resume_text ? `RESUME / EXPERIENCE\n\n${k.resume_text}` : '',
+                        ].filter(Boolean).join('\n\n---\n\n'),
+                      })}
+                    >
+                      <Eye className="w-3 h-3 mr-2" />View job description & resume
+                    </Button>
+                  )}
                   <Stamp d={k.created_at} />
                 </TileShell>
               ))}

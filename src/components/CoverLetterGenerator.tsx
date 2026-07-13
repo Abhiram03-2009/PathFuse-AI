@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { FileText, Sparkles, Download, Copy, Eye, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -36,6 +37,7 @@ const CoverLetterGenerator = () => {
   
   const [generatedLetter, setGeneratedLetter] = useCachedState<string>('cl:letter', '');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -65,9 +67,12 @@ const CoverLetterGenerator = () => {
 
   const generateCoverLetter = async () => {
     setIsGenerating(true);
+    setGenerateProgress(0);
+    const progressInterval = setInterval(() => setGenerateProgress((p) => Math.min(p + 100 / 20, 100)), 100);
 
     // Enhanced AI generation with better templates
     setTimeout(() => {
+      clearInterval(progressInterval);
       const date = new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
@@ -338,6 +343,7 @@ ${personalInfo.name || '[Your Name]'}`;
                 </>
               )}
             </Button>
+            {isGenerating && <Progress value={generateProgress} className="h-1.5" />}
           </CardContent>
         </Card>
         </div>

@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       profiles: {
@@ -132,10 +157,12 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          job_description: string | null
           job_title: string | null
           matched_keywords: Json | null
           missing_keywords: Json | null
           overall_match: number | null
+          resume_text: string | null
           suggestions: Json | null
           updated_at: string
           user_id: string
@@ -143,10 +170,12 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          job_description?: string | null
           job_title?: string | null
           matched_keywords?: Json | null
           missing_keywords?: Json | null
           overall_match?: number | null
+          resume_text?: string | null
           suggestions?: Json | null
           updated_at?: string
           user_id: string
@@ -154,10 +183,12 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          job_description?: string | null
           job_title?: string | null
           matched_keywords?: Json | null
           missing_keywords?: Json | null
           overall_match?: number | null
+          resume_text?: string | null
           suggestions?: Json | null
           updated_at?: string
           user_id?: string
@@ -361,6 +392,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
