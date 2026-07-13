@@ -162,13 +162,13 @@ const AIChatbot = () => {
                       </div>
                     )}
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      className={`max-w-[80%] sm:max-w-md min-w-0 px-4 py-2 rounded-lg ${
                         message.sender === 'user'
                           ? 'bg-blue-600 text-white'
                           : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                       <p className={`text-xs mt-1 ${
                         message.sender === 'user' ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
                       }`}>

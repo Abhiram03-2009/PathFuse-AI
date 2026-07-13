@@ -141,7 +141,7 @@ const Auth = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow"></div>
                 <div className="relative w-16 h-16 bg-gray-800/60 backdrop-blur-lg rounded-xl border border-cyan-400/30 neon-border overflow-hidden">
-                  <img src={pathFuseLogo} alt="PathFuse AI logo" className="w-full h-full object-contain p-2" />
+                  <img src={pathFuseLogo} alt="PathFuse AI logo" className="w-full h-full object-cover" />
                 </div>
               </div>
               <div>
