@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Linkedin, Upload, Download, Sparkles, User, Briefcase, GraduationCap, ExternalLink, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -37,6 +38,28 @@ const LinkedInIntegration = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeText, setResumeText] = useCachedState<string>('li:resume', '');
   const [analysisResult, setAnalysisResult] = useCachedState<string>('li:analysis', '');
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [insightsProgress, setInsightsProgress] = useState(0);
+
+  // There's no real progress to report from a single request/response call,
+  // but a static spinner with no sense of how long this takes reads as
+  // "did anything happen?" - this fakes a steadily-advancing bar that
+  // never quite reaches 100% until the response actually comes back.
+  const runWithProgress = async <T,>(task: () => Promise<T>): Promise<T> => {
+    setIsGeneratingInsights(true);
+    setInsightsProgress(0);
+    const interval = setInterval(() => {
+      setInsightsProgress((p) => (p >= 90 ? p : p + (90 - p) * 0.15));
+    }, 300);
+    try {
+      const result = await task();
+      setInsightsProgress(100);
+      return result;
+    } finally {
+      clearInterval(interval);
+      setTimeout(() => setIsGeneratingInsights(false), 400);
+    }
+  };
 
   const saveReport = async () => {
     const content = resumeText || analysisResult;
@@ -143,13 +166,15 @@ const LinkedInIntegration = () => {
   const generateOptimizedResume = async () => {
     if (!profileData) return;
     try {
-      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
-        body: { action: 'generate_resume', profileData }
+      await runWithProgress(async () => {
+        const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+          body: { action: 'generate_resume', profileData }
+        });
+        if (error) throw new Error(error.message || 'Failed to generate resume');
+        if (!data || !data.resumeText) throw new Error('No resume text received');
+        setResumeText(data.resumeText);
+        setAnalysisResult('');
       });
-      if (error) throw new Error(error.message || 'Failed to generate resume');
-      if (!data || !data.resumeText) throw new Error('No resume text received');
-      setResumeText(data.resumeText);
-      setAnalysisResult('');
       toast({
         title: "Resume Generated!",
         description: `Professional resume generated from ${profileData.name}'s LinkedIn profile.`
@@ -167,13 +192,15 @@ const LinkedInIntegration = () => {
   const analyzeProfileStrengths = async () => {
     if (!profileData) return;
     try {
-      const { data, error } = await supabase.functions.invoke('linkedin-backend', {
-        body: { action: 'career_insights', profileData }
+      await runWithProgress(async () => {
+        const { data, error } = await supabase.functions.invoke('linkedin-backend', {
+          body: { action: 'career_insights', profileData }
+        });
+        if (error) throw new Error(error.message || 'Failed to generate insights');
+        if (!data || !data.analysis) throw new Error('No analysis received');
+        setAnalysisResult(data.analysis);
+        setResumeText('');
       });
-      if (error) throw new Error(error.message || 'Failed to generate insights');
-      if (!data || !data.analysis) throw new Error('No analysis received');
-      setAnalysisResult(data.analysis);
-      setResumeText('');
       toast({
         title: "Analysis Complete!",
         description: `Comprehensive career analysis completed for ${profileData.name}.`
@@ -270,13 +297,22 @@ const LinkedInIntegration = () => {
                   </div>
                 </div>
                 <div className="flex space-x-2 pt-2">
-                  <Button onClick={analyzeProfileStrengths} size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                  <Button onClick={analyzeProfileStrengths} disabled={isGeneratingInsights} size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                     <Sparkles className="w-4 h-4 mr-2" />Career Analysis
                   </Button>
-                  <Button onClick={generateOptimizedResume} size="sm" variant="outline" className={`${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}>
+                  <Button onClick={generateOptimizedResume} disabled={isGeneratingInsights} size="sm" variant="outline" className={`${isDarkMode ? 'border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/10' : 'border-blue-300/50 text-blue-600 hover:bg-blue-400/10'}`}>
                     <Download className="w-4 h-4 mr-2" />Generate Resume
                   </Button>
                 </div>
+                {isGeneratingInsights && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className={`flex items-center justify-between text-xs ${isDarkMode ? 'text-cyan-300' : 'text-blue-600'}`}>
+                      <span>Analyzing with AI…</span>
+                      <span>{Math.round(insightsProgress)}%</span>
+                    </div>
+                    <Progress value={insightsProgress} className="h-1.5" />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

@@ -4,6 +4,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Download, FileText, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+
+// A normal <a download> click is a no-op in Capacitor's WKWebView - there's
+// no browser download manager to catch it. On native, write the file to the
+// cache dir instead and hand it to the OS share sheet (Save to Files,
+// AirDrop, Mail, etc.) so exporting actually does something on a phone.
+// base64Data must not include a "data:...;base64," prefix.
+async function saveOrShare(fileName: string, base64Data: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  const { uri } = await Filesystem.writeFile({
+    path: fileName,
+    data: base64Data,
+    directory: Directory.Cache,
+  });
+  await Share.share({ title: fileName, url: uri, dialogTitle: `Save or share ${fileName}` });
+  return true;
+}
+
+function utf8ToBase64(text: string): string {
+  return btoa(unescape(encodeURIComponent(text)));
+}
 
 interface PDFPreviewModalProps {
   isOpen: boolean;
@@ -18,24 +41,24 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
 
   const generatePDF = () => {
     // Create a proper PDF using jsPDF
-    import('jspdf').then(({ jsPDF }) => {
+    import('jspdf').then(async ({ jsPDF }) => {
       const doc = new jsPDF();
-      
+
       // Set font
       doc.setFont('helvetica');
-      
+
       // Add content with proper formatting
       let processedContent = content;
-      
+
       const lines = processedContent.split('\n');
       let yPosition = 20;
-      
+
       lines.forEach((line, index) => {
         if (yPosition > 280) {
           doc.addPage();
           yPosition = 20;
         }
-        
+
         // Check if it's a header line (first few lines or all caps)
         if (index < 5 || line === line.toUpperCase()) {
           doc.setFontSize(12);
@@ -44,7 +67,7 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
           doc.setFontSize(10);
           doc.setFont('helvetica', 'normal');
         }
-        
+
         // Split long lines
         const splitLines = doc.splitTextToSize(line, 170);
         splitLines.forEach((splitLine: string) => {
@@ -52,18 +75,26 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
           yPosition += 6;
         });
       });
-      
-      // Save the PDF
+
       const fileName = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-    }).catch((error) => {
+
+      // doc.save() triggers a browser download link click, which is a no-op
+      // inside Capacitor's WKWebView - hand it to the native share sheet
+      // instead so exporting actually does something on a phone.
+      const base64Pdf = doc.output('datauristring').split(',')[1];
+      const shared = await saveOrShare(fileName, base64Pdf);
+      if (!shared) doc.save(fileName);
+    }).catch(async (error) => {
       console.error('PDF generation failed:', error);
-      // Create downloadable text file as fallback
+      // Fall back to a plain text export
+      const fileName = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.txt`;
+      const shared = await saveOrShare(fileName, utf8ToBase64(content));
+      if (shared) return;
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${type === 'resume' ? 'Resume' : 'Cover_Letter'}_${new Date().toISOString().split('T')[0]}.txt`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -71,7 +102,7 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
     });
   };
 
-  const downloadAsWord = () => {
+  const downloadAsWord = async () => {
     const wordContent = `
       <!DOCTYPE html>
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
@@ -99,11 +130,15 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
       </html>
     `;
 
+    const fileName = `${type}-${Date.now()}.doc`;
+    const shared = await saveOrShare(fileName, utf8ToBase64(wordContent));
+    if (shared) return;
+
     const blob = new Blob([wordContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${type}-${Date.now()}.doc`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -112,7 +147,7 @@ const PDFPreviewModal = ({ isOpen, onClose, title, content, type }: PDFPreviewMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`max-w-4xl max-h-[90vh] ${isDarkMode ? 'dark' : ''} bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700`}>
+      <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col ${isDarkMode ? 'dark' : ''} bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700`}>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between text-gray-900 dark:text-white">
             <div className="flex items-center space-x-2">
