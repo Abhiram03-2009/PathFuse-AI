@@ -98,9 +98,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // via a custom URL scheme instead of a normal web redirect. Catch that
     // redirect here and exchange the PKCE code it carries for a session.
     let urlListenerHandle: { remove: () => void } | undefined;
+    // appUrlOpen can fire more than once for a single redirect on iOS. A
+    // PKCE code/flow state is single-use server-side, so processing it twice
+    // makes the second attempt fail with "invalid flow state" even though
+    // the first one succeeded - track the last URL we've handled to guard
+    // against that.
+    let lastHandledUrl: string | null = null;
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }: URLOpenListenerEvent) => {
         if (!url.includes('auth/callback')) return;
+        if (url === lastHandledUrl) return;
+        lastHandledUrl = url;
 
         await Browser.close().catch(() => {});
 
