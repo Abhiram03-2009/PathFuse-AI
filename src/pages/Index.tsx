@@ -123,10 +123,9 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-10">
-          <h1 className={`text-3xl md:text-4xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`text-3xl md:text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
           </h1>
-          <p className={`text-lg ${isDarkMode ? 'text-cyan-300' : 'text-blue-600'}`}>Your AI Career Assistant</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
