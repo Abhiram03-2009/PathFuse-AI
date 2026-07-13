@@ -112,21 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         await Browser.close().catch(() => {});
 
-        // TEMPORARY diagnostic: show exactly what the callback URL looks
-        // like, since there's no way to see console output on a TestFlight
-        // build without a Mac attached. Remove once the flow-state issue is
-        // resolved - this briefly displays a one-time auth code on screen.
-        const params = new URL(url).searchParams;
-        toast({
-          title: 'OAuth callback received',
-          description: `has code: ${params.has('code')}, has error: ${params.has('error')}, query: ${new URL(url).search.slice(0, 180)}`,
-        });
-
         // The provider (or Supabase itself) can redirect back with an error
         // instead of a code - e.g. misconfigured OAuth credentials on the
         // Supabase/provider side. Surface it instead of failing silently,
         // since there's no way to see console.error output on a TestFlight
         // build without a Mac attached.
+        const params = new URL(url).searchParams;
         const callbackError = params.get('error_description') || params.get('error');
         if (callbackError) {
           console.error('OAuth callback returned an error:', callbackError);
@@ -138,7 +129,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        // exchangeCodeForSession takes the raw auth code, NOT the callback
+        // URL - passing the full URL makes Supabase look up a flow state
+        // for a string that never matches anything it stored, which is
+        // exactly what was causing "invalid flow state, no valid flow
+        // state found" on every attempt.
+        const code = params.get('code');
+        if (!code) {
+          console.error('OAuth callback had no code or error param:', url);
+          toast({
+            title: 'Sign-in failed',
+            description: 'No authorization code was returned.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
           console.error('Error exchanging OAuth code for session:', error);
           toast({
