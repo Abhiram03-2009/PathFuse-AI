@@ -129,13 +129,13 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className={`${isDarkMode ? 'bg-gray-800/30 border-cyan-400/30' : 'bg-white/50 border-blue-300/50'} backdrop-blur-lg rounded-2xl p-2 border`}>
+          <div className={`${isDarkMode ? 'bg-gray-800/30 border-cyan-400/30' : 'bg-white/50 border-blue-300/50'} backdrop-blur-lg rounded-2xl p-2 border neon-border`}>
             <TabsList className="flex items-center gap-1.5 h-auto bg-transparent overflow-x-auto scrollbar-hide -mx-1 px-1">
-              <TabsTrigger value="dashboard" className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
+              <TabsTrigger value="dashboard" className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} data-[state=active]:shadow-md data-[state=active]:shadow-cyan-500/40 flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
                 <div className="flex flex-row items-center gap-1.5 whitespace-nowrap"><BarChart3 className="w-4 h-4" /><span className="text-xs font-medium">Home</span></div>
               </TabsTrigger>
               {FEATURES.map((f) => (
-                <TabsTrigger key={f.id} value={f.id} className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
+                <TabsTrigger key={f.id} value={f.id} className={`${isDarkMode ? 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-cyan-300' : 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-blue-600'} data-[state=active]:shadow-md data-[state=active]:shadow-cyan-500/40 flex-shrink-0 px-3 py-2 rounded-lg border border-transparent transition-all`}>
                   <div className="flex flex-row items-center gap-1.5 whitespace-nowrap"><f.icon className="w-4 h-4" /><span className="text-xs font-medium">{f.short}</span></div>
                 </TabsTrigger>
               ))}
@@ -154,7 +154,7 @@ const Index = () => {
                 { label: 'LinkedIn', value: stats.linkedin, icon: Linkedin, color: 'from-blue-600 to-indigo-600' },
                 { label: 'ATS scans', value: stats.keywords, icon: Target, color: 'from-rose-500 to-pink-600' },
               ].map((s) => (
-                <Card key={s.label} className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border transition-all hover:scale-[1.02] cursor-default`}>
+                <Card key={s.label} className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border transition-all hover:scale-[1.02] cursor-default`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -170,7 +170,7 @@ const Index = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Recent Activity — spans 2 cols */}
-              <Card className={`lg:col-span-2 ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border`}>
+              <Card className={`lg:col-span-2 ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
                 <CardHeader>
                   <CardTitle className={`flex items-center space-x-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     <Activity className="w-5 h-5" /><span>Recent Activity</span>
@@ -227,7 +227,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border`}>
+                <Card className={`${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white border-blue-300/40'} backdrop-blur-lg border neon-border`}>
                   <CardHeader>
                     <CardTitle className={`flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       <Newspaper className="w-4 h-4" />Career News & Trends
