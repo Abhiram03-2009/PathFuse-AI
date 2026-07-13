@@ -178,17 +178,6 @@
   }
 }
 
-@keyframes neon-flicker {
-  0%, 100% {
-    opacity: 1;
-    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor, 0 0 20px currentColor;
-  }
-  2%, 8%, 10%, 92%, 98% {
-    opacity: 0.85;
-    text-shadow: 0 0 2px currentColor;
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -273,10 +262,6 @@
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite alternate;
-}
-
-.animate-neon-flicker {
-  animation: neon-flicker 2s ease-in-out infinite alternate;
 }
 
 .animate-fade-in {
@@ -500,4 +485,12 @@
     clip: rect(76px, 9999px, 37px, 0);
     transform: skew(0.65deg);
   }
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

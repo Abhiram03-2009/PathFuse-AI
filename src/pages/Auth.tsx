@@ -11,7 +11,7 @@ import { Eye, EyeOff, UserPlus, LogIn } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { signInWithOAuthNative } from '@/lib/nativeAuth';
-import pathFuseLogo from '@/assets/pathfuse-logo.png';
+import pathFuseLogo from '@/assets/pathfuse-icon.png';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -141,12 +141,12 @@ const Auth = () => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-purple-400/20 rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow"></div>
                 <div className="relative w-16 h-16 bg-gray-800/60 backdrop-blur-lg rounded-xl border border-cyan-400/30 neon-border overflow-hidden">
-                  <img src={pathFuseLogo} alt="Path Fuse AI Logo" className="w-full h-full object-cover" />
+                  <img src={pathFuseLogo} alt="PathFuse AI logo" className="w-full h-full object-contain p-2" />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-neon-flicker">
-                  Path Fuse AI
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  PathFuse AI
                 </h1>
                 <p className="text-xs text-cyan-300/80 animate-fade-in">Your AI Career Assistant</p>
               </div>
