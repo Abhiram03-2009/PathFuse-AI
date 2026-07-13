@@ -6,6 +6,7 @@ import { LogOut, Moon, Sun } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import SettingsMenu from '@/components/SettingsMenu';
 import pathFuseLogo from '@/assets/pathfuse-icon.png';
 const Navbar = () => {
   const {
@@ -51,7 +52,9 @@ const Navbar = () => {
       </div>
       
       <div className="container mx-auto flex justify-between items-center relative z-10">
-        <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>
+        <div className="flex items-center gap-2">
+          {user && <SettingsMenu />}
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
             <div className={`relative w-14 h-14 ${isDarkMode ? 'bg-gray-800/40 border-cyan-400/20' : 'bg-white/60 border-blue-300/30'} backdrop-blur-lg rounded-xl border neon-border overflow-hidden`}>
@@ -61,6 +64,7 @@ const Navbar = () => {
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">PathFuse AI</h1>
             <p className={`text-xs animate-fade-in ${isDarkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Your AI Career Assistant</p>
+          </div>
           </div>
         </div>
 
