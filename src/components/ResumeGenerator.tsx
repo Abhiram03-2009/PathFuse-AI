@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Download, FileText, Sparkles, Plus, X, Eye, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,7 @@ const ResumeGenerator = () => {
   const [newSkill, setNewSkill] = useState('');
   const [template, setTemplate] = useCachedState<string>('rg:template', 'professional');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateProgress, setGenerateProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -150,8 +152,11 @@ const ResumeGenerator = () => {
 
   const generateResume = async () => {
     setIsGenerating(true);
+    setGenerateProgress(0);
+    const interval = setInterval(() => setGenerateProgress((p) => Math.min(p + 100 / 20, 100)), 100);
     // Simulate AI generation
     setTimeout(() => {
+      clearInterval(interval);
       setIsGenerating(false);
       toast({
         title: "Resume Generated!",
@@ -454,7 +459,8 @@ const ResumeGenerator = () => {
                 </>
               )}
             </Button>
-            <Button 
+            {isGenerating && <Progress value={generateProgress} className="h-1.5" />}
+            <Button
               variant="outline" 
               className="w-full text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={() => setShowPreview(true)}

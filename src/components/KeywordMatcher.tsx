@@ -44,6 +44,8 @@ const KeywordMatcher = () => {
         matched_keywords: analysis.matchedKeywords as any,
         missing_keywords: analysis.missingKeywords as any,
         suggestions: analysis.suggestions as any,
+        job_description: jobDescription,
+        resume_text: resumeText,
       });
       if (error) throw error;
       toast({ title: 'Saved', description: 'Keyword analysis stored in your library.' });
