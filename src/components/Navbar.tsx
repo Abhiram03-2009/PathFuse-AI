@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Moon, Sun } from 'lucide-react';
+import { LogOut, Menu, Settings as SettingsIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -15,10 +15,10 @@ const Navbar = () => {
     signOut
   } = useAuth();
   const {
-    isDarkMode,
-    toggleDarkMode
+    isDarkMode
   } = useTheme();
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
@@ -53,7 +53,16 @@ const Navbar = () => {
       
       <div className="container mx-auto flex justify-between items-center relative z-10">
         <div className="flex items-center gap-2">
-          {user && <SettingsMenu />}
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSettingsOpen(true)}
+              className={`${isDarkMode ? 'text-cyan-300 hover:bg-cyan-400/10' : 'text-blue-600 hover:bg-blue-400/10'}`}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
           <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>
           <div className="relative">
             <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-r from-cyan-400/20 to-purple-400/20' : 'bg-gradient-to-r from-blue-400/25 to-purple-400/25'} rounded-xl blur-lg group-hover:from-cyan-400/30 group-hover:to-purple-400/30 transition-all duration-500 animate-pulse-glow`}></div>
@@ -92,11 +101,11 @@ const Navbar = () => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className={`${isDarkMode ? 'bg-cyan-400/20' : 'bg-blue-300/30'}`} />
               <DropdownMenuItem
-                onClick={toggleDarkMode}
+                onClick={() => setSettingsOpen(true)}
                 className={`${isDarkMode ? 'text-gray-300 hover:text-cyan-400 hover:bg-cyan-400/10' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-400/10'}`}
               >
-                {isDarkMode ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator className={`${isDarkMode ? 'bg-cyan-400/20' : 'bg-blue-300/30'}`} />
               <DropdownMenuItem onClick={handleSignOut} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
@@ -106,6 +115,7 @@ const Navbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>}
       </div>
+      {user && <SettingsMenu open={settingsOpen} onOpenChange={setSettingsOpen} />}
     </nav>;
 };
 export default Navbar;
