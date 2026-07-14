@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText, MessageSquare, Search, GraduationCap, Globe, PlusCircle, Target,
-  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight, Newspaper, ExternalLink,
+  BookOpen, BarChart3, Linkedin, Bot, Sparkles, TrendingUp, Activity, Clock, ArrowRight, Newspaper, ExternalLink, Mic,
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ResumeGenerator from '@/components/ResumeGenerator';
 import CoverLetterGenerator from '@/components/CoverLetterGenerator';
 import AIChatbot from '@/components/AIChatbot';
+import MockInterview from '@/components/MockInterview';
 import JobAnalyzer from '@/components/JobAnalyzer';
 import KeywordMatcher from '@/components/KeywordMatcher';
 import UniversityPredictor from '@/components/UniversityPredictor';
@@ -25,6 +26,7 @@ const FEATURES = [
   { id: 'resume', name: 'Resume Builder', short: 'Resume', icon: FileText, gradient: 'from-cyan-500 to-blue-600', component: ResumeGenerator },
   { id: 'cover-letter', name: 'Cover Letter', short: 'Letter', icon: PlusCircle, gradient: 'from-emerald-500 to-teal-600', component: CoverLetterGenerator },
   { id: 'ai-chat', name: 'AI Career Coach', short: 'Coach', icon: Bot, gradient: 'from-purple-500 to-pink-600', component: AIChatbot },
+  { id: 'mock-interview', name: 'Mock Interview', short: 'Interview', icon: Mic, gradient: 'from-fuchsia-500 to-purple-600', component: MockInterview },
   { id: 'job-analyzer', name: 'Job Match Analyzer', short: 'Jobs', icon: Search, gradient: 'from-orange-500 to-red-600', component: JobAnalyzer },
   { id: 'keyword-matcher', name: 'Keyword Matcher', short: 'ATS', icon: Target, gradient: 'from-rose-500 to-pink-600', component: KeywordMatcher },
   { id: 'university-predictor', name: 'University Predictor', short: 'Uni', icon: GraduationCap, gradient: 'from-indigo-500 to-purple-600', component: UniversityPredictor },

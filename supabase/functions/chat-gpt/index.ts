@@ -16,18 +16,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { message, history } = await req.json();
+    const { message, history, mode, role: jobRole, interviewType } = await req.json();
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    const systemPrompt = mode === 'interview'
+      ? `You are conducting a ${interviewType || 'mixed behavioral and technical'} mock interview for a "${jobRole || 'the role the candidate specified'}" position. Ask exactly ONE interview question at a time - never more than one question per turn. After the candidate answers, briefly critique their answer (2-3 sentences: what was strong, what to improve) then ask the next question. Keep the interviewer persona throughout, be realistic and professionally challenging but supportive. Do not use markdown headers or bullet lists - respond conversationally like a real interviewer speaking out loud.`
+      : 'You are a professional AI Career Coach. Provide expert, specific, actionable advice on resumes, cover letters, interviews, salary negotiation, job searching, career transitions, and professional development. Keep responses concise yet comprehensive, and use markdown when helpful.';
+
     const messages = [
-      {
-        role: 'system',
-        content: 'You are a professional AI Career Coach. Provide expert, specific, actionable advice on resumes, cover letters, interviews, salary negotiation, job searching, career transitions, and professional development. Keep responses concise yet comprehensive, and use markdown when helpful.',
-      },
+      { role: 'system', content: systemPrompt },
       ...(Array.isArray(history) ? history.slice(-10) : []),
       { role: 'user', content: message },
     ];

@@ -146,10 +146,6 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
               <Trash2 className="w-4 h-4 mr-2" />Delete Account
             </Button>
           </div>
-
-          <p className={`text-center text-xs pt-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            PathFuse AI v1.0.0
-          </p>
         </SheetContent>
       </Sheet>
 
