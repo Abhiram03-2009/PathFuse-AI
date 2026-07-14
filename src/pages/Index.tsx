@@ -117,8 +117,20 @@ const Index = () => {
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'} relative overflow-hidden`}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-20 right-20 w-64 h-64 ${isDarkMode ? 'bg-cyan-400/8' : 'bg-cyan-400/12'} rounded-full blur-3xl animate-float`} />
-        <div className={`absolute bottom-20 left-20 w-96 h-96 ${isDarkMode ? 'bg-purple-400/8' : 'bg-purple-400/12'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '2s' }} />
+        <div className={`absolute top-20 right-20 w-72 h-72 ${isDarkMode ? 'bg-cyan-400/20' : 'bg-cyan-400/25'} rounded-full blur-3xl animate-float`} />
+        <div className={`absolute bottom-20 left-20 w-96 h-96 ${isDarkMode ? 'bg-purple-400/20' : 'bg-purple-400/25'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '2s' }} />
+        <div className={`absolute top-1/2 left-1/2 w-80 h-80 ${isDarkMode ? 'bg-blue-400/15' : 'bg-blue-400/20'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '4s' }} />
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div
+            key={i}
+            className={`floating-bubble bubble-neon w-${Math.floor(Math.random() * 3) + 2} h-${Math.floor(Math.random() * 3) + 2} animate-bubble-${i % 3 + 1}`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 20}s`,
+              animationDuration: `${25 + Math.random() * 15}s`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
