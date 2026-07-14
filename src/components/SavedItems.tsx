@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BookOpen, Briefcase, ExternalLink, Trash2, Calendar,
   FileText, Mail, Linkedin, Target, Eye, Copy,
@@ -62,6 +63,27 @@ const SavedItems = () => {
     }
     setData((d) => ({ ...d, [table]: d[table].filter((r) => r.id !== id) }));
     toast({ title: 'Removed', description: 'Item deleted from your saved list.' });
+  };
+
+  const JOB_STATUSES = ['saved', 'applied', 'interviewing', 'offer', 'rejected'] as const;
+  const STATUS_STYLE: Record<string, string> = {
+    saved: 'bg-gray-500/20 text-gray-300 border-gray-400/30',
+    applied: 'bg-blue-500/20 text-blue-300 border-blue-400/30',
+    interviewing: 'bg-amber-500/20 text-amber-300 border-amber-400/30',
+    offer: 'bg-green-500/20 text-green-300 border-green-400/30',
+    rejected: 'bg-red-500/20 text-red-300 border-red-400/30',
+  };
+
+  const updateJobStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from('saved_jobs').update({ status }).eq('id', id);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setData((d) => ({
+      ...d,
+      saved_jobs: d.saved_jobs.map((r) => (r.id === id ? { ...r, status } : r)),
+    }));
   };
 
   const copyContent = async () => {
@@ -160,7 +182,19 @@ const SavedItems = () => {
                 <TileShell key={j.id} onRemove={() => remove('saved_jobs', j.id)}>
                   <h3 className={`font-semibold text-sm ${textPrimary}`}>{j.job_title}</h3>
                   <p className={`text-sm ${textSecondary}`}>{j.company_name}</p>
-                  {j.match_percentage && <Badge className="mt-2 bg-green-500/20 text-green-300 border border-green-400/30">{j.match_percentage}% Match</Badge>}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {j.match_percentage && <Badge className="bg-green-500/20 text-green-300 border border-green-400/30">{j.match_percentage}% Match</Badge>}
+                    <Select value={j.status || 'saved'} onValueChange={(v) => updateJobStatus(j.id, v)}>
+                      <SelectTrigger className={`h-6 w-auto text-xs border ${STATUS_STYLE[j.status || 'saved']}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {JOB_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s} className="capitalize text-xs">{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Stamp d={j.created_at} />
                   {j.job_url && <Button variant="outline" size="sm" asChild className="w-full mt-2"><a href={j.job_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-3 h-3 mr-2" />Apply</a></Button>}
                 </TileShell>

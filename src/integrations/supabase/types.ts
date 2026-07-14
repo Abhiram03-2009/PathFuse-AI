@@ -131,6 +131,7 @@ export type Database = {
           job_title: string
           job_url: string | null
           match_percentage: number | null
+          status: string
           user_id: string
         }
         Insert: {
@@ -140,6 +141,7 @@ export type Database = {
           job_title: string
           job_url?: string | null
           match_percentage?: number | null
+          status?: string
           user_id: string
         }
         Update: {
@@ -149,6 +151,7 @@ export type Database = {
           job_title?: string
           job_url?: string | null
           match_percentage?: number | null
+          status?: string
           user_id?: string
         }
         Relationships: []
