@@ -52,15 +52,15 @@ const Navbar = () => {
       </div>
       
       <div className="container mx-auto flex justify-between items-center relative z-10">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {user && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSettingsOpen(true)}
-              className={`${isDarkMode ? 'text-cyan-300 hover:bg-cyan-400/10' : 'text-blue-600 hover:bg-blue-400/10'}`}
+              className={`h-8 w-8 rounded-lg ${isDarkMode ? 'text-cyan-300 bg-cyan-400/10 hover:bg-cyan-400/20' : 'text-blue-600 bg-blue-400/10 hover:bg-blue-400/20'}`}
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </Button>
           )}
           <div className="flex items-center space-x-3 cursor-pointer group" onClick={handleLogoClick}>

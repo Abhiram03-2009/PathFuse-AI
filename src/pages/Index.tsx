@@ -119,9 +119,9 @@ const Index = () => {
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'} relative overflow-hidden`}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-20 right-20 w-72 h-72 ${isDarkMode ? 'bg-cyan-400/20' : 'bg-cyan-400/25'} rounded-full blur-3xl animate-float`} />
-        <div className={`absolute bottom-20 left-20 w-96 h-96 ${isDarkMode ? 'bg-purple-400/20' : 'bg-purple-400/25'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '2s' }} />
-        <div className={`absolute top-1/2 left-1/2 w-80 h-80 ${isDarkMode ? 'bg-blue-400/15' : 'bg-blue-400/20'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '4s' }} />
+        <div className={`absolute top-20 right-20 w-72 h-72 ${isDarkMode ? 'bg-cyan-400/30' : 'bg-cyan-400/35'} rounded-full blur-3xl animate-float`} />
+        <div className={`absolute bottom-20 left-20 w-96 h-96 ${isDarkMode ? 'bg-purple-400/30' : 'bg-purple-400/35'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '2s' }} />
+        <div className={`absolute top-1/2 left-1/2 w-80 h-80 ${isDarkMode ? 'bg-blue-400/22' : 'bg-blue-400/28'} rounded-full blur-3xl animate-float`} style={{ animationDelay: '4s' }} />
         {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}

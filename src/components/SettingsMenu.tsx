@@ -74,17 +74,17 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="left"
-          className={`${isDarkMode ? 'bg-gray-900 border-cyan-400/20 text-white' : 'bg-white border-blue-300/40'} w-80 flex flex-col`}
+          className={`${isDarkMode ? 'bg-gray-900 border-cyan-400/20 text-white' : 'bg-white border-blue-300/40'} w-72 max-w-[80vw] px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col`}
         >
           <SheetHeader>
-            <SheetTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              <SettingsIcon className="w-5 h-5" />Settings
+            <SheetTitle className={`flex items-center gap-2 text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <SettingsIcon className="w-4 h-4" />Settings
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6 flex-1">
-            <div className="flex items-center gap-3">
-              <Avatar className={`h-12 w-12 border-2 ${isDarkMode ? 'border-cyan-400/30' : 'border-blue-400/40'}`}>
+          <div className="mt-4 space-y-4 flex-1">
+            <div className="flex items-center gap-2.5">
+              <Avatar className={`h-10 w-10 border-2 ${isDarkMode ? 'border-cyan-400/30' : 'border-blue-400/40'}`}>
                 <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white">
                   {getInitials(profile?.full_name)}
@@ -98,17 +98,17 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
 
             <Separator className={isDarkMode ? 'bg-cyan-400/20' : 'bg-blue-300/30'} />
 
-            <div className="space-y-2">
-              <Label htmlFor="settings-name" className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Display name</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-name" className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display name</Label>
               <div className="flex gap-2">
                 <Input
                   id="settings-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={isDarkMode ? 'bg-gray-800/50 border-cyan-400/30 text-white' : 'bg-white border-blue-300/50'}
+                  className={`h-8 text-sm ${isDarkMode ? 'bg-gray-800/50 border-cyan-400/30 text-white' : 'bg-white border-blue-300/50'}`}
                 />
-                <Button onClick={saveName} disabled={saving || name === profile?.full_name} size="icon" variant="outline">
-                  <Save className="w-4 h-4" />
+                <Button onClick={saveName} disabled={saving || name === profile?.full_name} size="icon" variant="outline" className="h-8 w-8 shrink-0">
+                  <Save className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
@@ -116,14 +116,14 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
             <Separator className={isDarkMode ? 'bg-cyan-400/20' : 'bg-blue-300/30'} />
 
             <div className="flex items-center justify-between">
-              <Label className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Appearance</Label>
+              <Label className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Appearance</Label>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={toggleDarkMode}
-                className={isDarkMode ? 'border-cyan-400/30 text-cyan-300' : 'border-blue-300/50 text-blue-600'}
+                className={`h-7 text-xs ${isDarkMode ? 'border-cyan-400/30 text-cyan-300' : 'border-blue-300/50 text-blue-600'}`}
               >
-                {isDarkMode ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+                {isDarkMode ? <Sun className="w-3.5 h-3.5 mr-1.5" /> : <Moon className="w-3.5 h-3.5 mr-1.5" />}
                 {isDarkMode ? 'Light Mode' : 'Dark Mode'}
               </Button>
             </div>
@@ -132,18 +132,20 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
 
             <Button
               variant="outline"
+              size="sm"
               onClick={handleSignOut}
               className="w-full text-red-400 border-red-400/30 hover:bg-red-400/10"
             >
-              <LogOut className="w-4 h-4 mr-2" />Sign Out
+              <LogOut className="w-3.5 h-3.5 mr-2" />Sign Out
             </Button>
 
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setConfirmDeleteOpen(true)}
               className="w-full text-red-500/70 hover:text-red-400 hover:bg-red-400/10"
             >
-              <Trash2 className="w-4 h-4 mr-2" />Delete Account
+              <Trash2 className="w-3.5 h-3.5 mr-2" />Delete Account
             </Button>
           </div>
         </SheetContent>

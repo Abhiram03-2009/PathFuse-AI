@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Mic, MicOff, Send, User, Bot, Loader2, RotateCcw, Flag } from 'lucide-react';
+import { Mic, MicOff, Send, User, Bot, Loader2, RotateCcw, Flag, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCachedState } from '@/hooks/useCachedState';
@@ -27,7 +27,12 @@ const MockInterview = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -72,8 +77,8 @@ const MockInterview = () => {
     }
   };
 
-  const sendAnswer = async () => {
-    const answer = input.trim();
+  const sendAnswer = async (spoken?: string) => {
+    const answer = (spoken ?? input).trim();
     if (!answer || loading) return;
     const nextMessages: Message[] = [...messages, { role: 'user', content: answer }];
     setMessages(nextMessages);
@@ -84,14 +89,70 @@ const MockInterview = () => {
       setMessages([...nextMessages, { role: 'assistant', content: reply }]);
       speak(reply);
     } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+      // Don't leave the conversation in a half-sent state on a network blip -
+      // drop the optimistically-added message and give the answer back so
+      // retrying is just hitting send again, not retyping everything.
+      setMessages(messages);
+      setInput(answer);
+      toast({
+        title: 'Could not reach the interviewer',
+        description: `${e.message} — your answer wasn't sent, tap Send to try again.`,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      audioChunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        if (blob.size === 0) return;
+        setTranscribing(true);
+        try {
+          const form = new FormData();
+          form.append('audio', blob, 'answer.webm');
+          const { data, error } = await supabase.functions.invoke('speech-to-text', { body: form });
+          if (error) throw new Error(error.message || 'Failed to transcribe');
+          const text = (data?.text || '').trim();
+          if (!text) {
+            toast({ title: "Didn't catch that", description: 'No speech detected - try again.', variant: 'destructive' });
+            return;
+          }
+          await sendAnswer(text);
+        } catch (e: any) {
+          toast({ title: 'Transcription failed', description: e.message, variant: 'destructive' });
+        } finally {
+          setTranscribing(false);
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch (e: any) {
+      toast({
+        title: 'Microphone access needed',
+        description: 'Enable microphone permission to answer by voice, or type your answer below.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  };
+
   const endInterview = async () => {
     window.speechSynthesis?.cancel();
+    if (recording) stopRecording();
     setLoading(true);
     try {
       const reply = await callInterviewer(
@@ -221,16 +282,33 @@ const MockInterview = () => {
                 </div>
               )}
             </div>
+            <div className="flex flex-col items-center gap-3 mb-3">
+              <button
+                type="button"
+                onClick={recording ? stopRecording : startRecording}
+                disabled={loading || transcribing}
+                className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
+                  recording
+                    ? 'bg-red-600 animate-pulse shadow-lg shadow-red-500/50'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30'
+                } disabled:opacity-50`}
+              >
+                {transcribing ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : recording ? <Square className="w-5 h-5 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+              </button>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {transcribing ? 'Transcribing…' : recording ? 'Tap to stop and send' : 'Tap to answer by voice'}
+              </p>
+            </div>
             <div className="flex space-x-2">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your answer…"
+                placeholder="…or type your answer"
                 onKeyDown={(e) => e.key === 'Enter' && sendAnswer()}
                 disabled={loading}
                 className={isDarkMode ? 'bg-gray-900/50 border-cyan-400/30 text-white' : 'bg-white border-blue-300/50'}
               />
-              <Button onClick={sendAnswer} disabled={loading || !input.trim()}>
+              <Button onClick={() => sendAnswer()} disabled={loading || !input.trim()}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
