@@ -80,22 +80,10 @@ const Landing = () => {
           </div>
           <span className="font-bold tracking-tight">PathFuse AI</span>
         </div>
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/auth')}
-          className="text-cyan-300 hover:text-white hover:bg-white/5"
-        >
-          Sign in
-        </Button>
       </header>
 
       {/* Hero */}
       <main className="relative z-10 flex flex-col items-center justify-center px-6 pt-12 pb-24 text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/5 text-xs text-cyan-300 mb-8 animate-fade-in">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          Your AI career co-pilot
-        </div>
-
         <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[1.05]">
           <span className="bg-gradient-to-r from-white via-cyan-200 to-fuchsia-300 bg-clip-text text-transparent">
             The future of
