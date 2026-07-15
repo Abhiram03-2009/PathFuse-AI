@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, TrendingUp, Brain, Rocket } from 'lucide-react';
+import { ArrowRight, TrendingUp, Brain, Rocket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import pathFuseLogo from '@/assets/pathfuse-icon.png';
 
 const phrases = [
   'Build your career.',
@@ -75,8 +76,8 @@ const Landing = () => {
       {/* Top bar */}
       <header className="relative z-10 flex items-center justify-between px-6 pb-5 pt-[calc(1.25rem+env(safe-area-inset-top))] md:px-12">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-fuchsia-500 grid place-items-center shadow-lg shadow-cyan-500/30">
-            <Sparkles className="w-4 h-4 text-black" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-cyan-500/30">
+            <img src={pathFuseLogo} alt="PathFuse AI logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-bold tracking-tight">PathFuse AI</span>
         </div>

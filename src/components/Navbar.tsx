@@ -21,7 +21,7 @@ const Navbar = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate('/');
   };
   const handleLogoClick = () => {
     navigate('/');
