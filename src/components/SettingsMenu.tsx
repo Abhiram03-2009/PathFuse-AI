@@ -50,7 +50,7 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
   const handleSignOut = async () => {
     onOpenChange(false);
     await signOut();
-    navigate('/auth');
+    navigate('/');
   };
 
   const handleDeleteAccount = async () => {
@@ -60,7 +60,7 @@ const SettingsMenu = ({ open, onOpenChange }: SettingsMenuProps) => {
       if (error) throw new Error(error.message || 'Failed to delete account');
       if (data?.error) throw new Error(data.error);
       toast({ title: 'Account deleted', description: 'Your account and data have been removed.' });
-      navigate('/auth');
+      navigate('/');
     } catch (e: any) {
       toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
     } finally {
