@@ -12,6 +12,7 @@ interface Profile {
   full_name: string | null;
   email: string | null;
   avatar_url: string | null;
+  ai_consent_at: string | null;
   created_at: string;
   updated_at: string;
 }

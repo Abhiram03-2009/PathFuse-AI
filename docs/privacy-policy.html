@@ -11,13 +11,16 @@
   a { color: #2563eb; }
   .updated { color: #64748b; font-size: 0.9rem; }
   ul { padding-left: 1.3rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  th { background: #f8fafc; }
 </style>
 </head>
 <body>
 <h1>Privacy Policy — PathFuse AI</h1>
-<p class="updated">Last updated: July 15, 2026</p>
+<p class="updated">Last updated: July 16, 2026</p>
 
-<p>PathFuse AI ("we", "our", "the app") is an AI career navigator for students and job seekers. This policy explains what information we collect, how we use it, and the choices you have.</p>
+<p>PathFuse AI ("we", "our", "the app") is an AI career navigator for students and job seekers. This policy explains what information we collect, how we use it, who we share it with, and the choices you have.</p>
 
 <h2>Information We Collect</h2>
 <ul>
@@ -25,19 +28,28 @@
   <li><strong>Content you create:</strong> resumes, cover letters, and career analyses you generate or save in the app.</li>
   <li><strong>LinkedIn data:</strong> if you use the LinkedIn integration, the profile URL you provide and publicly available profile information retrieved from it.</li>
   <li><strong>Job search data:</strong> job descriptions, saved job listings, and application status you track in the app.</li>
-  <li><strong>Chat and interview content:</strong> messages you send to the AI Career Coach, and spoken answers during Mock Interview practice (audio is transcribed to text and is not stored after transcription).</li>
+  <li><strong>Chat and interview content:</strong> messages you send to the AI Career Coach, and spoken answers during Mock Interview practice (audio is transcribed to text and is not stored as audio after transcription).</li>
 </ul>
 
 <h2>How We Use Your Information</h2>
 <p>We use your information solely to provide the app's features: generating resumes and cover letters, analyzing job matches and keyword gaps, powering the AI chat and mock interview tools, and letting you save and revisit your work in your Library. We do not sell your data.</p>
 
-<h2>Third-Party Services</h2>
-<p>To provide these features, some data is processed by the following third-party services, solely for that purpose:</p>
+<h2>Sharing With Third-Party AI &amp; Processing Services</h2>
+<p>Some features work by sending the specific data below to named third-party services, only when you actively use that feature. Before you can use any of these features, the app shows an in-app screen naming these services and what's sent, and asks you to explicitly agree before anything is transmitted.</p>
+<table>
+  <tr><th>When you use…</th><th>This data is sent…</th><th>…to</th></tr>
+  <tr><td>AI Career Coach (chat)</td><td>Your chat messages and conversation history</td><td>Groq (AI language processing)</td></tr>
+  <tr><td>Resume Analyzer / Keyword Matcher</td><td>Your resume text and the job description you enter</td><td>Groq</td></tr>
+  <tr><td>Mock Interview</td><td>Your spoken answers (as audio, transcribed to text and not retained afterward) and the resulting conversation</td><td>Groq</td></tr>
+  <tr><td>Multilingual Translator</td><td>The text you ask to translate</td><td>Groq</td></tr>
+  <tr><td>LinkedIn Optimizer</td><td>The LinkedIn profile URL you provide</td><td>Firecrawl (retrieves publicly available profile data)</td></tr>
+</table>
+<p>These providers process this data solely to return a result to you (a chat reply, an analysis, a transcription, a translation, or profile data) and under their own privacy/security terms. We don't share your account information (name, email) with these providers beyond what's needed to process the specific request.</p>
+
+<h2>Other Service Providers</h2>
 <ul>
-  <li><strong>Supabase</strong> — database hosting and authentication.</li>
-  <li><strong>Groq</strong> — AI language model processing for chat, resume/keyword analysis, and voice transcription.</li>
-  <li><strong>Firecrawl</strong> — retrieves publicly available LinkedIn profile information you request.</li>
-  <li><strong>Apple / Google</strong> — if you choose to sign in with Apple or Google.</li>
+  <li><strong>Supabase</strong> — database hosting and authentication for all your account and saved data.</li>
+  <li><strong>Apple / Google</strong> — only if you choose to sign in with Apple or Google, to verify your identity.</li>
 </ul>
 
 <h2>Data Retention & Deletion</h2>
@@ -56,4 +68,3 @@
 <p>Questions about this policy or your data? Email <a href="mailto:kaakarla@gmail.com">kaakarla@gmail.com</a>.</p>
 </body>
 </html>
-

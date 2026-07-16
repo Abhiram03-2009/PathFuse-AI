@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          ai_consent_at: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
@@ -49,6 +50,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_consent_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -57,6 +59,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_consent_at?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
