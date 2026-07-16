@@ -64,11 +64,11 @@ const AIConsentGate = ({ children }: { children: React.ReactNode }) => {
               Privacy Policy
             </a>.
           </p>
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={decline} className="flex-1">
-              <LogOut className="w-4 h-4 mr-2" />Decline & Sign Out
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button variant="outline" onClick={decline} className="flex-1 text-sm px-3 whitespace-normal h-auto min-h-10">
+              <LogOut className="w-4 h-4 mr-2 shrink-0" />Decline & Sign Out
             </Button>
-            <Button onClick={agree} disabled={saving} className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600">
+            <Button onClick={agree} disabled={saving} className="flex-1 text-sm px-3 whitespace-normal h-auto min-h-10 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600">
               {saving ? 'Saving…' : 'I Agree & Continue'}
             </Button>
           </div>
