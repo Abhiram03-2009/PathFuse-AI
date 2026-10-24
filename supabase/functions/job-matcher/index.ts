@@ -1,6 +1,10 @@
 
 const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+// Groq retired llama-3.3-70b-versatile on 2026-08-16; override with the GROQ_MODEL secret if this one is retired too.
+const GROQ_MODEL = Deno.env.get('GROQ_MODEL') ?? 'openai/gpt-oss-120b';
+// gpt-oss models reason before answering; keep that short so max_tokens is left for the answer.
+const REASONING = GROQ_MODEL.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,7 +73,8 @@ async function extractJobs(results: any[], industry: string, location: string) {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL,
+        ...REASONING,
       messages: [
         { role: 'system', content: `Extract real ${industry} job openings in ${location} from these search results. Return JSON {"jobs":[{"title":"","company":"","location":"","salary":"","description":"","jobUrl":"","postedDate":""}]}. Use ONLY information present. Use the URL as jobUrl. If salary not listed use "Not listed". Output up to 12 matches.` },
         { role: 'user', content: JSON.stringify(condensed) },
