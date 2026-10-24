@@ -1,5 +1,9 @@
 
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+// Groq retired llama-3.3-70b-versatile on 2026-08-16; override with the GROQ_MODEL secret if this one is retired too.
+const GROQ_MODEL = Deno.env.get('GROQ_MODEL') ?? 'openai/gpt-oss-120b';
+// gpt-oss models reason before answering; keep that short so max_tokens is left for the answer.
+const REASONING = GROQ_MODEL.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,12 +49,13 @@ async function analyzeWithGroq(resumeText: string, analysisType: string): Promis
       method: 'POST',
       headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: GROQ_MODEL,
+        ...REASONING,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Please analyze this resume:\n\n${resumeText.substring(0, 4000)}` },
         ],
-        max_tokens: 1500,
+        max_tokens: 2500,
       }),
     });
     if (!res.ok) { console.error('Groq resume-analyzer error:', res.status); return null; }
